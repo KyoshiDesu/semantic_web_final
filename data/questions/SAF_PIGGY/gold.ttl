@@ -1,0 +1,18 @@
+@prefix ag: <http://example.org/autograde#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+ag:SAF_PIGGY_R1 a ag:ReferenceTriple ;
+    ag:criterion ag:K1_Requirement ;
+    ag:hasObject ag:DuplexConnection ;
+    ag:hasPredicate ag:requires ;
+    ag:hasSubject ag:Piggybacking ;
+    ag:weight 2.0 .
+
+ag:DuplexConnection a ag:Concept .
+
+ag:K1_Requirement a ag:Criterion ;
+    rdfs:comment "Names two-way (duplex) communication as the requirement"@id .
+
+ag:Piggybacking a ag:Concept .
+

@@ -13,7 +13,7 @@ def cmd_gold(args):
 
 def cmd_extract(args):
     from autograde import pipeline, segment
-    answers = io.load_answers(args.synthetic)
+    answers = io.load_answers(args.synthetic, args.saf)
     answers = answers[answers.question_id == args.question]
     if args.answers:
         answers = answers[answers.answer_id.isin(args.answers.split(","))]
@@ -28,7 +28,8 @@ def cmd_extract(args):
 def cmd_run(args):
     from autograde import pipeline
     run_dir = pipeline.run_split(args.question, args.mode, args.split, args.synthetic,
-                                 use_llm_feedback=not args.template_feedback)
+                                 use_llm_feedback=not args.template_feedback, include_saf=args.saf,
+                                 annotated_only=args.annotated_only)
     print(f"run -> {run_dir}")
 
 
@@ -102,13 +103,16 @@ def main(argv=None):
     s.add_argument("--mode", choices=["llm", "gold"], required=True)
     s.add_argument("--answers", help="comma-separated answer ids")
     s.add_argument("--synthetic", action="store_true", help="include data/synthetic answers")
+    s.add_argument("--saf", action="store_true", help="include the SAF subset (data/external/saf)")
     s.set_defaults(func=cmd_extract)
     s = sub.add_parser("run", help="grade answers and write a run")
     s.add_argument("--question", required=True, help="question id or 'all'")
     s.add_argument("--mode", choices=["llm", "gold"], required=True)
     s.add_argument("--split", choices=["pilot", "test", "all"], required=True)
     s.add_argument("--synthetic", action="store_true", help="include data/synthetic answers")
+    s.add_argument("--saf", action="store_true", help="include the SAF subset (data/external/saf)")
     s.add_argument("--template-feedback", action="store_true", help="skip the LLM for feedback")
+    s.add_argument("--annotated-only", action="store_true", help="only answers with triple annotations (offline)")
     s.set_defaults(func=cmd_run)
     s = sub.add_parser("calibrate", help="grid search on the pooled pilot split -> config/frozen.yaml")
     s.add_argument("--mode", choices=["llm", "gold"], default="llm")

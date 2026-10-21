@@ -65,8 +65,9 @@ def to_graph(qid, entries):
     return g
 
 
-def answer_graph(answer_id, students, sentences):
-    """Student triples with provenance (the deck's jawaban.ttl)."""
+def answer_graph(answer_id, students, sentences, qid=None, trace=None):
+    """Student triples with provenance (the deck's jawaban.ttl), plus the reasoner's input and output when
+    a trace is given: the alignedSubject/alignedObject pairs Python asserted and the inferred ag:contradicts."""
     g = Graph()
     g.bind("ag", AG)
     g.bind("prov", PROV)
@@ -89,6 +90,11 @@ def answer_graph(answer_id, students, sentences):
         g.add((node, AG.inAnswer, AG[answer_id]))
         for sid in t.sentence_ids:
             g.add((node, PROV.wasDerivedFrom, AG[sid]))
+    for t_id, r_id in (trace or {}).get("aligned", []):
+        g.add((AG[t_id], AG.alignedSubject, ref_iri(qid, r_id)))
+        g.add((AG[t_id], AG.alignedObject, ref_iri(qid, r_id)))
+    for t_id, r_id in (trace or {}).get("contradictions", []):
+        g.add((AG[t_id], AG.contradicts, ref_iri(qid, r_id)))
     return g
 
 

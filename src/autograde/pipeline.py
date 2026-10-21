@@ -38,18 +38,22 @@ class Context:
 
 
 def grade(ctx, answer_id, students, params=None):
-    """Matching, reasoning, ledger and score for already-extracted triples (no files written)."""
+    """Matching, reasoning, ledger and score for already-extracted triples (no files written).
+
+    Returns (students, entries, score, trace); trace holds σ for every pair, the aligned pairs given to the
+    reasoner, and the contradictions it inferred."""
     params = params or ctx.params
     students = fill_concepts(students, ctx.index)
     results, sigmas, aligned = match(ctx.refs, students, params, ctx.sim, ctx.rel)
     contra = reason.contradictions(ctx.qid, ctx.refs, students, aligned, ctx.reasoner)
     entries = ledger.build(answer_id, ctx.refs, results, sigmas, contra, students, params)
-    return students, entries, score(answer_id, entries, params)
+    trace = {"sigmas": sigmas, "aligned": aligned, "contradictions": sorted(contra)}
+    return students, entries, score(answer_id, entries, params), trace
 
 
 def extract_triples(ctx, answer_id, sentences, mode):
     if mode == "llm":
-        return extract.extract_llm(answer_id, sentences)
+        return extract.extract_llm(answer_id, sentences, language=ctx.rubric.get("language", "id"))
     if mode == "gold":
         return extract.extract_gold(answer_id), []
     raise ValueError(f"unknown mode {mode!r}")
@@ -58,9 +62,9 @@ def extract_triples(ctx, answer_id, sentences, mode):
 def run_answer(ctx, answer_id, text, mode, out_dir, use_llm_feedback=True):
     sentences = segment.split(answer_id, text)
     students, log = extract_triples(ctx, answer_id, sentences, mode)
-    students, entries, sc = grade(ctx, answer_id, students)
+    students, entries, sc, trace = grade(ctx, answer_id, students)
     ledger.write(out_dir, ctx.qid, entries)
-    ledger.answer_graph(answer_id, students, sentences).serialize(out_dir / "answer.ttl", format="turtle")
+    ledger.answer_graph(answer_id, students, sentences, ctx.qid, trace).serialize(out_dir / "answer.ttl", format="turtle")
     sc.sparql_score = ledger.recompute_sparql(out_dir / "ledger.ttl", io.question_dir(ctx.qid) / "gold.ttl",
                                               ctx.params["lambda"])
     if abs(sc.score - sc.sparql_score) >= 1e-9:
@@ -72,15 +76,21 @@ def run_answer(ctx, answer_id, text, mode, out_dir, use_llm_feedback=True):
     io.save_json(fb.model_dump(), out_dir / "feedback.json")
     with open(out_dir / "extraction_log.jsonl", "w", encoding="utf-8") as f:
         f.writelines(json.dumps(row, ensure_ascii=False) + "\n" for row in log)
-    return {"sentences": sentences, "students": students, "entries": entries, "score": sc, "feedback": fb, "log": log}
+    io.save_json({"sigmas": [[t, r, s] for (t, r), s in sorted(trace["sigmas"].items())],
+                  "aligned": trace["aligned"], "contradictions": trace["contradictions"]}, out_dir / "trace.json")
+    return {"sentences": sentences, "students": students, "entries": entries, "score": sc, "feedback": fb, "log": log,
+            "trace": trace, "out_dir": out_dir}
 
 
 def runs_dir():
     return io.ROOT / "outputs" / "runs"
 
 
-def run_split(question, mode, split, include_synthetic=False, use_llm_feedback=True, answer_ids=None, run_id=None):
-    answers = io.load_answers(include_synthetic)
+def run_split(question, mode, split, include_synthetic=False, use_llm_feedback=True, answer_ids=None, run_id=None,
+              include_saf=False, annotated_only=False):
+    answers = io.load_answers(include_synthetic, include_saf)
+    if annotated_only:
+        answers = answers[answers.answer_id.map(lambda a: io.annotation_path(a) is not None)]
     if question != "all":
         answers = answers[answers.question_id == question]
     if split != "all":
@@ -96,12 +106,13 @@ def run_split(question, mode, split, include_synthetic=False, use_llm_feedback=T
         ctx = contexts.setdefault(a.question_id, Context.load(a.question_id))
         res = run_answer(ctx, a.answer_id, a.text, mode, run_dir / a.answer_id, use_llm_feedback)
         rows.append({"answer_id": a.answer_id, "question_id": a.question_id, "split": a.split,
-                     "synthetic": bool(a.synthetic), "score": res["score"].score,
+                     "source": a.source, "synthetic": bool(a.synthetic), "score": res["score"].score,
                      "sparql_score": res["score"].sparql_score})
         print(f"{a.answer_id}: {res['score'].score:.1f}")
     pd.DataFrame(rows).to_csv(run_dir / "scores.csv", index=False)
     io.save_json({"run_id": run_id, "mode": mode, "split": split, "question": question,
                   "params": io.load_params(), "params_frozen": io.frozen_path().exists(),
                   "reasoner": io.load_config()["reasoner"], "include_synthetic": include_synthetic,
+                  "include_saf": include_saf,
                   "created": datetime.now().isoformat(timespec="seconds")}, run_dir / "run.json")
     return run_dir

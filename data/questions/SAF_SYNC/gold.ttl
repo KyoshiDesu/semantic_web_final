@@ -1,0 +1,68 @@
+@prefix ag: <http://example.org/autograde#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+ag:SAF_SYNC_R1 a ag:ReferenceTriple ;
+    ag:criterion ag:K1_Asynchronous ;
+    ag:hasObject ag:Character ;
+    ag:hasPredicate ag:transmits ;
+    ag:hasSubject ag:AsynchronousTransmission ;
+    ag:weight 1.0 .
+
+ag:SAF_SYNC_R2 a ag:ReferenceTriple ;
+    ag:criterion ag:K1_Asynchronous ;
+    ag:hasObject ag:StartStopBits ;
+    ag:hasPredicate ag:uses ;
+    ag:hasSubject ag:AsynchronousTransmission ;
+    ag:weight 1.0 .
+
+ag:SAF_SYNC_R3 a ag:ReferenceTriple ;
+    ag:criterion ag:K1_Asynchronous ;
+    ag:hasObject ag:LowTransmissionRate ;
+    ag:hasPredicate ag:has ;
+    ag:hasSubject ag:AsynchronousTransmission ;
+    ag:weight 1.0 .
+
+ag:SAF_SYNC_R4 a ag:ReferenceTriple ;
+    ag:criterion ag:K2_Synchronous ;
+    ag:hasObject ag:Frame ;
+    ag:hasPredicate ag:transmits ;
+    ag:hasSubject ag:SynchronousTransmission ;
+    ag:weight 1.0 .
+
+ag:SAF_SYNC_R5 a ag:ReferenceTriple ;
+    ag:criterion ag:K2_Synchronous ;
+    ag:hasObject ag:SynFlag ;
+    ag:hasPredicate ag:uses ;
+    ag:hasSubject ag:SynchronousTransmission ;
+    ag:weight 1.0 .
+
+ag:SAF_SYNC_R6 a ag:ReferenceTriple ;
+    ag:criterion ag:K2_Synchronous ;
+    ag:hasObject ag:HighTransmissionRate ;
+    ag:hasPredicate ag:has ;
+    ag:hasSubject ag:SynchronousTransmission ;
+    ag:weight 1.0 .
+
+ag:Character a ag:Concept .
+
+ag:Frame a ag:Concept .
+
+ag:HighTransmissionRate a ag:Concept .
+
+ag:LowTransmissionRate a ag:Concept .
+
+ag:StartStopBits a ag:Concept .
+
+ag:SynFlag a ag:Concept .
+
+ag:AsynchronousTransmission a ag:Concept .
+
+ag:K1_Asynchronous a ag:Criterion ;
+    rdfs:comment "Describes asynchronous transmission"@id .
+
+ag:K2_Synchronous a ag:Criterion ;
+    rdfs:comment "Describes synchronous transmission"@id .
+
+ag:SynchronousTransmission a ag:Concept .
+

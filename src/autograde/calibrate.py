@@ -2,7 +2,7 @@
 from datetime import datetime
 
 from autograde import gold, io, pipeline, segment
-from autograde.evaluate import human_totals, scores_path
+from autograde.evaluate import human_totals
 
 
 def calibrate(include_synthetic=False, mode="llm", cosine=None, out=None):
@@ -15,7 +15,7 @@ def calibrate(include_synthetic=False, mode="llm", cosine=None, out=None):
     # SPARQL reasoner: parity-tested against Pellet, and fast enough for the whole grid
     contexts = {q: pipeline.Context.load(q, reasoner="sparql", cosine=cosine) for q in sorted(set(pilot.question_id))}
     weights = {q: gold.criterion_weights(c.refs) for q, c in contexts.items()}
-    scores = io.load_scores(scores_path(include_synthetic))
+    scores = io.load_human_scores(include_synthetic)
     human = human_totals(scores[scores.answer_id.isin(pilot.answer_id)], weights, question_of)
     pilot = pilot[pilot.answer_id.isin(human.index)]
     if pilot.empty:

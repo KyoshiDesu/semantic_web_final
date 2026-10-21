@@ -5,26 +5,52 @@ from autograde import io, llm
 from autograde.models import StudentTriple
 from autograde.normalize import content_tokens
 
-SYSTEM = """You extract semantic triples from a student's short answer written in Indonesian.
+LANGUAGES = {"id": "Indonesian", "en": "English"}
+
+SYSTEM = """You extract semantic triples from a student's short answer written in {language}.
 
 Rules:
 - Output only relations the student actually states. Never add knowledge the student did not write.
 - subject and object must copy the student's own words from the cited sentences (you may drop articles).
 - predicate must be one of the listed predicate ids or aliases. Use "other" when none fits.
-- Rewrite passive voice as active: "CO2 diserap oleh daun" -> subject "daun", predicate "menyerap", object "CO2".
-- Split coordinated statements: "menghasilkan glukosa dan oksigen" gives two triples.
-- negated is true only when the student denies the relation (tidak, bukan, tanpa).
+- Rewrite passive voice as active: {passive_example}.
+- Split coordinated statements into one triple each.
+- negated is true only when the student denies the relation{negation_words}.
 - sentence_ids lists every sentence needed to support the triple, e.g. when the subject is only named in an
-  earlier sentence ("Proses ini ...")."""
+  earlier sentence and later referred to with a pronoun."""
 
-EXAMPLES = """Example 1
+STYLE = {
+    "id": {"passive_example": '"CO2 diserap oleh daun" -> subject "daun", predicate "menyerap", object "CO2"',
+           "negation_words": " (tidak, bukan, tanpa)"},
+    "en": {"passive_example": '"an IP address is assigned by the server" -> subject "server", predicate "assigns", '
+                              'object "IP address"',
+           "negation_words": ' ("not", "never"); prefer a positive predicate such as "lacks" over a negated "has"'},
+}
+
+EXAMPLES = {
+    "id": """Example 1
 S1: Karbon dioksida diserap oleh daun.
 {"triples": [{"sentence_ids": ["S1"], "subject": "daun", "predicate": "menyerap", "object": "karbon dioksida", "negated": false}]}
 
 Example 2
 S1: Fotosintesis terjadi di kloroplas.
 S2: Proses ini tidak menghasilkan karbon dioksida.
-{"triples": [{"sentence_ids": ["S1", "S2"], "subject": "fotosintesis", "predicate": "menghasilkan", "object": "karbon dioksida", "negated": true}]}"""
+{"triples": [{"sentence_ids": ["S1", "S2"], "subject": "fotosintesis", "predicate": "menghasilkan", "object": "karbon dioksida", "negated": true}]}""",
+    "en": """Example 1
+S1: An acknowledgement is sent by the receiver.
+{"triples": [{"sentence_ids": ["S1"], "subject": "receiver", "predicate": "sends", "object": "acknowledgement", "negated": false}]}
+
+Example 2
+S1: UDP is a transport protocol.
+S2: It has no flow control.
+{"triples": [{"sentence_ids": ["S1"], "subject": "UDP", "predicate": "is_a", "object": "transport protocol", "negated": false},
+             {"sentence_ids": ["S1", "S2"], "subject": "UDP", "predicate": "lacks", "object": "flow control", "negated": false}]}""",
+}
+
+
+def for_language(predicates, language):
+    """Only the predicates offered for this language (plus language-independent ones such as `other`)."""
+    return {"predicates": [p for p in predicates["predicates"] if p.get("lang", "any") in (language, "any")]}
 
 
 def predicate_values(predicates):
@@ -52,11 +78,11 @@ def schema(labels, predicates):
             "required": ["triples"], "additionalProperties": False}
 
 
-def user_prompt(sentences, predicates):
+def user_prompt(sentences, predicates, language="id"):
     preds = "\n".join(f"- {p['id']}: {p['description']}" + (f" (alias: {', '.join(p['aliases'])})" if p.get("aliases") else "")
                       for p in predicates["predicates"])
     numbered = "\n".join(f"S{i}: {text}" for i, (_, text) in enumerate(sentences, 1))
-    return f"Predicates:\n{preds}\n\n{EXAMPLES}\n\nStudent answer:\n{numbered}"
+    return f"Predicates:\n{preds}\n\n{EXAMPLES[language]}\n\nStudent answer:\n{numbered}"
 
 
 def grounded(span, text, threshold):
@@ -94,13 +120,15 @@ def parse(answer_id, sentences, data, predicates, threshold):
     return kept, log
 
 
-def extract_llm(answer_id, sentences, *, backend=None, predicates=None, threshold=None):
+def extract_llm(answer_id, sentences, *, backend=None, predicates=None, threshold=None, language="id"):
     if not sentences:
         return [], []
-    predicates = predicates or io.load_predicates()
+    predicates = for_language(predicates or io.load_predicates(), language)
     threshold = threshold if threshold is not None else io.load_config()["grounding_threshold"]
     labels = [f"S{i}" for i in range(1, len(sentences) + 1)]
-    data = llm.complete_json(SYSTEM, user_prompt(sentences, predicates), schema(labels, predicates), backend=backend)
+    system = SYSTEM.format(language=LANGUAGES[language], **STYLE[language])
+    data = llm.complete_json(system, user_prompt(sentences, predicates, language), schema(labels, predicates),
+                             backend=backend)
     return parse(answer_id, sentences, data, predicates, threshold)
 
 

@@ -26,7 +26,22 @@ Agent Rule 2: formula changes need a human decision recorded here. Newest last.
 - **Lecturer corrections** (deck slide 1.4): `data/human/overrides.yaml` → `python -m autograde override`. This writes `ledger_corrected.*` and `score_corrected.json`; the original ledger is never changed. Corrected scores are never used in `evaluate`.
 - **Synthetic data** lives in `data/synthetic/` (deck answers A07/A08 plus five invented answers, a single invented rater). Reports that include it are stamped "SYNTHETIC DATA — not real results".
 
+## 2026-10-21 — SAF subset and demo app
+
+- **SAF subset** (Filighera et al. 2022, English, CC-BY-4.0), imported by `scripts/import_saf.py` into `data/external/saf/`: 5 questions, 150 answers (SAF validation → pilot, SAF test_unseen_answers → test; SAF train not imported). It is loaded only with `--saf`.
+  - The 5 questions are DHCP, piggybacking, async/sync transmission, data-link service classes, and CSMA/CD diameter. They were chosen for spread of scores and relation-like reference answers.
+  - **The gold triples, rubrics and the 15 triple annotations for SAF were drafted by Claude (AI), not by a lecturer or a human annotator.** Every file says so. They are for the demo only and must not be used for the gold-mode ablation.
+  - SAF scores are holistic points (max 1 for these questions), stored as `criterion = _total`. So SAF has no per-criterion errors.
+- **English predicates** (`lang: en` in `predicates.yaml`) with ontology relations `utilizes ≡ uses`, `enables ≡ allows`, `provides ≡ assigns`, and `has ⊥ lacks`, `allows ⊥ prevents`, `decreases ⊥ increases`. Extraction prompts, examples and the predicate enum follow each question's `rubric.yaml` `language`.
+- **Either/or reference answers can't be expressed.** SAF piggybacking allows "duplex connection OR acknowledgement field", so its gold has only the duplex triple.
+- **Embedding labels:** known concept ids are embedded as words (`LowTransmissionRate` → "low transmission rate"), not the run-together id.
+- `answer.ttl` now also stores the reasoner's input (`ag:alignedSubject` / `ag:alignedObject`) and output (`ag:contradicts`), so the reasoning can be inspected and queried with SPARQL.
+- The demo app's SPARQL console is read-only and refuses `SERVICE` (federated queries to remote endpoints).
+
 ## Open — needs a human decision
+
+- **Pronoun subjects.** Many SAF answers start "It is used to…". In LLM mode the grounding check keeps "it" as the subject, which doesn't match "DHCP". Options: resolve pronouns to the question's topic concept, or accept the miss. (The AI-drafted annotations keep the student's explicit subjects.)
+- **SAF in the article.** The deck lists SAF as an optional comparison, pending the lecturer's approval. If it's used, the gold triples need a human review first.
 
 - **The deck's partial-credit example does not hold with the chosen embedding model.** cos(makanan, glukosa) = 0.358 with `paraphrase-multilingual-MiniLM-L12-v2`, below τ_l, so A07 scores 60, not 70, on real embeddings. The test fixture stubs the value at 0.70, as the plan specifies. Options: add "makanan" as a lecturer alias, choose a different embedding model, or keep it as is and let calibration decide.
 - **Unknown concept vs gold concept** compares against the concept's id label only ("glukosa"), not its aliases ("gula", cos 0.541). Taking the max over id and aliases is a candidate change to `sim`.

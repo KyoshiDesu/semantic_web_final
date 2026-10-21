@@ -8,7 +8,10 @@ from autograde import io
 
 STOPWORDS = {"yang", "dan", "di", "ke", "dari", "itu", "ini", "untuk", "dengan", "oleh", "pada", "adalah",
              "sebagai", "juga", "akan", "atau", "para", "serta", "lalu", "kemudian", "sang", "si", "nya",
-             "tersebut", "dalam", "secara", "bisa", "dapat", "maka", "karena", "agar", "supaya", "the"}
+             "tersebut", "dalam", "secara", "bisa", "dapat", "maka", "karena", "agar", "supaya",
+             # English (SAF subset)
+             "the", "a", "an", "of", "to", "is", "are", "and", "or", "in", "on", "for", "with", "by", "it",
+             "its", "this", "that", "be", "as", "at", "from", "which", "each", "every"}
 
 
 def norm_text(text):
@@ -63,10 +66,15 @@ class Embedder:
         return float(np.clip(self.vector(a) @ self.vector(b), 0.0, 1.0))
 
 
+def concept_label(concept_id):
+    """Readable text for embedding a concept id: LowTransmissionRate -> "low transmission rate", DHCPServer -> "dhcp server"."""
+    return norm_text(re.sub(r"(?<=[a-z0-9])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])", " ", concept_id))
+
+
 def make_sim(cosine):
     """sim(concept_a, text_a, concept_b, text_b): two known concepts compare by id only (no embedding)."""
     def sim(ca, ta, cb, tb):
         if ca and cb:
             return 1.0 if ca == cb else 0.0
-        return cosine(norm_text(ca or ta), norm_text(cb or tb))
+        return cosine(concept_label(ca) if ca else norm_text(ta), concept_label(cb) if cb else norm_text(tb))
     return sim

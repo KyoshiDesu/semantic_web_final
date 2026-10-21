@@ -1,0 +1,90 @@
+@prefix ag: <http://example.org/autograde#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+ag:SAF_DLL_R1 a ag:ReferenceTriple ;
+    ag:criterion ag:K1_Unconfirmed ;
+    ag:hasObject ag:Acknowledgement ;
+    ag:hasPredicate ag:lacks ;
+    ag:hasSubject ag:UnconfirmedConnectionless ;
+    ag:weight 1.0 .
+
+ag:SAF_DLL_R2 a ag:ReferenceTriple ;
+    ag:criterion ag:K1_Unconfirmed ;
+    ag:hasObject ag:DataLoss ;
+    ag:hasPredicate ag:allows ;
+    ag:hasSubject ag:UnconfirmedConnectionless ;
+    ag:weight 1.0 .
+
+ag:SAF_DLL_R3 a ag:ReferenceTriple ;
+    ag:criterion ag:K1_Unconfirmed ;
+    ag:hasObject ag:FlowControl ;
+    ag:hasPredicate ag:lacks ;
+    ag:hasSubject ag:UnconfirmedConnectionless ;
+    ag:weight 1.0 .
+
+ag:SAF_DLL_R4 a ag:ReferenceTriple ;
+    ag:criterion ag:K2_Confirmed ;
+    ag:hasObject ag:Acknowledgement ;
+    ag:hasPredicate ag:has ;
+    ag:hasSubject ag:ConfirmedConnectionless ;
+    ag:weight 1.0 .
+
+ag:SAF_DLL_R5 a ag:ReferenceTriple ;
+    ag:criterion ag:K2_Confirmed ;
+    ag:hasObject ag:DataLoss ;
+    ag:hasPredicate ag:prevents ;
+    ag:hasSubject ag:ConfirmedConnectionless ;
+    ag:weight 1.0 .
+
+ag:SAF_DLL_R6 a ag:ReferenceTriple ;
+    ag:criterion ag:K2_Confirmed ;
+    ag:hasObject ag:FlowControl ;
+    ag:hasPredicate ag:lacks ;
+    ag:hasSubject ag:ConfirmedConnectionless ;
+    ag:weight 1.0 .
+
+ag:SAF_DLL_R7 a ag:ReferenceTriple ;
+    ag:criterion ag:K3_ConnectionOriented ;
+    ag:hasObject ag:FlowControl ;
+    ag:hasPredicate ag:has ;
+    ag:hasSubject ag:ConnectionOriented ;
+    ag:weight 1.0 .
+
+ag:SAF_DLL_R8 a ag:ReferenceTriple ;
+    ag:criterion ag:K3_ConnectionOriented ;
+    ag:hasObject ag:ConnectPhases ;
+    ag:hasPredicate ag:has ;
+    ag:hasSubject ag:ConnectionOriented ;
+    ag:weight 1.0 .
+
+ag:SAF_DLL_R9 a ag:ReferenceTriple ;
+    ag:criterion ag:K3_ConnectionOriented ;
+    ag:hasObject ag:DataLoss ;
+    ag:hasPredicate ag:prevents ;
+    ag:hasSubject ag:ConnectionOriented ;
+    ag:weight 1.0 .
+
+ag:ConnectPhases a ag:Concept .
+
+ag:Acknowledgement a ag:Concept .
+
+ag:ConfirmedConnectionless a ag:Concept .
+
+ag:ConnectionOriented a ag:Concept .
+
+ag:DataLoss a ag:Concept .
+
+ag:FlowControl a ag:Concept .
+
+ag:K1_Unconfirmed a ag:Criterion ;
+    rdfs:comment "Describes the unconfirmed connectionless service"@id .
+
+ag:K2_Confirmed a ag:Criterion ;
+    rdfs:comment "Describes the confirmed connectionless service"@id .
+
+ag:K3_ConnectionOriented a ag:Criterion ;
+    rdfs:comment "Describes the connection-oriented service"@id .
+
+ag:UnconfirmedConnectionless a ag:Concept .
+

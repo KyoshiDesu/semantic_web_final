@@ -127,42 +127,53 @@
 
 <owl:Class rdf:about="#Concept">
   <rdfs:subClassOf rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+  <rdfs:label xml:lang="id">Konsep</rdfs:label>
 </owl:Class>
 
 <owl:Class rdf:about="#Relation">
   <rdfs:subClassOf rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+  <rdfs:label xml:lang="id">Relasi</rdfs:label>
 </owl:Class>
 
 <owl:Class rdf:about="#Triple">
   <rdfs:subClassOf rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+  <rdfs:label xml:lang="id">Triple</rdfs:label>
 </owl:Class>
 
 <owl:Class rdf:about="#ReferenceTriple">
   <rdfs:subClassOf rdf:resource="#Triple"/>
+  <owl:disjointWith rdf:resource="#StudentTriple"/>
+  <rdfs:label xml:lang="id">Triple Acuan</rdfs:label>
 </owl:Class>
 
 <owl:Class rdf:about="#StudentTriple">
   <rdfs:subClassOf rdf:resource="#Triple"/>
+  <rdfs:label xml:lang="id">Triple Jawaban</rdfs:label>
 </owl:Class>
 
 <owl:Class rdf:about="#Criterion">
   <rdfs:subClassOf rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+  <rdfs:label xml:lang="id">Kriteria</rdfs:label>
 </owl:Class>
 
 <owl:Class rdf:about="#Answer">
   <rdfs:subClassOf rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+  <rdfs:label xml:lang="id">Jawaban</rdfs:label>
 </owl:Class>
 
 <owl:Class rdf:about="#Sentence">
   <rdfs:subClassOf rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+  <rdfs:label xml:lang="id">Kalimat</rdfs:label>
 </owl:Class>
 
 <owl:Class rdf:about="#LedgerEntry">
   <rdfs:subClassOf rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+  <rdfs:label xml:lang="id">Entri Ledger</rdfs:label>
 </owl:Class>
 
 <owl:Class rdf:about="#Status">
   <rdfs:subClassOf rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+  <rdfs:label xml:lang="id">Status</rdfs:label>
 </owl:Class>
 
 <owl:NamedIndividual rdf:about="#Cocok">
@@ -197,6 +208,72 @@
 <owl:NamedIndividual rdf:about="#menghasilkan">
   <rdf:type rdf:resource="#Relation"/>
   <incompatibleWith rdf:resource="#mengonsumsi"/>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#is_a">
+  <rdf:type rdf:resource="#Relation"/>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#uses">
+  <rdf:type rdf:resource="#Relation"/>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#utilizes">
+  <rdf:type rdf:resource="#Relation"/>
+  <equivalentPredicate rdf:resource="#uses"/>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#requires">
+  <rdf:type rdf:resource="#Relation"/>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#has">
+  <rdf:type rdf:resource="#Relation"/>
+  <incompatibleWith rdf:resource="#lacks"/>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#lacks">
+  <rdf:type rdf:resource="#Relation"/>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#assigns">
+  <rdf:type rdf:resource="#Relation"/>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#provides">
+  <rdf:type rdf:resource="#Relation"/>
+  <equivalentPredicate rdf:resource="#assigns"/>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#replaces">
+  <rdf:type rdf:resource="#Relation"/>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#transmits">
+  <rdf:type rdf:resource="#Relation"/>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#allows">
+  <rdf:type rdf:resource="#Relation"/>
+  <incompatibleWith rdf:resource="#prevents"/>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#enables">
+  <rdf:type rdf:resource="#Relation"/>
+  <equivalentPredicate rdf:resource="#allows"/>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#prevents">
+  <rdf:type rdf:resource="#Relation"/>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#decreases">
+  <rdf:type rdf:resource="#Relation"/>
+  <incompatibleWith rdf:resource="#increases"/>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#increases">
+  <rdf:type rdf:resource="#Relation"/>
 </owl:NamedIndividual>
 
 <swrl:Variable rdf:about="urn:swrl#t"/>
@@ -503,6 +580,15 @@
     </rdf:Description>
   </swrl:head>
 </swrl:Imp>
+
+<owl:AllDifferent>
+  <owl:distinctMembers rdf:parseType="Collection">
+    <rdf:Description rdf:about="#Cocok"/>
+    <rdf:Description rdf:about="#Parsial"/>
+    <rdf:Description rdf:about="#Hilang"/>
+    <rdf:Description rdf:about="#Kontradiksi"/>
+  </owl:distinctMembers>
+</owl:AllDifferent>
 
 
 </rdf:RDF>

@@ -1,0 +1,55 @@
+@prefix ag: <http://example.org/autograde#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+ag:SAF_DHCP_R1 a ag:ReferenceTriple ;
+    ag:criterion ag:K1_Definition ;
+    ag:hasObject ag:NetworkProtocol ;
+    ag:hasPredicate ag:is_a ;
+    ag:hasSubject ag:DHCP ;
+    ag:weight 1.0 .
+
+ag:SAF_DHCP_R2 a ag:ReferenceTriple ;
+    ag:criterion ag:K2_Purpose ;
+    ag:hasObject ag:IPAddress ;
+    ag:hasPredicate ag:assigns ;
+    ag:hasSubject ag:DHCP,
+        ag:DHCPServer ;
+    ag:weight 2.0 .
+
+ag:SAF_DHCP_R3 a ag:ReferenceTriple ;
+    ag:criterion ag:K2_Purpose ;
+    ag:hasObject ag:Configuration ;
+    ag:hasPredicate ag:assigns ;
+    ag:hasSubject ag:DHCP,
+        ag:DHCPServer ;
+    ag:weight 1.0 .
+
+ag:SAF_DHCP_R4 a ag:ReferenceTriple ;
+    ag:criterion ag:K3_History ;
+    ag:hasObject ag:RARP ;
+    ag:hasPredicate ag:replaces ;
+    ag:hasSubject ag:DHCP ;
+    ag:weight 1.0 .
+
+ag:Configuration a ag:Concept .
+
+ag:IPAddress a ag:Concept .
+
+ag:K1_Definition a ag:Criterion ;
+    rdfs:comment "States what DHCP is"@id .
+
+ag:K3_History a ag:Criterion ;
+    rdfs:comment "Relates DHCP to the protocols it replaced"@id .
+
+ag:NetworkProtocol a ag:Concept .
+
+ag:RARP a ag:Concept .
+
+ag:DHCPServer a ag:Concept .
+
+ag:K2_Purpose a ag:Criterion ;
+    rdfs:comment "Explains what DHCP is used for"@id .
+
+ag:DHCP a ag:Concept .
+

@@ -1,0 +1,485 @@
+answer_id,question_id,text,split,saf_id,saf_feedback
+SAF_DHCP_T001,SAF_DHCP,"The Dynamic Host Configuration Protocol (DHCP) is a network management protocol used on Internet Protocol networks whereby a DHCP server dynamically assigns an IP address and other network configuration parameters to each device on a network so they can communicate with other IP networks. A DHCP server enables computers to request IP addresses and networking parameters automatically from the Internet service provider (ISP), reducing the need for a network administrator or a user to manually assign IP addresses to all network devices.
+
+DHCP is used for:
+Simplifies installation and configuration of end systems
+Allows for manual and automatic IP address assignment
+May provide additional configuration information (DNS server, netmask, default router, etc.)",test,26fb0c1baccf4dd08561ae95c1cef731,The response answers the definition and the usage of DHCP correctly.
+SAF_DHCP_T002,SAF_DHCP,"The Dynamic Host Configuration Protocol (DHCP) is Internet Protocol based on the special server that uses for manually or automatically IP addresses assignment and other network configuration parameters, such as subnet masks and default gateways, to each device on a network so they can communicate with other IP networks.
+This server need not be on the same LAN as the requesting host. Since the DHCP server may not be reachable by broadcasting, a DHCP relay agent is needed on each LAN.",test,34ac6a4d78ce46a2a75e8e7d1ca49758,The response answers the definition and the usage of DHCP correctly.
+SAF_DHCP_T003,SAF_DHCP,It is used to assignIP addresses to hosts in a network.,test,542ffb3bc2074150a8ed1e8b08a9155f,"The response does not give a definition and does not specify how DHCP assigns the IP addresses, i.e. dynamically or automatically."
+SAF_DHCP_T004,SAF_DHCP,"The Dynamic Host Configuration Protocol (DHCP) is a protocol designed as a replacement for the RARP and BOOTP protocols, with some additional functionality.
+As such, it is is a protocol used for managing client IP addresses in a LAN.  
+When a client first joins a network, it sends out a so-called 'DHCP Discover packet', which is a way for the client to tell the DHCP server (usually the local router) that it needs a valid IP address.  
+The DHCP server then responds, assigning an IP address and optionally some additional addresses (like the default netmask or router) to this host. The assigned address will be valid only for a certain duration specified by the host in the response.  
+The client now has to renew its IP address (by sending out yet another DHCP Discover packet) before the assigned address expires.
+
+As long as the address hasn't expired, it is safe for the client to assume that his current address is still valid, even after being disconnected from the network for some time.",test,5863152a355e4f7da29ad1188586cc42,The response answers the definition and the usage of DHCP correctly.
+SAF_DHCP_T005,SAF_DHCP,"DHCP is a protocol to centrally manage the distribution of ip addresses in a network.
+The DHCP simplifies the installation and configuration of end systems. Moreover, it allows for manual and automatic IP address assignment and may provide additional configuration information such as DNS server, netmask, default router, etc.",test,7ac51695bbfb40aca6be7d2fba653bc9,The response answers the definition and the usage of DHCP correctly.
+SAF_DHCP_T006,SAF_DHCP,"DHCP is a protocol that provides quick, automatic, and central management for the distribution of IP addresses within a network. It simplifies installation and configuration of end systems, also allowing for manual and automatic IP address assignment.
+
+It is used for providing configuration information such as DNS server, netmask, default router, etc)",test,85be48fe1fc74ffa8f8e08144e80248a,The response answers the definition and the usage of DHCP correctly.
+SAF_DHCP_T007,SAF_DHCP,"The DHCP protocol is used to simplify the configuration of ip adresses of end systems. It is used to dynamically assign ip adresses to the participants of a network, while still enabling administrators to configure ip adresses manually. Every end system is able to configure itself with the help of the dhcp-server. The end system sends a dhcp discovery broadcast, the dhcp identifies itself and afterwards they negotiate the ip adress, as well as other parameters like time server, name server, domain name and subnet mask.",test,8a0857f06e354ab6a16de2b9e999448f,The response answers the definition and the usage of DHCP correctly.
+SAF_DHCP_T008,SAF_DHCP,"The Dynamic Host Configuration Protocol (DHCP) is a network management protocol used on Internet Protocol networks whereby a DHCP server dynamically assigns an IP address and other network configuration parameters to each device on a network so they can communicate with other IP networks. It is used for simplified installation and configuration of end systems into network. Allows for manual or automatic assignment of IP addresses. May also provide additional configuration information like DNS server, netmask, default router, etc",test,97c2cd368759432c89ba870284124eaf,The response answers the definition and the usage of DHCP correctly.
+SAF_DHCP_T009,SAF_DHCP,"The Dynamic Host Configuration Protocol (DHCP) is a network management protocol used on
+Internet Protocol networks whereby a DHCP server dynamically assigns an IP address and other
+network configuration parameters to each device on a network.
+
+
+DHCP simplifies installation and configuration of end systems, and allows for manual and
+automatic IP address assignment.
+
+End systems can broadcast DHCP DISCOVER packets to retrieve their IP from the DHCP server.",test,a0f00f0cd97a4e3d89cf3fa3937c3740,The response answers the definition and the usage of DHCP correctly.
+SAF_DHCP_T010,SAF_DHCP,It’s a network protocol used on IP networks to dynamically assign an IP address and other information to any device (host) on a network so they can communicate using IP.,test,c5f4942e4d10425b844db460a2edcd90,The response only states the definition/description of DHCP correctly. The precise usage is missing in the response.
+SAF_DHCP_T011,SAF_DHCP,DHCP extends the functionality of RARP. It is used for automatic IP address assignment.,test,cb53f4a90127434fa0bc19054c1ddef3,The response only states the definition/description of DHCP correctly. The usage is missing in the response.
+SAF_DHCP_T012,SAF_DHCP,The DHCP is used to add clients into a network by giving them the required information/addresses.,test,ce7fff8b7ce1467d8fb9178b30f18804,"The response partially describes DHCP as it lacks specifics, like what information is shared, to be considered complete and precise."
+SAF_DHCP_T013,SAF_DHCP,"DHCP is used to manually/automatically assign IP addresses to physical devices inside of a network with the help of a DHCP server. A client with no IP address sends a broadcast DHCP discover packet to everyone on the network. The Server will respond with a DHCP offer, where he offers an IP address to the client. The Client will then respond with a DHCP request (telling the server he wants the IP address). The Server will assign the IP address to the Client for a certain time period (DHCP ACK). After this leasing time, the client has to renew the leasing of the IP address otherwise the DHCP Server will remove the IP address of the client again.",test,ceadc243bd3645e7b71489deabfd3ea9,The response is partially correct because the DHCP definition part is missing in the answer. There is an explanation about how DHCP works but that is not part of the question requirement.
+SAF_DHCP_T014,SAF_DHCP,DHCP is a network management protocol which extends the functionality of RARP and BOOTP. DHCP simplifies installation and cofiguration of end systems. It also allows for manual and automatic IP address assignment.,test,d503c59e2bee4093bf4a45fd7a8748e5,The response answers the definition and the usage of DHCP correctly.
+SAF_DHCP_T015,SAF_DHCP,"The dhcp protocol is a protocol to configure systems that join a network.
+It is used to assign ip addresses to systems within the network. 
+If a system joins the network it can ask the dhcp server for network configuration and an ip address that it should use in the future.",test,da0cb1165e6643eba2946471fa8a85af,The response is partially correct because it lacks a DHCP usage.
+SAF_DHCP_T016,SAF_DHCP,DHCP is a network management protocol which configures end devices on IP Networks (mostly LANs) by assigning them an IP address and other network configuration parameters.,test,f3ca8adfa8f94552af4bdba3ebf072b5,The response only states the definition/description of DHCP correctly. The precise usage is missing in the response.
+SAF_DHCP_T017,SAF_DHCP,"DHCP has replaced RARP (and BOOTP) as it has Extended functionality. Its uses are: 1.Simplifies installation and configuration of end systems 2.Allows for manual and automatic IP address assignment 3.May provide additional configuration information like DNS server, netmask, default router, etc.",test,f61d0dd942f64517b4b11ae1dfd2d350,The response answers the definition and the usage of DHCP correctly.
+SAF_DHCP_V001,SAF_DHCP,"The Dynamic Host Configuration Protocol  is a network management protocol.
+
+Used for intranet or network service providers to automatically assign IP addresses to users.
+Used by the intranet administrator to centrally manage all Computers.",pilot,0d2f6680de20496b8249543307ba652e,The response is partially correct because DHCP also allows the manual and dynamic allocation of IP addresses.
+SAF_DHCP_V002,SAF_DHCP,With the “Dynamic Host Configuration Protocol” a host can find out about the IP address to a dedicated hardware address. It simplifies the installation and configuration of end-systems and it is used for manual and automatic IP address assignment. It may also provide additional configuration information such as DNS server or netmask information.,pilot,62b60b31759e421da9ef16d680871fd4,The response answers the definition and the usage of DHCP correctly.
+SAF_DHCP_V003,SAF_DHCP,"DHCP is a new version of RARP and BOOTP but more or less does the same thing. Most of the time its a router that can both manually or automatically assign IP addresses (and other information such as DNS Server, netmask, default router etc. ) to clients in its domain. The request from the clients is a broadcast request, the DHCP server then answers. 
+A big advantage is the dynamic allocation of IP addresses. Each address is given out with a lease timer. A client has to refresh his lease before the timer runs out. If it does, and the client has not refreshed his lease, that IP address can once again be assigned to a new client. Therefore it allows to reclaim addresses of disappearing hosts.",pilot,89117ee2e8c545f1a1e511b782fbeb84,The definition/description is partially correct as it is a separate protocol or a successor protocol with extended functionality and not a new version of RARP and BOOTP.
+SAF_DHCP_V004,SAF_DHCP,"DHCP is a protocol which is used to configure network-data and allocate IP-adressen (manual or automatic) within a network:
+Every Host can request and process IP-Configurations from a 
+DHCP-Server. This simplifies the process of IP adress assignement and extends the functionality of the former used RARP.",pilot,892c515d874142abad443d9e2ab8ce37,The response answers the definition and the usage of DHCP correctly except it does not configure network data.
+SAF_DHCP_V005,SAF_DHCP,"Simplifies installation and configuration of end systems , Allows for manual and automatic IP address assignment, May provide additional configuration information(DNS server, netmask, default router, etc.)
+Used for:  Request can be relayed by DHCP relay agent, if server on other LAN",pilot,a7ece11370d749c3a8f223dc6661ed62,The stated usage is not a usage but the process of how it is carried out.
+SAF_DHCP_V006,SAF_DHCP,DHCP is a network management protocol that is primarily used to automatically assign an IP address to each device/host on a network so they can communicate with other IP networks or endpoints in the network.,pilot,c3bc25a3192647fc934b39188f3bde70,"The response is partially correct because the DHCP usage part is not specific enough. DHCP is used to assign automatic, manual, and dynamic IP addresses in a network."
+SAF_DHCP_V007,SAF_DHCP,"DHCP is used to assign IP addresses and other configuration to (new) hosts in a network. After an initial DHCP DISCOVER packet of a client the server sends the assigned IP address back with additional information, like DNS server or netmask.",pilot,df0a1cfb4efe42c5983d100ed2ac2d7a,The response answers the definition and the usage of DHCP correctly.
+SAF_DHCP_V008,SAF_DHCP,"DHCP is a newer version of RARP. 
+Systems use this protocol to resolve their own IP address in a network from their hardware/MAC address. 
+A specific DHCP server assigns the IP addresses and is contacted to resolve them.",pilot,f40f5399004e4202a0038c6950cc2b5a,"The response answer is partially correct because the statement regarding the DHCP server is correct. However, DHCP is more a replacement of RARP and not a new version. Also, ARP is used to resolve the IP address from the MAC address."
+SAF_DHCP_V009,SAF_DHCP,"DHCP is the new version of ARP (Address Resolution Protocol), basically DHCP does the same : 
+The DHCP (=Dynamic Host Configuration Protocol) is a communication protocol (for network management) on internet protocols.
+A DHCP server is used for assignment : A DHCP server assigns network configurations and IP addresses to devices on a network in 
+a dynamic way. As a result, the devices are to work and communicate with other IP networks.
+So, DHCP simplifies installation and configuration of end systems, it can assign manual and automatic, dynamic IP addresses to devices in a network and can provide network parameter information like netmask, DNS server, default router and so on.
+The IP address assignment is for limited time available only.",pilot,f612f1b6c05a4c7fa376e74a8f9d8240,The definition part in the response is partially correct because DHCP is not a new version of ARP. DHCP uses ARP requests during the IP allocation process but they are separate protocols.
+SAF_PIGGY_T001,SAF_PIGGY,Both sides must send data to use piggybacking to be able to attach ACKs to data frames otherwise the sender will assume a frame loss.,test,1c0cfab8391b493ea65d820e5844c218,"The response is incorrect as there will not always be data to send, in such cases a dedicated timer timeout is used to signal the absence of sufficient data and trigger the sending of separate acknowledgment."
+SAF_PIGGY_T002,SAF_PIGGY,"The connection has to be duplex and both sides have to have data to send (Otherwise the frame is 0 characters + the acknowledgement, which would just be a confirmation and no piggybacking).",test,820606cc6ca44ec889e31a444b3fc1c7,"The response answers the underlying requirement correctly. Instead of sending the whole frame with no data, a separate acknowledgment can also be sent after a timeout."
+SAF_PIGGY_T003,SAF_PIGGY,"Requirement: The interval of two adjacent frames, which are sent by sender, is short.
+So that we can use piggybacking to response these two frames with one acknowledgement. 
+The communication has to be duplex (so the protocol must not be ""Utopia"").
+And the receiving buffer from the Sender must be ,so that it is able to store the ACK plus the additional data!",test,8b92b2a5ffe7419a940b355abcecaed8,"The response contains a duplex connection as one of the requirements, but having to send two frames within short intervals is incorrect. Also, the same data and acknowledgments are tied together in piggybacking. Therefore, the total buffer space requirement should ideally remain almost the same as when they are sent separately."
+SAF_PIGGY_T004,SAF_PIGGY,"To use the piggybacking extension to the sliding window protocol, we have to be in a duplex mode.",test,b30d3cc317514e79b068f0bf34429a76,The response answers the underlying requirement correctly.
+SAF_PIGGY_T005,SAF_PIGGY,"The requirement that has to be met that you can use the piggybacking extension to the sliding window protocol is, that we need the ACK field in the frame header that costs only a few bits. A seperate frame would need more costs: ACK, header and a checksum.",test,b3933375086a42ab86b3aab0e85faa8d,"The response is correct, a duplex connection is also required."
+SAF_PIGGY_T006,SAF_PIGGY,"There must also be frames directed towards A (sender) in the transmission, so that B (receiver) sends frames back to A in a reasonable amount of time. In addition to that the amount of frames size of both parties must be similarly big, because the acknowledgement is added to frames directed at A. As a result there must be a certain balance of frames in both directions.",test,c0495c36eddd4ae0a7c5f0d424cc51ec,"The response correctly implies duplex operation. However, a balanced approach is difficult to achieve in real scenarios, so there are ways to overcome it, like a dedicated timer signaling a timeout in the absence of data to be sent."
+SAF_PIGGY_T007,SAF_PIGGY,"Piggybacking only makes sense if there is a full-duplex or semi-duplex connection between sender and receiver. Therefore, the ACK for a data frame from a sender is sent in one frame with the next data frame issued by the receiver. Thus, the requirement for piggybacking is a duplex connection (and the need of sending an ACK).",test,d224de1cd1e140b5a8ebdb899fcc48f8,The response identifies the underlying requirement duplex connection correctly.
+SAF_PIGGY_T008,SAF_PIGGY,A receiver of a data frame has to send data frames the ACKs are piggybacked onto at a rate that is high enough so that the sender doesn't have to wait for too long for the ACKs to arrive. Otherwise a timeout might occur and the sender sends the frame again.,test,e79339cd4a2c489fa41275c9c89c16db,The response states duplex communication indirectly but a dedicated timer timeout can also be on the receiver side to send acknowledgment separately when sufficient data is not present.
+SAF_PIGGY_T009,SAF_PIGGY,"Need to know the initial sequence number, aswell as the next sequence number and acknowledgement.",test,fc0c2f676d1d4dc4b608cae105153d16,The response is incorrect as the above points are not specific to piggybacking but hold for the sliding window protocol in general.
+SAF_PIGGY_V001,SAF_PIGGY,sending must be possible in both directions in order to send data and acks (Two-way-communication) and the frames must be able to contain acks.,pilot,070e2ed4e09044d08c1e3dbca7043683,The response states both the requirements correctly.
+SAF_PIGGY_V002,SAF_PIGGY,"Piggybacking means the ACKs are not sent separately but are inside the header of the next package that the party who is acknowledging the last package wants to send.
+So piggybacking only makes sense when both partners are sending and receiving data, i.e. we have a duplex transfer operating mode.",pilot,0feac5f89e2c448aaa965172753d53ba,The response answers the underlying requirement correctly.
+SAF_PIGGY_V003,SAF_PIGGY,"The initial SeqNo needs to be known + the next SeqNo and the next ACK-SeqNO needs to be known.
+Otherwise, Piggybacking is not possible.",pilot,2ec6726925d149e8a0f8ae8698d7c958,The response is incorrect as the main requirement for piggybacking is a two-way/duplex channel. The points stated in the response are an implementation detail of the sliding window protocol.
+SAF_PIGGY_V004,SAF_PIGGY,Duplex operation,pilot,3a73cb0819ee4608aaf03f438de28127,The response answers the underlying requirement correctly.
+SAF_PIGGY_V005,SAF_PIGGY,Data and Acknowledgements are send in both directions (sender to receiver and receiver to sender). The data and acknowledgements are bundled into one package.,pilot,3f4dfec8e6804088896b64c370cf8838,The response is correct as it implicitly answers the requirement of duplex communication.
+SAF_PIGGY_V006,SAF_PIGGY,Both parties must be able to send data and acknowledge information,pilot,6b783d4c1f82440a8d3143e39653c53e,"The response answers the underlying requirement, i.e. duplex connection, correctly."
+SAF_PIGGY_V007,SAF_PIGGY,"-It has to be a Full-Duplex operation
+-Frames must contain implicit acknowledgments",pilot,796d2be28fe943b19c2bac6d36fd060e,The response answers the underlying requirement correctly. Both points are correct.
+SAF_PIGGY_V008,SAF_PIGGY,"Frames may contain an implicit ACKs.
+Duplex Operation. 
+It has to have an initial SeqNo. of 0",pilot,7c1d371998d24699b68739569fd93840,"Apart from the correct answer of duplex operation, the response also contains other requirements. The first point is true, but it refers to what happens in piggybacking in general. The last point is incorrect as it is specific to the example given in the slides."
+SAF_PIGGY_V009,SAF_PIGGY,We need a duplex operation. This means that Sender and Receiver both sends and receives frames. Then ACK and data can be merged into one frame and sent together.,pilot,7f3e239e989241fd9d6ddcaee5a7ef07,The response answers the underlying requirement correctly.
+SAF_PIGGY_V010,SAF_PIGGY,"Both parties have to advertise their window sizes to each other to avoid the received data to be thrown away (so the receiving buffer was full). Therefore, they need to introduce a new field to the frames which holds this value. Alternatively, they agree upon first communication to some static window size and afterwards send their data (and hope the free buffer sizes of both remain the same). In both cases it would be recommandable not to send huge data chunks upon first communication, because both parties don't know the window sizes of the other one yet. With each frame they send a sequence number (even if no data is sent, so the receiver is able to acknowledge it), the ACK-number (even if no new data has been received, so the receiver can use this as base for their sequence number), and lastly the window size.",pilot,8161ed8f4c35420d81814d73e55b1c26,The response is incorrect. All the stated points are correct but are related to the window sliding mechanism in general and how the initial setup occurs.
+SAF_PIGGY_V011,SAF_PIGGY,"The communication needs to be duplex.
+Additionally, there should be a time period, within this time period, data link layer should wait for the next packet, and attach the acknowledgement to the outgoing data frame and then send the frame.
+When time expires and there is no packet to be sent, link layer sends a separate acknowledgement frame.",pilot,82911b1bdf4e4833aa4856ca1126ab9a,The response answers the underlying requirement correctly.
+SAF_PIGGY_V012,SAF_PIGGY,"The receiver must have data to send back to the sender so he can attach the ACK information to that data. If he has no data to send, the service can be jammed. To prevent this, a receiver timeout can be added so that after the timeout has expired and no data was sent, an ACK packet is sent independently",pilot,8a306aed09d642b2881a73490a40a3a1,The response does not answer the underlying requirement for piggybacking. The response states a possible situation in piggybacking and how to overcome it.
+SAF_PIGGY_V013,SAF_PIGGY,Every transmission must contain an ACK.,pilot,8af80ae20a734672a7b5f030de0c7821,"The response does not answer the underlying requirement for piggybacking. A duplex connection is needed, so that data and acknowledgments can be sent both ways."
+SAF_PIGGY_V014,SAF_PIGGY,we require atleast a (semi)duplex data transfer,pilot,95c60c298fbd43ca9a82d4d302c37d59,The response answers the underlying requirement correctly.
+SAF_PIGGY_V015,SAF_PIGGY,"To be able to take advantage of the piggybacking extension in the sliding window protocol, a full duplex communication channel with both parties actively sending messages is required. Otherwise, the implicit ACKs cannot be added to outgoing data frames.",pilot,99e09920912547c2841ed020d5520cfe,The response answers the underlying requirement correctly.
+SAF_PIGGY_V016,SAF_PIGGY,"A relieable in-order delivery of packets (like data link layer 2 in OSI)
+
+At least an acknowledged connectionless service or an Acknowledged connection-oriented service (for feedback if the packets / frames are received).",pilot,9a9983a6ec9d40448302166cd4e956be,The response is not directly related to the piggybacking but to sliding window protocol in general.
+SAF_PIGGY_V017,SAF_PIGGY,"Piggybacking in sliding window allows to send the acknowledgment of a received frame together with data.
+- Sender and receiver needs two sequence counter. One for its own frames and one for the acknowledgment of the received frames.
+- Benefits the most from a duplex connection
+- when a frame is send, the SeqNo of the frame and the SeqNo of the last received frame (for acknowledgment) are send together.
+- The SeqNo is initialized with 0 and is increased before a new frame is sent.",pilot,ca7d1c911c864abca82a7bf5b0a9bfaf,"The response is correct as it identifies duplex connection as one of the requirements, but the sequence number need not be initialized with 0."
+SAF_PIGGY_V018,SAF_PIGGY,"If you send data in both direcions, you can add the acknowledgment ,for earlier packages, on the next data package.",pilot,dbecb8c382d84d629f8cfda0d4349b4d,The response identifies the underlying requirement duplex connection correctly.
+SAF_PIGGY_V019,SAF_PIGGY,"The participant, who sends the ACK, has to have Data, which he wants to send. If there is no Data to ""biggyback"" the ACK on, the participant will wait infinitly for data to send with the ACK and therefore the piggyback extension would not work.",pilot,e680404bd5ff4f06bedfdb58089e0ee6,"The response is incorrect because a dedicated timer can be used on the receiver side to overcome the above problem of no data on the receiver side. After the timeout, an acknowledgment is sent independently."
+SAF_PIGGY_V020,SAF_PIGGY,"Before using Piggybacking extension, there should be duplex operation. Furthermore, a new packet should arrive quickly then the acknowledgement is piggybacked onto it; otherwise, if no new packet has arrived by the end of this time period, the data link layer just sends a separate acknowledgment frame. 
+
+Also, the sliding windows protocol will utilize the bandwidth of the communication channel with piggybacking, frames may contain implicit acknowledges. For example, the intuitive SeqNo. is 0, then the next SeqNo. and the next ACK-SeqNo to be expected is given.",pilot,f61b064a65ad4e3b976e706c26dc77c9,The response answers the underlying requirement correctly.
+SAF_SYNC_T001,SAF_SYNC,"Asynchronous transmission sends single bytes which are bounded by a start bit and an end bit.
+
+In comparison synchronous transmission is able to send a block of bytes (Frame). These blocks are defined by SYN or flag.",test,06e1288db7514d54aa8525c221ed5146,The response answers the differences correctly.
+SAF_SYNC_T002,SAF_SYNC,"In an asynchronous transmission each byte is sent separately and has a start and an end bit.
+In a synchronous transmission data is sent in frames which can lead to higher transmission rates but becomes more complex.",test,10adf6c3d77e48e0b26a01bb5e8e7121,The response correctly answers the differences between synchronous and asynchronous transmission mode.
+SAF_SYNC_T003,SAF_SYNC,"Asynchronous: Each character is bounded by a start bit and a stop bit -> simple and  inexpensive, but low transmission rates
+Synchronous: several characters pooled to frames, defined by SYN or flag -> more complex, but higher transmission rates",test,11831c0a425b47e59edaf5f46a9d3c3d,The response answers the differences correctly.
+SAF_SYNC_T004,SAF_SYNC,"In the asynchronous transmission mode, there is a start bit and a stop bit for every single character (byte) [ START | BYTE | STOP ].The synchronous transmission mode packs several bytes into a frame and a synchronisation flag is used to mark the begin and end of a new frame [ SYN | BYTE 1 | ... | BYTE n | SYN ].",test,2c921d86adf443ecb6f1940b0c8246a0,The response answers the differences correctly.
+SAF_SYNC_T005,SAF_SYNC,"asynchronous: byte- and block-oriented
+synchronous: character-, count- and bit-oriented",test,4c3208bb187f481397a34926f54e65c5,"The differences mentioned in the response are incorrect. The correct difference is: In asynchronous transmission, every character unit is surrounded by a start bit and a stop bit. In synchronous transmission, several characters are pooled into a frame."
+SAF_SYNC_T006,SAF_SYNC,"During asynchronous transmission each Byte of the transmission is bounded by a start and a stop bit. This makes it possible to transfer data at all time.
+With synchronus transmission the sender has to wait for the reciever until he is ready, so a transmission has to start with SYN flags. After the SYN Flags all Bytes of the data can be transferred without being bounded with start and stop bits. This leads to a higher transmittion rate than with the asynchronus transmission.",test,5949be86e48c404c82b27f4bbcaa9bdd,The response answers the differences correctly.
+SAF_SYNC_T007,SAF_SYNC,"Synchronous transmission sends data in a sort of blocks or frames.
+
+In Unsynchronous transmission the data is sended in form of byte and character.
+Start and  Stop-Bits are added.",test,63a39b1e3f974526b6fe2b51f54ee2d8,The differences mentioned in the response are completely correct.
+SAF_SYNC_T008,SAF_SYNC,"Asynchronous mode transmits characters separately and marks their boundary by using a start and stop bit, while synchronous mode groups multiple characters into frames where bounds are specified using control flags or a length field or invalid symbols of the physical layer.
+Asynchronous mode is simpler, but it's also slower than synchronous mode due to the increased overhead.",test,a7b574e1e7da48488f4614bd6d7c0daf,The response answers the differences correctly.
+SAF_SYNC_T009,SAF_SYNC,"While in asynchronous transmission every character is bounded by a start and a end bit, in synchronous transmission several character are bound to frames, these frames are bound by SYN or flag. The asynchronous transmission is simple and inexpensive, but has a low transmission rate, up to 200 bit/sec, while the synchronous transmission has a higher transmission rate, but is more complex.",test,c1c0383b4eba403696ac5c322c658dcd,The response answers the differences correctly.
+SAF_SYNC_T010,SAF_SYNC,"On the asynchronous transmission, we transmit character independently from each other. Each byte is delimited by a start bit and a stop bit. 
+
+One the Synchronous transmission, whereas, several characters are regrouped in a ""frame"". 
+
+The Synchronous transmission is generally more complex but faster.",test,cdc3b25e053b432ba57b3fb7e5139d38,The response is correct as it correctly answers the differences between synchronous and asynchronous transmission mode.
+SAF_SYNC_T011,SAF_SYNC,"asynchronous: characters are bounded with a start and stop bit, the transmission rate is low with up to 200bit/sec
+
+synchronous: characters are pooled in frames with a SYN or flag - this has a higher transmission rate and is also more complex",test,ddb9c673778b424fb0412be17d98afff,The response answers the differences correctly.
+SAF_SYNC_T012,SAF_SYNC,"The difference is that in synchronous transmission mode the information which is to be transmitted is packed in frames, whereas in asynchronous transmission mode a single character represents a frame, which is bounded by a so-called start bit and a stop bit. So the asynchronous transmission have low transmission rates but is simple and inexpensive, in contrast the synchronous transmission is more complex but has higher transmission rates.",test,f99bedf6dbc64850a4360a2e55a4f7ec,The response correctly answers the differences between synchronous and asynchronous transmission mode.
+SAF_SYNC_V001,SAF_SYNC,"Asynchronous transmission (byte-oriented/ block-oriented):
+Data is sent in form of byte or character. The data (byte/character) is then bounded by a start bit and a stop bit. This is considered to be the simpler and less expensive way but it only supports low transmission rates.
+
+Synchronous transmission (character-oriented/ count-oriented/ bit-oriented):
+Data is sent in form of frames. Therefore, several characters are bundled to frames. The Frames are defined by SYN or flag. This is considered to be the more complex approach. However, it supports higher transmission rates.",pilot,357ae5ef987443aeb7d4f44e2c50ef9a,The response answers the differences correctly.
+SAF_SYNC_V002,SAF_SYNC,"asynchronous:
+- each character is bounded by a start bit and a stop bit
+- generally low transmission rates, often up to 200 bit/sec
+- simple and inexpensive
+
+synchronous:
+- several characters are pooled to frames and those frames are sent
+- frames are defined by SYN or flag
+- more complex, but higher transmission rates",pilot,37f19cc6f2c847bbad071400d736264b,The response answers the differences correctly.
+SAF_SYNC_V003,SAF_SYNC,"Asynchronous transmission: Every character a self-contained unit surrounded by a start bit and a stop bit, which is an easy and cheap pattern, but causes low transmission rates.
+
+Synchronous transmission: Several characters pooled to a continuous stream of data (frames), Frames defined by SYN or flag, higher complexity, but higher transmission rates. Requires synchronisation between sender and receiver.",pilot,3c109c56a5b24e998c01fe7d2daa1cf5,The response answers the differences correctly.
+SAF_SYNC_V004,SAF_SYNC,"In the asynchronous transmission mode each character is bounded by a start bit and a stop bit. In the synchronous transmission several characters are pooled to frames, that are defined by SYN or flag.",pilot,3d7eea11a7ac4db9a4f4f8accbec46fd,The response answers the differences correctly.
+SAF_SYNC_V005,SAF_SYNC,"Asynchronous transmission: Each character (byte) is sent one-by-one at any time and is surrounded by a start and stop bit. This allows only low transmission rates, but is a simple and inexpensive form of transmission.
+
+Synchronous transmission: Here the characters are combined to frames, and headers and trailers (SYN or flag) are attached. As the frames can have different lengths, protocols (Character oriented, Count oriented, Bit oriented) are needed to be declared, defining what is part of the flag and what is part of the data. This form of transmission is more complex, however it offers higher transmission rates.",pilot,61201db677b54b49a7200dae2f4d4616,The response correctly explains the differences between asynchronous and synchronous transmission.
+SAF_SYNC_V006,SAF_SYNC,"Asynchronous Transmission: In this type of transmission, each character is bounded by a start and end bit. This is simple but offers low transmission rates upto 200bits/sec.
+
+Synchronous Transmission: In this type of transmission, several characters are pooled  into frames and these frames are added SYN or flag, this offers more transmission rates than the asynchronous.",pilot,65f4e7c08f6f4dd7b2a238cea8a088eb,The response answers the differences correctly.
+SAF_SYNC_V007,SAF_SYNC,"- Asynchronous: start and stop bit between every byte (bad transmission rate, but easy to realize)
+
+- Synchronous: use of flags/SYN for start and end of data frames containing multiple bytes (higher transmission rate, but more complex)",pilot,7849853c8aa94b6bb38be70517905c19,The response explains the differences between asynchronous and synchronous transmission correctly.
+SAF_SYNC_V008,SAF_SYNC,"Asynchronous transmission:
+- Byte-oriented / Block-oriented
+- Each Byte/Block (packet) is bounded by start bit and stop bit
+- low transmission rates, often up to 200 bit/s
+- simple, inexpensive
+Synchronous transmission:
+- Multiple Characters pooled to frames
+- Frames begin and end with SYN or Flag
+- higher transmission rates
+- requires additional effort / time
+- eg. Character-Oriented, Count-Oriented, Bit-Oriented Protocols",pilot,7c82ae35ed854048a9128949169fa15e,The response answers the differences correctly.
+SAF_SYNC_V009,SAF_SYNC,"Asychronous: Each charactes is wrapped by a start and stop bit. 
+Synchronous: Several characters are pooled to frames, defined by SYNs or any other type of flags.
+
+In the asychronous transmission mode multiple characters are combined in frames. The frames can be bounded by idle times, character-oriented, count-oriented, bit-oriented or by invalid characters of the physical layer. 
+The synchronous transmission is more complex, but has a higher transmission rate than the asychronous.",pilot,9d309c81477b4bff8481025038e6286c,The response answers the differences correctly.
+SAF_SYNC_V010,SAF_SYNC,"Asynchronous transmission:
+ Each character is bounded by a strat bit and a stop bit.
++ simple and not expensive
+- low transmission rates, often up to 200 bit/sec
+
+Synchronous transmission:
+ Several characters pooled to frames.
+ Frames defined by SYN or flag.
++ higher transmission rates
+- more complex",pilot,a0cd5a4831d54518b4caacf3a690785a,The response correctly answers the differences between synchronous and asynchronous transmission mode.
+SAF_SYNC_V011,SAF_SYNC,"Asynchronous transmission:
+- Each character is bounded by a start bit and a stop bit
+- Simple + inexpensive, but low transmission rates, often up to 200 bit/sec
+
+Synchronous transmission:
+- Several characters pooled to frames
+- Frames defined by SYN or flag
+- More complex, but higher transmission rates",pilot,b0cdf13ad14846a1a6ef94f123c01b58,The response answers the differences correctly.
+SAF_SYNC_V012,SAF_SYNC,"Asynchronous transmission mode: 
+- Each bit is transmitted individually
+- Each character is bounded by a start bit and stop bit
+- Simple and inexpensive
+- Low transmission rate
+
+Synchronous transmission mode:
+- Combine multiple bits to be transmitted at the same time
+- Several characters pooled to frames -> different possibilities of frames bounding
+- Complex
+- High transmission rate",pilot,b44f0154cbc7463fb0b7dc76faf5b19c,The response answer is correct as it correctly explains the differences between synchronous and asynchronous mode.
+SAF_SYNC_V013,SAF_SYNC,"Synchronous: Characters are sent in frames. Their size defined by a SYN or flag sent at the start and the end of the transmission.
+Asynchronous: Characters begin and end are marked a start and a stop bit. Each character is sent independently.",pilot,b54f189b594c4d4fb0b9523c466250be,The response answers the differences correctly.
+SAF_SYNC_V014,SAF_SYNC,"Asynchronous transmission – Characters are transmitted individually, by encapsulating them within start and stop bit. Its simple and inexpensive but has low data transmission rates
+Synchronous Transmission – Several characters are combined into a Frame and encapsulating frame within SYN or Flag symbol. Its complex but offers higher data transmission rates.",pilot,bb9c185b275d4a8fb38cf04bd710c6ec,The response answers the differences correctly.
+SAF_SYNC_V015,SAF_SYNC,"In asynchronous transmission, each character contains a start bit as prefix and a stop bit as suffix.
+In a synchronous transmission, several characters are grouped together in a frame, which are defined by a SYN or flag.",pilot,be35f019cc624cbca2bf4113ce3e4d3b,The response answers the differences correctly.
+SAF_SYNC_V016,SAF_SYNC,"The asynchronous transmission puts on each byte (character) a starter bit and a stop bit. That way is cheap and easy to implement, but the transmission rate would be low.
+
+The synchronous transmission puts several bytes (characters) to a frame. SYN or flags define these frames at the end and beginning of the frame. This mode is more complicated but has a higher transmission rate.",pilot,cc472cee228247ad9a4bbd89a24b7c17,The response correctly explains the differences between asynchronous and synchronous transmission.
+SAF_SYNC_V017,SAF_SYNC,"Asynchronous mode: each character is bound between a start bit and a stop bit. -> simple and inexpensive but low transmission rate. 
+
+Synchronous mode: several characters form into one frame, frames defined by SYN or other flags.  -> More complex but higher transmission rate.",pilot,d68d1f223c324e9ea6ca1e98b2ddf14f,The response answers the differences correctly.
+SAF_SYNC_V018,SAF_SYNC,"Async. Transmission: Each character of a message is bounded by a start and stop bit.This mode is both simple and inexpensive, but to the costs of low transmission rates which are mostly limited to 200 bit/sec.
+
+Sync.Transmission: Several Characters of the message a ""pooled"" to frames and those frames are defined by SYN or flag. This apporach is more complex but enables higher transmission rate.",pilot,d76164668ffa46bf87857c79650b6d71,The response answers the differences correctly.
+SAF_SYNC_V019,SAF_SYNC,"The asynchronous transmission mode needs a start and a stop character before and after each byte. Therefore it has low transmission rates. But it is very simple and inexpensive.
+The synchronous transmission mode has higher transmission rates. It works by pooling several characters to frames defined by SYN or flag. Therefore it is more complex than the asynchronous transmission mode.",pilot,dc46d268504d456faca768ba30c821bf,The response answers the differences correctly.
+SAF_SYNC_V020,SAF_SYNC,"In asynchronous mode each byte is bounded by start- and stop Bit and sent individually at any time. This is inefficient and has low transmission rate.
+Synchronous has higher transmission rate, but complex with regards to “how to detect beginning and ending of fields within a frame?”",pilot,e73c345e659f4f029cd414b28e40ec34,The response is correct as it answers the differences between synchronous and asynchronous transmission mode correctly.
+SAF_SYNC_V021,SAF_SYNC,"Asynchronous: 
+•	Each character is framed by a start bit and an end bit
+•	Slow transmission
+•	No gaps between data
+
+Synchronous:  
+•	Characters are pooled in frames, which are defined by flags or SYNs (synchronous idle characters)
+•	Fast transmission
+•	Gaps between data",pilot,f1faf83f6b364136b818f271a6e00596,The response answers the differences correctly.
+SAF_DLL_T001,SAF_DLL,"The 3 service classes are: Unconfirmed connectionless service (1), Confirmed connectionless service (2) and Connection-oriented service (3). The main difference between this services is the handling of the loss. While in (1) data packets are only send to the receiver, packets can get lost and loss is not being corrected. In service (2) data packets has to be acknowledged by the receiver and packets will be resend after a certain timeout. This leads to inefficient communication and can be done on a higher level. Service (3) consists of 3 phases (Connection establishment, data transfer, Disconnect). Just like in service (2) we have no loss, but Flow Control is possible in contrast to services (2) and (1).",test,046864f20b2346409a823479c57ed4a3,The response answers the services' names and differences correctly.
+SAF_DLL_T002,SAF_DLL,"Data Link Layer service classes:
+- Unconfirmed Connectionless Service
+- Confirmed Connectionless Service 
+- Connection-oriented Service
+
+In Unconfirmed Connectionless and Confirmed Connectionless services there is no established connection between the sender and the receiver, while in Connection-oriented service, the data is only transferred when a connection is established between the sender and the receiver. In Connection-oriented there is also a disconnect phase.
+
+In Unconfirmed Connectionless service when the sender sends a frame, it hopes the frame reachs the receiver without a problem. The sender does not receive any confirmation, from the receiver, that the frame was received. This is not what happens in Confirmed Connectionless and Connection-oriented services. When a message is received on the receiver side, the receiver sends a confirmation message to the sender. So, in this two services the sender has the confirmation that the message reached the receiver.",test,0bce05fc060743c395a867ff626f64ec,The response answers the services' names and differences correctly.
+SAF_DLL_T003,SAF_DLL,"Unconfirmed Connectionless Service: You send data without a steady connection and without any feedback if the data arrived and if it arrived correctly.
+
+Confirmed Connectionless Service: You do not use a steady connection between sender and receiver, but you get a feedback whenever data is received.
+
+Connection-Oriented Service: You use a steady connection between sender and receiver. Each transmission process consists of 3 phases, at first you establish a connection then you send the data and at the end you disconnect.",test,0eb61c5ec96a42668d9d7915180a9e71,The response answers the services' names and differences correctly.
+SAF_DLL_T004,SAF_DLL,"Here are the 3 service classes the data link layer offers: 
+
+1) Unconfirmed connectionLess Service: there is no ""connect and disconnect"" between sender and receiver. There is no flow control or error management
+
+2) Confirmed connectionLess Service: There is no ""connect and disconnect"", there is no flow control but there is an acknowledgment for each frame sent. 
+
+3) Connection oriented Service: there is a flow control and a ""connect and disconnect"" protocol between the sender and the receiver",test,238c575e0be14037bc76806354de8b05,The response answers the services' names and differences correctly.
+SAF_DLL_T005,SAF_DLL,"1. Unconfirmed Connectionless Service 
+2. Confirmed Connectionless Service
+3. Connection-Oriented Service 
+
+In the 1. service, transmission of the data happens isolated and independent. A loss of data is possible. 
+With service 2. if the receiver do not answer, the data is retransmit after a certain time, so there are no loss. In both is no connection or disconnection. 
+In the 3. service, first a connection is initialized, data is transfered and then the connection is abort.",test,29a6962e5edb4f7eb84919f23f7371ad,The response answers the services' names and differences correctly.
+SAF_DLL_T006,SAF_DLL,"Unconfirmed Connectionless Service: no flow control
+Confirmed Connectionless Service: no flow control, duplication and sequencing error may happen
+Connection-Oriented Service: flow control, no loss, no duplication, no sequencing error",test,2bcec1f99c4041e8aeb9ea7e11dc4ce4,The response answers the services' names and differences correctly.
+SAF_DLL_T007,SAF_DLL,"1.Unconfirmed Conn.less Service
+2.Confirmed Conn.less Service
+3.Connection-Oriented Service
+
+Differences: 
+1.Unconfirmed Conn.less Service and Confirmed Conn.less Service have no flow control. But Connection-Oriented Service has no flow control.
+2.confirmed Conn.less Service and Confirmed Conn.less Service have no connect or disconnect. But Connection-Oriented Service has connect or disconnect.
+3. Connection-Oriented Service has no loss, no duplication, no sequencing error. But Confirmed Conn.less Service has loss, duplication,sequencing. And Unconfirmed Conn.less Service has more errors than Confirmed Conn.less Service.",test,42debf189efc4d1abcd4235ef78cd2df,The response answers the services' names and differences correctly.
+SAF_DLL_T008,SAF_DLL,"Unconfirmed connectionless service (UCS), confirmed connectionless service (CCS) and connection-oriented service (COS). UCS doesn’t have correction mechanism and flow control. The data probably gets lost. CCS reply ACK when receiving the correct data and it has timeout-and-retransmit mechanism. It is more reliable than CCS but probably incurs some sequence errors. COS has connection and disconnection mechanism. It can achieve flow control, no loss and no sequencing error.",test,4cfc2482e48041adadfc1b99f764bf65,The response answers the services' names and differences correctly.
+SAF_DLL_T009,SAF_DLL,"The three classes: 
+Unconfirmed Connectionless Service
+Confirmed Connectionless Service
+Connection Oriented Service
+
+In Unconfirmed Connectionless no confirmation of data transmitted is received, loss of data units is possible and also no flow control is present.
+In Confirmed Connectionless  acknowledgement of data transmitted is received, no loss of data units because of retransfer and timeout mechanisms and also no flow control is present.
+In Connection Oriented data is transferred over an error free channel, no loss of data units possible and flow control is also present,",test,5704b93caccb4a49bdb63196fcca5779,The response answers the services' names and differences correctly.
+SAF_DLL_T010,SAF_DLL,"""Uncomfirmed Conn.less Service"", ""Confirmed Conn.less Service"", ""Connection-Oriented Service""
+""Uncomfirmed Conn.less Service"":
+Data is just send, without any feedback, that it is received. Both partys assume that no bit is missing. There is no Flow Control or a connect and disconnect feature. This way of sending data is only used on L1 communication channels with very low error rate.
+
+""Confirmed Conn.less Service"":
+Everytime data is send, the receiver sends an ACK flag, that he received it. If he doesnt send an ACK flag in a given time frame, the transmission times out and the data is retransmitted. There also is no Flow control or a connect and disconnect feature, duplicates and sequence errors can happen because of a retransmission. This service is used on L1 communication channels with high error rate.
+
+""Connection-Oriented Service"":
+3-phased communication: 1. Connection(initializing the counters/variables of the sender and receiver) 2. Data Transfer 3. Disconnect. The data sent in setp two of this class is bidirectional, sequentiell and acknowledged, which means no data loss, no duplicates and no errors.",test,73417bd9dd0f4cf4b207dc567d8df6e8,The response answers the services' names and differences correctly.
+SAF_DLL_T011,SAF_DLL,"Unconfirmed Connectionless Service:
+-sends data without establish a connection
+-if data units get lost, didn’t get any feedback
+-no flow control and no disconnect 
+
+Confirmed Connectionless Service:
+-if data units get received, the receiver send an acknowledgement, so no loss
+-if sender does not receive an ack within a certain time, then retransmit, it can lead to duplicates and sequence errors
+-no flow controls
+-didn’t establish a connection or disconnection with the receiver
+
+Connection-Oriented Service:
+-3-phased Communication: 1. Establish a connection, 2. Transfer data, 3. Disconnect
+-Flow control, no loss of data units, no duplication and no sequencing error",test,91c288d2581a421da24379d13faf11c7,The response answers the services' names and differences correctly.
+SAF_DLL_T012,SAF_DLL,"- Unconfirmed Connectionless Service 
+The Unconfirmed Connectionless Service sends data to the receiver, without announcing it (building up a connection) first in data frames without any flow control. Because of the missing connection and flow control, it is possible that complete data frames can get lost.  
+- Confirmed Connectionless Service 
+Wheras the confirmed connectionless service sends the data frames and waits for an acknowledgement of the corresponding recipient. If the recipient confirms the data frame, the next data frame is being sent. If the recipient doesn’t answer for a long time, the data frame is being resent. If for some reason, the ackknowledgement gets lost, the recipient will eventually get a data frame twice, and will not be able to detect the duplication. The correction has to be made on a higher level. It is much slower than the unconfirmed, because of waittime for timeouts and ackknowledgement messages. 
+- Connection Oriented Service 
+In the connection oriented service, the overhead is a lot higher, but the advantages are a detailed flow control, in which the recipient can detect duplicates, ask for a certain frame and can align the frames in the right order. And if the recipient reads slower than the sender transmit, it is possible to make a transmission. The participants first exchange a handshake and afterwards are transferring data. Afterwards the connection is disconnected.",test,afcab339bcdd4bedb487a639de9cb198,The response answers the services' names and differences correctly.
+SAF_DLL_T013,SAF_DLL,"The three classes:
+
+Unconfirmed Connectionless Service
+-Transmits isolated independent units
+-Data units may be lost
+-No flow control
+-No connecting or disconnecting
+
+Confirmed Connectionless Service
+-Transmits independent data units 
+-Receiver acknowledges the reception of each single frame
+-Timeout + Retransmission if sender does not receive acknowledgment within a certain amount of time 
+-Thereby no loss of data, but duplicates and sequence errors may occur
+-No flow control
+-No connecting or disconnecting  
+
+Connection-Orientated Service 
+-Transmits data over error free channel (through acknowledgments)
+-No loss of data, no duplications, no sequencing errors
+-Flow control
+-3-phased communication: connect, data transfer, disconnect",test,cf3ffd67be0c42f4ba6586833fd5a5d4,The response answers the services' names and differences correctly.
+SAF_DLL_T014,SAF_DLL,"1.Unconfirmed Conn.less Service 
+ Features
+   No flow control
+   No connect or disconnect 
+ 2.Confirmed Conn.less Service
+ Features
+   No flow control
+   No connect or disconnect
+   Duplicates and sequence errors may happen due to “retransmit”
+ 3.Connection-Oriented Service
+Connection over error free channel
+  No loss, no duplication, no sequencing error
+   Flow control
+3-phased communication
+They are different in features.",test,e93cffe717804606b639e53e398e0c55,The response answers the services' names and differences correctly.
+SAF_DLL_T015,SAF_DLL,"(1) “Unconfirmed Connectionless Service”: Transmission of isolated, independent units (loss of data units possible)
+is a good choice on communication medium with very low error rate
+
+(2) “Confirmed Connectionless Service”: Receipt of data units get acknowledged by receiver, therefore no loss, but duplicates and sequence errors may happen due to retransmit if no acknowledgement within a certain time.
+is a good choice on communication medium with high error rate e.g. wireless communication
+
+(3) ""Connection-Oriented Service”: This service has flow control. Consists of 3-phases of communication, with Connection Initialization, Data Transfer and Disconnection. 
+is a good choice if bi-directional communication is needed
+and is a good choice for an error free communication medium (therefore no loss, no duplication, no sequencing error)",test,f326adeda6fd4a3faa2ae4bd3dd82b88,The response answers the services' names and differences correctly.
+SAF_DLL_V001,SAF_DLL,"- Unconfirmed Connectionless Service
+- Confirmed Connectionless Service
+- Connection-Oriented Service
+
+The first class offers no flow control or feedback if a frame arrived to its destination. The second class offers no flow control, but the sender resends the frame, if an error occured, which is noticable due to implicit acknowledments. The third class resends the frames, too, but detects additionally duplicates and offers flow control due to ""states"" of sender and receiver and 3-phased communication.",pilot,0674617659e94f2e9ef5acae1248a870,The response answers the services' names and differences correctly.
+SAF_DLL_V002,SAF_DLL,"-unconfirmed connection less service
+-confirmed connection less service
+-connection-oriented service 
+
+For unconfirmed data is send by data request (Data.req) and receiver gets the data stating an indication.
+The data is send immediately on the contrary to the connection-oriented service. In unconfirmed conn. less service, you have to expect that 
+the sent packet arrives but you have no feedback Acknowledge-signal (ACK) whether the packet arrived. 
+
+For confirmed conn. less service, when data is send via data request and arrived (data indication), the receiver answers to the sender by an 
+acknowledgement (ACK) , so there is a feedback signal stating that data arrived successfully. 
+
+So far (for unconfirmed and confirmed connection less service), data is send and acknowledged (for confirmed conn. less) immediately. 
+There is no difference for connection, data or disconnection phases. By using connection-oriented service, you have requests and indications for connection
+establishment, data transfer and the disconnection. Instead of just sending data, you send a request first for establishing a connection, then
+there is an indication (=able to receive) on the receiver and the receiver sends a response back, after that the sender has a confirmation.
+There is the same principle for the phases 'data transfer' and 'disconnection'. 
+With connection-oriented service the system is able to send more than 1 bit bidirectional
+between sender and receiver and vice versa.",pilot,5735037e9a4e476ab99117dade0cb730,The response answers the services' names and differences correctly.
+SAF_DLL_V003,SAF_DLL,"The 3 service classes of the Data Link Layer are the unconfirmed connectionless service, the confirmed connectionless service and the connection-oriented service.
+The connection-oriented service has a 3-phased communication. First the entities have to connect, then they can transmit data and after this they disconnect. There is a data flow in both directions. The sender gets an acknowledgement if the receiver receives the data, so there is no loss of data. This service offers also flow control and prevents duplication or sequencing error. 
+The other services have no connect or disconnect and no flow control. 
+The confirmed connectionless service can only ensure that there will be no loss of data because the receiver sends an acknowledgement. 
+The unconfirmed connectionless service cannot because only the sender can send data and the receiver sends nothing back.",pilot,57a03a5534194184804ca573c0628408,The response answers the services' names and differences correctly.
+SAF_DLL_V004,SAF_DLL,"Unconfirmed Connectionless Service:
+-This service has no flow control and the data unit does not get acknowledged from receiver. So there are no Timeouts.
+Confirmed Connectionless Service:
+-This service has no flow control and the data unit does get acknowledged from receiver. So there could be Timeouts and retransmits.
+
+Connection-Oriented Service:
+-This service has flow control. Is implemented in a 3-phased communication.
+1. Connection
+2. Data Transfer
+3. Disconnection",pilot,5f294cda98324fda84e0ca390670124d,The response answers the services' names and differences correctly.
+SAF_DLL_V005,SAF_DLL,"Unconfirmed Connectionless Service:
+In this service, the data that is sent by the sender is expected to arrive at the receiver, however, there is no feedback from the receiver's side. Due to a lack of acknowledgement from the receiver side, there exists a possibility of data units getting lost. Furthermore, in this service there is no flow control taking place and neither is there a possibility of connect/disconnect. This form of service is best suited for L1 communication channels with a very low error rate.
+
+Confirmed Connectionless Service:
+This service is a form of bi-directional communication, where upon sending information the receiver responds with an acknowledgment of whether the information has been received or not. It is particularly used in applications where a high error rate is expected, such as for moving devices. Similar to the unconfirmed connectionless service, no flow control or a connect/disconnect phase takes place. Due to the additional acknowledgement here, no data loss is possible, however, duplication and sequencing errors are still possible
+
+Connection-Oriented Service:
+As opposed to the connectionless services, the connection-oriented service operates with flow control, achieved by a 3-phase bi-directional communication (connect, transfer, disconnect). This prevents data loss, duplication of data or sequencing errors. This form of service requires some sort of connection management as both the sides agree to perform the communication.",pilot,73e94f5e24c2455da27100b560a8f19c,The response answers the services' names and differences correctly.
+SAF_DLL_V006,SAF_DLL,"1.	Unconfirmed Connection Less Service: Has no flow control, connect or disconnect; Sender’s Frames are transmitted as it is without taking in account possible loss during transmission with no acknowledgement from Receiver. Suitable with communication channels with very low error rate.
+2.	 Confirmed Connection Less Service: Sender’s transmitted frames get acknowledged by receiver, may result in duplicate and sequence errors; Still no flow control, connect or disconnect. Better reliability than Unconfirmed Connection Less Service.
+3.	Confirmed Connection Oriented Service: Starts with connect, then data transfer and end with disconnect. Uses flow control to synchronize frame sequence and prevent loss due to speed mismatch. Reliable compared to 2 types of connection less services.",pilot,811b7a820069414bb4157178acbfb298,The response answers the services' names and differences correctly.
+SAF_DLL_V007,SAF_DLL,"The Data Link Layer offers these :
+
+-unconfirmed conn.less service ->  no flow control , no connect or disconnect , sender will never get an acknowledgement from receiver (Radio/Broadcast).
+
+-confirmed conn.less service -> no flow control, no connect or disconnect , Duplicates and sequence errors may happen due to “retransmit”
+
+-the connection oriented service -> No loss, no duplication, no sequencing error ,Flow control  (3Phased communication : connection, Data transfer and disconnection)",pilot,818ab13b29984849a1240284a5f4787b,The response answers the services' names and differences correctly.
+SAF_DLL_V008,SAF_DLL,"unconfirmed connectionless service:
+  -  units are transmitted isolated and independently. Errors are detected by upper layers.
+
+confirmed connectionless service:
+  -  the receiver acknowledges received data with a receipt for data units
+  -  in comparison to unconfirmed c. s. data units can be retransmitted if they are missing/not acknowledged. Retransmitted packages may lead to duplications and sequence errors
+
+connection-oriented service
+  -  no package loss, no duplication, no error sequences due to flow control
+  -  the sender sends connection request, to make sure the receiver is ready to get data
+ -  Data is transferred and the connection is closed after that",pilot,adab1a2e9d244302af340fd101cfe9b3,The response answers the services' names and differences correctly.
+SAF_DLL_V009,SAF_DLL,"Unconfirmed Connectionless Service (=Frames are transmitted as independent units --> Data can be lost)
+Confirmed Connectionless Service (=Frames still transmitted independently but with acknowledgement)
+Connection oriented Service (=3 Phases: Connection --> Data Transfer --> Disconnection)",pilot,c8eb34c321b1449cbb4190c417bef0ba,The response answers the services' names and differences correctly.  But there is no common theme of the differences between them. The last point should also discuss the presence or absence of acknowledgment.
+SAF_DLL_V010,SAF_DLL,"Unconfirmed Connectionless Service: Transmission of isolated, independent units which are called frames. Data loss is possible. L2 doesn’t correct this and only transmit correct frames.
+
+Confirmed Connectionless Service: No data loss, because each frame is acknowledged. Timeout and retransmit is possible when a sender doesn’t receive an acknowledgement within a certain time frame.
+
+Connection-Oriented Service: Connection over error free channel. Theres no loss, duplication or sequencing errors. It also features Flow Control.",pilot,ea1fd487c58d46a3b5c771c8ce16f72f,The response answers the services' names and differences correctly.
+SAF_DLL_V011,SAF_DLL,"Unconfirmed connection-less service, confirmed connection-less service, and connection-oriented service.
+An unconfirmed connection-less service offers no feedback, if the sent frame was received. A confirmed connection-less service offers this feedback with a simple acknowledgment per frame, therefore no loss occurs. But the acknowledgment can also lead to duplicates because the sender may have not received the ACK yet and retransmits the frame. In contrast to other two, a connection-oriented service provides a connection without duplication or sequencing errors and provides flow control, because the connection is setup (exchange of parameters, i.e. sequence number) and teared down afterwards.",pilot,f27f52883c194ad59e4166166aa6da5d,The response answers the services' names and differences correctly.
+SAF_CSMA_T001,SAF_CSMA,The diameter gets smaller by the same factor.,test,0b6061ac8c204f589dd1d33c237d1aae,The response is correct as it answers the change in the diameter scale accurately.
+SAF_CSMA_T002,SAF_CSMA,the collision domain diameter have to shrink (divided by 10),test,497a3972819e4e7095afd2e7610ca1d0,The response is correct as it answers the change in the diameter scale accurately.
+SAF_CSMA_T003,SAF_CSMA,The collision domain diameter will decrease by a factor of 10.,test,4fd205cce98b41ff9fb2145b86e96211,The response is correct as it answers the change in the diameter scale accurately.
+SAF_CSMA_T004,SAF_CSMA,It is divided by the same factor of 10.,test,52814adc8a95436bbb0e548f4ecdb327,The response is correct as it answers the change in the diameter scale accurately.
+SAF_CSMA_T005,SAF_CSMA,"The collision domain diameter = 412m, i.e., ca. 300m instead of ca. 3000m",test,551f951cef7d43baaab337ad013ad07a,The response is correct as it answers the change in the diameter scale accurately.
+SAF_CSMA_T006,SAF_CSMA,The sender must still be able to detect collisions during simultaneous transmission and must also not exceed the maximum network extension. The collision domain diameter for 100 Mb/s is 10 times smaller than for 10 Mb/s if you use CSMA/CD => 3000m to 300m.,test,63475bedb7fa487ba24e8b839235cb7a,The response is correct as it answers the change in the diameter scale accurately.
+SAF_CSMA_T007,SAF_CSMA,"For doing so you have to shrink the maximal distance between two locations.
+In the given example the speed of the network should be increased by factor 10 from 10 Mb/s to 100 Mb/s. To achieve this without changing everything else, you have to reduce the collision domain diameter by factor 10.",test,6f96bc68d1e74bccb0b93045762ffc24,The response is correct as it answers the change in the diameter scale accurately.
+SAF_CSMA_T008,SAF_CSMA,"The collision domain diameter will shrink, exactly by the same Factor Value we increase the speed of Transmission.
+
+i.e .. when we have with Transmission rate of 10 Mbps and a Distance of 3000m, then we gonna have by Transmission rate of 100Mbps just a distance of 300m between the locations the speed ist possible.",test,7793dec596f5428a916e39f47d81de37,The response is correct as it answers the change in the diameter scale accurately.
+SAF_CSMA_T009,SAF_CSMA,The maximum distance has to shrink by the factor of 10 and the LAN also has to get smaller which is not possible or at some point not feasible.,test,89e69798c61d4032b10920b2dfddbb66,The response is correct as it answers the change in the diameter scale accurately.
+SAF_CSMA_T010,SAF_CSMA,"The collision domain diameter will shrink with the same factor,so when the original speed is 10Mb/s and the collision domain diameter is 3km, an increase of the speed by the factor 10 to 100Mb/s will decrease the collision domain diameter to 300m.",test,988770907a0e4a7e8d1f07c3fb667189,The response is correct as it answers the change in the diameter scale accurately.
+SAF_CSMA_T011,SAF_CSMA,"With a speed increased by a factor of 10, the collision domain diameter does decrease by a factor of 1/10 when using the same minimum packet size (e.g. 64 byte with Ethernet). This is because the send does finish much quicker (10 times as quick) while the time the electricity change needs to travel from sender to receiver and backwards remains the same.",test,9bfa0279d9904a8194c52908737f92d4,The response is correct as it answers the change in the diameter scale accurately.
+SAF_CSMA_T012,SAF_CSMA,The collision domain diameter decreases by the factor 10.,test,bfd96b84c1af4e5ea7d6d11d715d4b3c,The response is correct as it answers the change in the diameter scale accurately.
+SAF_CSMA_T013,SAF_CSMA,The collision domain diameter decreases by a factor of 10. That means the maximum distance between two locations on the network has to be 10 times smaller.,test,d90988c14c5044588ba509f2752ca738,The response is correct as it answers the change in the diameter scale accurately.
+SAF_CSMA_T014,SAF_CSMA,The collision domain diameter will be reduced by the factor of 10.,test,d9e9eafa5048492a9eeeb3d45c6650a9,The response is correct as it answers the change in the diameter scale accurately.
+SAF_CSMA_T015,SAF_CSMA,"The collision domain diameter is reduced by the same factor, e.g. from 3km to 300m.",test,dd933fb12dca46a986b51b1b23109c0c,The response is correct as it answers the change in the diameter scale accurately.
+SAF_CSMA_T016,SAF_CSMA,this “ collision domain diameter” will decrease by a factor of 10,test,ddf912abac844e688f4c8626170572ba,The response is correct as it answers the change in the diameter scale accurately.
+SAF_CSMA_V001,SAF_CSMA,"The collision domain diameter is decreased by the same factor, the network speed is increased by, i.e. if the collision domain diameter in a 10Mb/s network was 100m, the collision domain diameter in the same network with 100Mb/s would be 10m. 
+
+This is because the sender still must be able to recognize a collision during simultaneous sending.",pilot,05b3625fdc8c40a3a0e19806c2339216,The response is correct as it answers the change in the diameter scale accurately.
+SAF_CSMA_V002,SAF_CSMA,The collision Domain Diameter will be increased to 10times compared with the distance in 10Mb/s.,pilot,10c3e3fc9b6842aaa2388773055e88ce,The diameter is decreased by a factor of 10 instead of increased.
+SAF_CSMA_V003,SAF_CSMA,"The collision domain diameter is shortened by factor 10. Assuming the collision domain diameter is 3000m at 10Mb/s. If the speed is increased to 100Mb/s, the collision domain diameter will be 300m.",pilot,32d2706a54e9419baef58a125245c9ff,The response is correct as it answers the change in the diameter scale accurately.
+SAF_CSMA_V004,SAF_CSMA,"When the speed of a network is increased by a factor of ten, while letting everything else remain the same, the collision domain diameter reduces by the same factor. So, the diameter will decrease by a factor of 10 (that is, divide by 10)",pilot,389546012a3a4983b34fc2e9f599d451,The response is correct as it answers the change in the diameter scale accurately.
+SAF_CSMA_V005,SAF_CSMA,The diameter decreases by factor 10. The increased  Bit rate leads to a reduced bit duration but the transfer speed remains the same. The result of that is a shorter maximal distance between two stations which is allowed so that collisions can still be detected.,pilot,38b98440b2e847c9958f6ac42146eacf,The response is correct as it answers the change in the diameter scale accurately.
+SAF_CSMA_V006,SAF_CSMA,"The collision domain diameter, the maximal distance where collisions can be recognized decreases tenfold. If the collision domain diameter was 3000 meters before, it now is 300 meters.",pilot,39e0833365ec46119b62807232ca5f22,The response is correct as it answers the change in the diameter scale accurately.
+SAF_CSMA_V007,SAF_CSMA,"If the speed got ten times faster, we have to decrease the maximum collision domain diameter by 90%, that is the distance between the nodes, so that a collision can still be detected while sending. So there is basically a tradeoff between distance and efficiency.",pilot,50bd285e3ca54b17af8e0b28812d0f59,The response is correct as it answers the change in the diameter scale accurately.
+SAF_CSMA_V008,SAF_CSMA,"The collision domain diameter would be 10 times smaller which would have many collisions as a consequence, making it inadvisable to choose these dimensions.",pilot,550fada62f364553943bba67078eb54c,The response is correct as it answers the change in the diameter scale accurately.
+SAF_CSMA_V009,SAF_CSMA,"Collision Domain Diameter means the maximum length of line between two nodes in the network which you can use in respect to the length of used frames, the sending speed and the fact, that you want to be able to detect any kind of data collision during transmission. If we now increase the speed of transmission with all other factors remaining the same - especially the frame length -, the time of transmission for each node decreases. So there is less time of data frames travelling on the line during which the stations could detect a collision. To keep the function of collision detection, the maximum length of line - a.k.a. the Collision Domain Diameter - in the network has to decrease to the same factor. So an increase of transmission speed from 10 Mbit/s to 100 Mbit/s - factor 10 - causes a reduction of Collision Domain Diameter to the factor of 10, too. For example, in Ethernet 802.3 this means a reduction from 3000m to 300m.",pilot,5a142b9a85d54691836d731cd644409d,The response is correct as it answers the change in the diameter scale accurately.
+SAF_CSMA_V010,SAF_CSMA,"The size of ""collision domain diameter"" is dreduced by about 10 times, e.g. from ca.3000m to ca.300m.",pilot,5d8a457fea9c4c349f93286a7170e569,The response is correct as it answers the change in the diameter scale accurately.
+SAF_CSMA_V011,SAF_CSMA,"With CSMA/CD, if the speed of the network increases by a factor of 10, the collision domain diameter shrinks. The distance decreases by a factor of 10.",pilot,6176b653698d4948993db9f32ba43d07,The response is correct as it answers the change in the diameter scale accurately.
+SAF_CSMA_V012,SAF_CSMA,"Collision domain diameter is the distance between the two furthest nodes. If I use CSMA/CD, then the distance limitation for collision domain diameter will be one tenth as large as before when I increase the speed of a network by a factor of 10.",pilot,65d61ac26fa64080977237ce85808b9f,The response is correct as it answers the change in the diameter scale accurately.
+SAF_CSMA_V013,SAF_CSMA,"The “collision domain diameter” is the distance two station can have and still detect a collision while sending. It depends on the minimum frame size, the speed of the signal through the medium and the bit rate of the network. If the bit rate increases while nothing else changes in CSMA/CD a frame is transmitted in less time than before. In this time the signal travels a shorter distance thus decreasing the “collision domain diameter”. If the speed of the network increases by a factor of 10 the “collision domain diameter” shrinks by a factor of 1/10",pilot,7014f6b6797442549d5f70e2a16c28b5,The response is correct as it answers the change in the diameter scale accurately.
+SAF_CSMA_V014,SAF_CSMA,The collision domain diameter (CDD) is reduced to 1/10th of the original. In the given example CDD is reduced from approximately 3000m to about 300m.,pilot,8806b3fc084b468ea7b4be4a605dbc3f,The response is correct as it answers the change in the diameter scale accurately.
+SAF_CSMA_V015,SAF_CSMA,"The collision domain diameter reduces by the same factor for example for a network with 10Mb/s has a collision domain diameter of 3000m and when we increase the speed of the network by 10 to 100Mb/s, the collision domain diameter will become 300m.",pilot,8b4ae5ccaa28417ba297250d73b6c86a,The response is correct as it answers the change in the diameter scale accurately.
+SAF_CSMA_V016,SAF_CSMA,the collision domain diameter will be increased.,pilot,a0bdb6a4d8564ce887ec20cdf3bfe923,"The response is incorrect as it states that the diameter increases. Instead, for collisions to be detected, the diameter decreases by a factor of 10."
+SAF_CSMA_V017,SAF_CSMA,"The collision domain diameter decreases by the factor of 10. That means:
+new collision diameter = old colision diameter / 10",pilot,b0aa489b5d74455f9738e62973a8b853,The response is correct as it answers the change in the diameter scale accurately.
+SAF_CSMA_V018,SAF_CSMA,"Then the maximum segment length becomes 2000m, which is too long for collision recognition.",pilot,bbc72decacd3415f8466131d1e5fff30,The collision diameter decreases by a factor of 10 rather than becoming 2000m for a collision to be still detected.
+SAF_CSMA_V019,SAF_CSMA,The possible distance is reduced by factor 10.,pilot,e3271b5f2c5040b9ad42c038aa8b0d6c,The response is correct as it answers the change in the diameter scale accurately.
+SAF_CSMA_V020,SAF_CSMA,"The maximal distance between stations reduces by a factor of 10.
+
+Ex. : 64 byte sent with 10 Mb/s: Max Distance of 5.12 km
+        64 byte send with 100 Mb/s: Max Distance of 112 km",pilot,fd3ad1d878a945238165b56f9be3cb21,The response is correct as it answers the change in the diameter scale accurately.

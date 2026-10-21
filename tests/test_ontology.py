@@ -39,4 +39,16 @@ def test_three_rules_present(onto):
 
 
 def test_status_individuals(onto):
-    assert {i.name for i in onto.Status.instances()} == {"Cocok", "Parsial", "Hilang", "Kontradiksi"}
+    names = {"Cocok", "Parsial", "Hilang", "Kontradiksi"}
+    assert {i.name for i in onto.Status.instances()} == names
+    assert any({e.name for e in d.entities} == names for d in onto.different_individuals())
+
+
+def test_triples_disjoint(onto):
+    assert any(set(d.entities) == {onto.ReferenceTriple, onto.StudentTriple} for d in onto.disjoint_classes())
+
+
+def test_indonesian_labels(onto):
+    for name in CLASSES:
+        assert [l.lang for l in onto[name].label] == ["id"], name
+    assert [str(l) for l in onto.StudentTriple.label] == ["Triple Jawaban"]

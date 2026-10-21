@@ -5,7 +5,10 @@ Auditable short-answer scoring for Indonesian answers. The score is a published 
 ## Setup
 
 ```bash
-uv venv --python 3.12 .venv && uv pip install --python .venv/bin/python -r requirements.txt -e .
+# The project folder is synced by iCloud, which hides files inside a venv and breaks imports,
+# so the venv lives outside ~/Documents and .venv is a symlink to it.
+uv venv --python 3.12 ~/.venvs/semantic_web_final && ln -sfn ~/.venvs/semantic_web_final .venv
+uv pip install --python .venv/bin/python -r requirements.txt -e .
 cp .env.example .env          # add ANTHROPIC_API_KEY for LLM extraction, feedback and baseline B2
 ```
 
@@ -19,6 +22,12 @@ python -m autograde gold --question Q1             # validate gold.yaml -> gold.
 python -m autograde run --question Q1 --mode gold --split all --synthetic --template-feedback   # offline demo
 python -m autograde evaluate --run <run_id>
 streamlit run app/streamlit_app.py
+```
+
+SAF subset (real English answers, AI-drafted gold triples; see `data/external/saf/README.md`):
+
+```bash
+python -m autograde run --question all --mode gold --split all --saf --annotated-only --template-feedback
 ```
 
 Full command list: plan Section 8. Real data goes in `data/answers/answers.csv`, `data/human/scores.csv` (per criterion), `data/annotations/` (gold mode) and `data/human/evidence_audit.csv` / `overrides.yaml`. `data/synthetic/` is demo data only.

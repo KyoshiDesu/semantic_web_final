@@ -12,11 +12,20 @@ import owlready2 as o
 HERE = Path(__file__).resolve().parent
 IRI = "http://example.org/autograde#"
 
-# Q1 relations (validate with the lecturer). Every predicate id in config/predicates.yaml
-# except `other` must exist here.
-RELATIONS = ["menggunakan", "menyerap", "mengonsumsi", "menghasilkan"]
-EQUIVALENT = [("menyerap", "menggunakan")]
-INCOMPATIBLE = [("menghasilkan", "mengonsumsi")]
+# Every predicate id in config/predicates.yaml except `other` must exist here.
+# Q1 (Indonesian; validate with the lecturer) and the SAF subset (English; AI-drafted).
+RELATIONS = ["menggunakan", "menyerap", "mengonsumsi", "menghasilkan",
+             "is_a", "uses", "utilizes", "requires", "has", "lacks", "assigns", "provides", "replaces",
+             "transmits", "allows", "enables", "prevents", "decreases", "increases"]
+EQUIVALENT = [("menyerap", "menggunakan"), ("utilizes", "uses"), ("enables", "allows"), ("provides", "assigns")]
+INCOMPATIBLE = [("menghasilkan", "mengonsumsi"), ("has", "lacks"), ("allows", "prevents"),
+                ("decreases", "increases")]
+
+LABELS = {  # Indonesian rdfs:label per class (Protégé can render labels instead of IRIs)
+    "Concept": "Konsep", "Relation": "Relasi", "Triple": "Triple", "ReferenceTriple": "Triple Acuan",
+    "StudentTriple": "Triple Jawaban", "Criterion": "Kriteria", "Answer": "Jawaban", "Sentence": "Kalimat",
+    "LedgerEntry": "Entri Ledger", "Status": "Status",
+}
 
 RULES = [
     # Rule 1: incompatible predicate, not negated
@@ -77,8 +86,10 @@ def build(world=None):
             domain = [onto.StudentTriple]; range = [onto.Sentence]
 
     with onto:
-        for name in ("Cocok", "Parsial", "Hilang", "Kontradiksi"):
-            Status(name)
+        for cls, label in LABELS.items():
+            onto[cls].label = [o.locstr(label, lang="id")]
+        o.AllDisjoint([ReferenceTriple, StudentTriple])
+        o.AllDifferent([Status(name) for name in ("Cocok", "Parsial", "Hilang", "Kontradiksi")])
         rel = {name: Relation(name) for name in RELATIONS}
         for a, b in EQUIVALENT:
             rel[a].equivalentPredicate.append(rel[b])

@@ -12,4 +12,5 @@ where = ["src"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+pythonpath = ["src", "tests"]
 markers = ["pellet: needs Java + Pellet", "embeddings: needs the sentence-transformers model"]

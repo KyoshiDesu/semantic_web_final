@@ -1,0 +1,18 @@
+@prefix ag: <http://example.org/autograde#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+ag:SAF_CSMA_R1 a ag:ReferenceTriple ;
+    ag:criterion ag:K1_Effect ;
+    ag:hasObject ag:FactorOfTen ;
+    ag:hasPredicate ag:decreases ;
+    ag:hasSubject ag:CollisionDomainDiameter ;
+    ag:weight 2.0 .
+
+ag:CollisionDomainDiameter a ag:Concept .
+
+ag:FactorOfTen a ag:Concept .
+
+ag:K1_Effect a ag:Criterion ;
+    rdfs:comment "States that the diameter decreases by the same factor of 10"@id .
+
