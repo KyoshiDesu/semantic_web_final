@@ -10,4 +10,4 @@ Date: ________
 ## Konsep dan alias
 
 - **Piggybacking**: piggybacking, piggy backing, piggybacking extension, the piggybacking extension, piggyback extension
-- **DuplexConnection**: duplex, duplex mode, duplex operation, duplex connection, full-duplex, full duplex, full-duplex operation, full duplex operation, full-duplex connection, semi-duplex, half-duplex, half duplex, full-duplex or semi-duplex connection, two-way communication, two-way-communication, bidirectional communication, duplex communication, (semi)duplex data transfer
+- **DuplexConnection**: duplex, duplex mode, duplex operation, duplex connection, full-duplex, full duplex, full-duplex operation, full duplex operation, full-duplex connection, semi-duplex, half-duplex, half duplex, full-duplex or semi-duplex connection, two-way communication, two-way-communication, bidirectional communication, duplex communication, (semi)duplex data transfer, both directions, in both directions, sending in both directions, duplex communication channel

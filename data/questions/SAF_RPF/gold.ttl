@@ -1,0 +1,45 @@
+@prefix ag: <http://example.org/autograde#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+ag:SAF_RPF_R1 a ag:ReferenceTriple ;
+    ag:criterion ag:K1_Purpose ;
+    ag:hasObject ag:DuplicatePackets ;
+    ag:hasPredicate ag:reduces ;
+    ag:hasSubject ag:RPB,
+        ag:RPF ;
+    ag:weight 2.0 .
+
+ag:SAF_RPF_R2 a ag:ReferenceTriple ;
+    ag:criterion ag:K2_RPF ;
+    ag:hasObject ag:UnicastRoutingTable ;
+    ag:hasPredicate ag:uses ;
+    ag:hasSubject ag:RPF ;
+    ag:weight 1.0 .
+
+ag:SAF_RPF_R3 a ag:ReferenceTriple ;
+    ag:criterion ag:K3_RPB ;
+    ag:hasObject ag:SpanningTree ;
+    ag:hasPredicate ag:uses ;
+    ag:hasSubject ag:RPB ;
+    ag:weight 1.0 .
+
+ag:DuplicatePackets a ag:Concept .
+
+ag:K1_Purpose a ag:Criterion ;
+    rdfs:comment "Both reduce duplicate packets compared to flooding"@id .
+
+ag:K2_RPF a ag:Criterion ;
+    rdfs:comment "RPF uses the unicast routing table"@id .
+
+ag:K3_RPB a ag:Criterion ;
+    rdfs:comment "RPB forwards only along spanning-tree edges"@id .
+
+ag:SpanningTree a ag:Concept .
+
+ag:UnicastRoutingTable a ag:Concept .
+
+ag:RPB a ag:Concept .
+
+ag:RPF a ag:Concept .
+

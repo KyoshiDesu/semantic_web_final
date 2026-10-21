@@ -1,0 +1,30 @@
+@prefix ag: <http://example.org/autograde#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+ag:SAF_DUP_R1 a ag:ReferenceTriple ;
+    ag:criterion ag:K1_Problem ;
+    ag:hasObject ag:RepeatedProcessing ;
+    ag:hasPredicate ag:causes ;
+    ag:hasSubject ag:DuplicatePacket,
+        ag:Receiver ;
+    ag:weight 1.0 .
+
+ag:SAF_DUP_R2 a ag:ReferenceTriple ;
+    ag:criterion ag:K1_Problem ;
+    ag:hasObject ag:DuplicateDetection ;
+    ag:hasPredicate ag:lacks ;
+    ag:hasSubject ag:Receiver ;
+    ag:weight 1.0 .
+
+ag:DuplicateDetection a ag:Concept .
+
+ag:DuplicatePacket a ag:Concept .
+
+ag:RepeatedProcessing a ag:Concept .
+
+ag:K1_Problem a ag:Criterion ;
+    rdfs:comment "Explains that the receiver may act on the same information twice"@id .
+
+ag:Receiver a ag:Concept .
+

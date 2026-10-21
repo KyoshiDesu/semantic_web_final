@@ -1,0 +1,56 @@
+@prefix ag: <http://example.org/autograde#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+ag:SAF_BRIDGE_R1 a ag:ReferenceTriple ;
+    ag:criterion ag:K1_Content ;
+    ag:hasObject ag:StationMapping ;
+    ag:hasPredicate ag:has ;
+    ag:hasSubject ag:BridgeTable ;
+    ag:weight 1.0 .
+
+ag:SAF_BRIDGE_R2 a ag:ReferenceTriple ;
+    ag:criterion ag:K2_Learning ;
+    ag:hasObject ag:SourceAddress ;
+    ag:hasPredicate ag:uses ;
+    ag:hasSubject ag:BackwardLearning ;
+    ag:weight 1.0 .
+
+ag:SAF_BRIDGE_R3 a ag:ReferenceTriple ;
+    ag:criterion ag:K3_Forwarding ;
+    ag:hasObject ag:BridgeTable ;
+    ag:hasPredicate ag:uses ;
+    ag:hasSubject ag:Forwarding ;
+    ag:weight 1.0 .
+
+ag:SAF_BRIDGE_R4 a ag:ReferenceTriple ;
+    ag:criterion ag:K4_Benefit ;
+    ag:hasObject ag:Flooding ;
+    ag:hasPredicate ag:reduces ;
+    ag:hasSubject ag:Forwarding ;
+    ag:weight 1.0 .
+
+ag:BackwardLearning a ag:Concept .
+
+ag:Flooding a ag:Concept .
+
+ag:K1_Content a ag:Criterion ;
+    rdfs:comment "The table maps stations to LAN interfaces"@id .
+
+ag:K2_Learning a ag:Criterion ;
+    rdfs:comment "Backward learning reads the source address of incoming frames"@id .
+
+ag:K3_Forwarding a ag:Criterion ;
+    rdfs:comment "Forwarding looks up the table"@id .
+
+ag:K4_Benefit a ag:Criterion ;
+    rdfs:comment "Less flooding than forwarding everywhere"@id .
+
+ag:SourceAddress a ag:Concept .
+
+ag:StationMapping a ag:Concept .
+
+ag:BridgeTable a ag:Concept .
+
+ag:Forwarding a ag:Concept .
+

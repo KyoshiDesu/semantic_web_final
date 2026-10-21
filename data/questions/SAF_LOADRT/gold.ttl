@@ -1,0 +1,31 @@
+@prefix ag: <http://example.org/autograde#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+ag:SAF_LOADRT_R1 a ag:ReferenceTriple ;
+    ag:criterion ag:K1_Oscillation ;
+    ag:hasObject ag:Oscillation ;
+    ag:hasPredicate ag:causes ;
+    ag:hasSubject ag:LoadBasedRouting ;
+    ag:weight 1.0 .
+
+ag:SAF_LOADRT_R2 a ag:ReferenceTriple ;
+    ag:criterion ag:K2_Reordering ;
+    ag:hasObject ag:PacketReordering ;
+    ag:hasPredicate ag:causes ;
+    ag:hasSubject ag:LoadBasedRouting,
+        ag:Oscillation ;
+    ag:weight 1.0 .
+
+ag:K1_Oscillation a ag:Criterion ;
+    rdfs:comment "Load-based routing makes the chosen path oscillate"@id .
+
+ag:K2_Reordering a ag:Criterion ;
+    rdfs:comment "Oscillation reorders packets at the receiver"@id .
+
+ag:PacketReordering a ag:Concept .
+
+ag:LoadBasedRouting a ag:Concept .
+
+ag:Oscillation a ag:Concept .
+

@@ -1,0 +1,69 @@
+@prefix ag: <http://example.org/autograde#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+ag:SAF_DUPMETH_R1 a ag:ReferenceTriple ;
+    ag:criterion ag:K1_TemporaryTSAP ;
+    ag:hasObject ag:DuplicatePackets ;
+    ag:hasPredicate ag:prevents ;
+    ag:hasSubject ag:TemporaryTSAP ;
+    ag:weight 1.0 .
+
+ag:SAF_DUPMETH_R2 a ag:ReferenceTriple ;
+    ag:criterion ag:K1_TemporaryTSAP ;
+    ag:hasObject ag:WellKnownTSAP ;
+    ag:hasPredicate ag:prevents ;
+    ag:hasSubject ag:TemporaryTSAP ;
+    ag:weight 1.0 .
+
+ag:SAF_DUPMETH_R3 a ag:ReferenceTriple ;
+    ag:criterion ag:K2_ConnectionIds ;
+    ag:hasObject ag:DuplicatePackets ;
+    ag:hasPredicate ag:prevents ;
+    ag:hasSubject ag:ConnectionIdentification ;
+    ag:weight 1.0 .
+
+ag:SAF_DUPMETH_R4 a ag:ReferenceTriple ;
+    ag:criterion ag:K2_ConnectionIds ;
+    ag:hasObject ag:PersistentStorage ;
+    ag:hasPredicate ag:requires ;
+    ag:hasSubject ag:ConnectionIdentification ;
+    ag:weight 1.0 .
+
+ag:SAF_DUPMETH_R5 a ag:ReferenceTriple ;
+    ag:criterion ag:K3_PduSeqNo ;
+    ag:hasObject ag:DuplicatePackets ;
+    ag:hasPredicate ag:prevents ;
+    ag:hasSubject ag:PDUSequenceNumbers ;
+    ag:weight 1.0 .
+
+ag:SAF_DUPMETH_R6 a ag:ReferenceTriple ;
+    ag:criterion ag:K3_PduSeqNo ;
+    ag:hasObject ag:BandwidthOverhead ;
+    ag:hasPredicate ag:requires ;
+    ag:hasSubject ag:PDUSequenceNumbers ;
+    ag:weight 1.0 .
+
+ag:BandwidthOverhead a ag:Concept .
+
+ag:PersistentStorage a ag:Concept .
+
+ag:WellKnownTSAP a ag:Concept .
+
+ag:ConnectionIdentification a ag:Concept .
+
+ag:K1_TemporaryTSAP a ag:Criterion ;
+    rdfs:comment "Temporarily valid TSAPs"@id .
+
+ag:K2_ConnectionIds a ag:Criterion ;
+    rdfs:comment "Identifying connections individually"@id .
+
+ag:K3_PduSeqNo a ag:Criterion ;
+    rdfs:comment "Identifying PDUs individually"@id .
+
+ag:PDUSequenceNumbers a ag:Concept .
+
+ag:TemporaryTSAP a ag:Concept .
+
+ag:DuplicatePackets a ag:Concept .
+

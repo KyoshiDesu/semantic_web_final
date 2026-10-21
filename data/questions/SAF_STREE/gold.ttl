@@ -1,0 +1,41 @@
+@prefix ag: <http://example.org/autograde#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+ag:SAF_STREE_R1 a ag:ReferenceTriple ;
+    ag:criterion ag:K1_Property ;
+    ag:hasObject ag:Loops ;
+    ag:hasPredicate ag:lacks ;
+    ag:hasSubject ag:SpanningTree ;
+    ag:weight 1.0 .
+
+ag:SAF_STREE_R2 a ag:ReferenceTriple ;
+    ag:criterion ag:K1_Property ;
+    ag:hasObject ag:DuplicatePackets ;
+    ag:hasPredicate ag:prevents ;
+    ag:hasSubject ag:SpanningTree ;
+    ag:weight 1.0 .
+
+ag:SAF_STREE_R3 a ag:ReferenceTriple ;
+    ag:criterion ag:K2_LinkState ;
+    ag:hasObject ag:MulticastGroupInfo ;
+    ag:hasPredicate ag:has ;
+    ag:hasSubject ag:LinkStatePacket ;
+    ag:weight 1.0 .
+
+ag:DuplicatePackets a ag:Concept .
+
+ag:K2_LinkState a ag:Criterion ;
+    rdfs:comment "Link state packets carry multicast group information"@id .
+
+ag:LinkStatePacket a ag:Concept .
+
+ag:Loops a ag:Concept .
+
+ag:MulticastGroupInfo a ag:Concept .
+
+ag:K1_Property a ag:Criterion ;
+    rdfs:comment "No loops"@id .
+
+ag:SpanningTree a ag:Concept .
+

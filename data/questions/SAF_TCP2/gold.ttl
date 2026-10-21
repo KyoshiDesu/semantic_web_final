@@ -1,0 +1,67 @@
+@prefix ag: <http://example.org/autograde#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+ag:SAF_TCP2_R1 a ag:ReferenceTriple ;
+    ag:criterion ag:K1_Phases ;
+    ag:hasObject ag:SlowStart ;
+    ag:hasPredicate ag:has ;
+    ag:hasSubject ag:CongestionControl ;
+    ag:weight 1.0 .
+
+ag:SAF_TCP2_R2 a ag:ReferenceTriple ;
+    ag:criterion ag:K1_Phases ;
+    ag:hasObject ag:CongestionAvoidance ;
+    ag:hasPredicate ag:has ;
+    ag:hasSubject ag:CongestionControl ;
+    ag:weight 1.0 .
+
+ag:SAF_TCP2_R3 a ag:ReferenceTriple ;
+    ag:criterion ag:K2_Growth ;
+    ag:hasObject ag:Cwnd ;
+    ag:hasPredicate ag:increments ;
+    ag:hasSubject ag:SlowStart ;
+    ag:weight 1.0 .
+
+ag:SAF_TCP2_R4 a ag:ReferenceTriple ;
+    ag:criterion ag:K2_Growth ;
+    ag:hasObject ag:Cwnd ;
+    ag:hasPredicate ag:increments ;
+    ag:hasSubject ag:CongestionAvoidance ;
+    ag:weight 1.0 .
+
+ag:SAF_TCP2_R5 a ag:ReferenceTriple ;
+    ag:criterion ag:K3_Loss ;
+    ag:hasObject ag:SsThresh ;
+    ag:hasPredicate ag:lowers ;
+    ag:hasSubject ag:PacketLoss ;
+    ag:weight 1.0 .
+
+ag:SAF_TCP2_R6 a ag:ReferenceTriple ;
+    ag:criterion ag:K3_Loss ;
+    ag:hasObject ag:Cwnd ;
+    ag:hasPredicate ag:lowers ;
+    ag:hasSubject ag:PacketLoss ;
+    ag:weight 1.0 .
+
+ag:SsThresh a ag:Concept .
+
+ag:CongestionAvoidance a ag:Concept .
+
+ag:CongestionControl a ag:Concept .
+
+ag:K1_Phases a ag:Criterion ;
+    rdfs:comment "Names slow start and congestion avoidance"@id .
+
+ag:K2_Growth a ag:Criterion ;
+    rdfs:comment "Explains how cwnd grows in each phase"@id .
+
+ag:K3_Loss a ag:Criterion ;
+    rdfs:comment "Explains what happens to ss_thresh and cwnd after a loss"@id .
+
+ag:PacketLoss a ag:Concept .
+
+ag:SlowStart a ag:Concept .
+
+ag:Cwnd a ag:Concept .
+

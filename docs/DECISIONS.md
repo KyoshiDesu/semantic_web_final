@@ -38,6 +38,17 @@ Agent Rule 2: formula changes need a human decision recorded here. Newest last.
 - `answer.ttl` now also stores the reasoner's input (`ag:alignedSubject` / `ag:alignedObject`) and output (`ag:contradicts`), so the reasoning can be inspected and queried with SPARQL.
 - The demo app's SPARQL console is read-only and refuses `SERVICE` (federated queries to remote endpoints).
 
+## 2026-10-21 — SAF subset extended to 18 questions (demonstration)
+
+- 13 more SAF questions imported (549 answers in total), each with a rubric and gold key **drafted by Claude as a demonstration, not lecturer-validated**. The 8 questions that can't be written as fixed triples were skipped (see `data/external/saf/README.md`).
+- SAF scores are now divided by each question's maximum (0.5–3.5 points), not assumed to be out of 1.
+- New English predicates `causes`, `determines`, `follows`, `precedes`, `increments`, `lowers`, `reduces`; new incompatible pairs causes ⊥ prevents, increments ⊥ lowers, follows ⊥ precedes. The alias "reduces" moved from `decreases` to the new `reduces`.
+- Known misfits, kept on purpose to show the method's limits:
+  - **"Any two of three reasons"** (SAF_ENC): the key lists all three, so a correct answer can lose points.
+  - **Rates** (SAF_TCP1/2): triples say *that* cwnd grows, not *how fast* (exponential vs linear).
+  - **Implicit subjects**: many answers never name the topic ("we need a duplex operation"), so the subject goes unmatched.
+- **Some aliases were added after reading pilot-split answers only.** The keyword check afterwards showed pilot coverage improving but unseen test answers barely changing (SAF_DUP: 20 of 23 test answers still match no key concept). Exact alias lists don't keep up with paraphrase, which is why LLM extraction and the embedding step matter.
+
 ## Open — needs a human decision
 
 - **Pronoun subjects.** Many SAF answers start "It is used to…". In LLM mode the grounding check keeps "it" as the subject, which doesn't match "DHCP". Options: resolve pronouns to the question's topic concept, or accept the miss. (The AI-drafted annotations keep the student's explicit subjects.)

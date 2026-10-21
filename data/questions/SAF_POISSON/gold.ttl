@@ -1,0 +1,30 @@
+@prefix ag: <http://example.org/autograde#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+ag:SAF_POISSON_R1 a ag:ReferenceTriple ;
+    ag:criterion ag:K1_Answer ;
+    ag:hasObject ag:Burstiness ;
+    ag:hasPredicate ag:has ;
+    ag:hasSubject ag:InternetTraffic ;
+    ag:weight 1.0 .
+
+ag:SAF_POISSON_R2 a ag:ReferenceTriple ;
+    ag:criterion ag:K1_Answer ;
+    ag:hasObject ag:Independence ;
+    ag:hasPredicate ag:lacks ;
+    ag:hasSubject ag:InternetTraffic,
+        ag:PacketArrivals ;
+    ag:weight 1.0 .
+
+ag:Burstiness a ag:Concept .
+
+ag:Independence a ag:Concept .
+
+ag:PacketArrivals a ag:Concept .
+
+ag:InternetTraffic a ag:Concept .
+
+ag:K1_Answer a ag:Criterion ;
+    rdfs:comment "No; internet traffic is bursty"@id .
+

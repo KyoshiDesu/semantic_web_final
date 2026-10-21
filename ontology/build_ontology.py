@@ -16,10 +16,11 @@ IRI = "http://example.org/autograde#"
 # Q1 (Indonesian; validate with the lecturer) and the SAF subset (English; AI-drafted).
 RELATIONS = ["menggunakan", "menyerap", "mengonsumsi", "menghasilkan",
              "is_a", "uses", "utilizes", "requires", "has", "lacks", "assigns", "provides", "replaces",
-             "transmits", "allows", "enables", "prevents", "decreases", "increases"]
+             "transmits", "allows", "enables", "prevents", "decreases", "increases",
+             "causes", "determines", "follows", "precedes", "increments", "lowers", "reduces"]
 EQUIVALENT = [("menyerap", "menggunakan"), ("utilizes", "uses"), ("enables", "allows"), ("provides", "assigns")]
 INCOMPATIBLE = [("menghasilkan", "mengonsumsi"), ("has", "lacks"), ("allows", "prevents"),
-                ("decreases", "increases")]
+                ("decreases", "increases"), ("causes", "prevents"), ("increments", "lowers"), ("follows", "precedes")]
 
 LABELS = {  # Indonesian rdfs:label per class (Protégé can render labels instead of IRIs)
     "Concept": "Konsep", "Relation": "Relasi", "Triple": "Triple", "ReferenceTriple": "Triple Acuan",

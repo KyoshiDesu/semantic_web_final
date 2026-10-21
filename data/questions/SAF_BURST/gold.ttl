@@ -1,0 +1,42 @@
+@prefix ag: <http://example.org/autograde#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+ag:SAF_BURST_R1 a ag:ReferenceTriple ;
+    ag:criterion ag:K1_Definition ;
+    ag:hasObject ag:MultipleFrames ;
+    ag:hasPredicate ag:transmits ;
+    ag:hasSubject ag:FrameBursting ;
+    ag:weight 1.0 .
+
+ag:SAF_BURST_R2 a ag:ReferenceTriple ;
+    ag:criterion ag:K2_Advantage ;
+    ag:hasObject ag:Efficiency ;
+    ag:hasPredicate ag:has ;
+    ag:hasSubject ag:FrameBursting ;
+    ag:weight 1.0 .
+
+ag:SAF_BURST_R3 a ag:ReferenceTriple ;
+    ag:criterion ag:K3_Disadvantage ;
+    ag:hasObject ag:Delay ;
+    ag:hasPredicate ag:causes ;
+    ag:hasSubject ag:FrameBursting ;
+    ag:weight 1.0 .
+
+ag:Delay a ag:Concept .
+
+ag:Efficiency a ag:Concept .
+
+ag:K1_Definition a ag:Criterion ;
+    rdfs:comment "Frame bursting sends several frames in one transmission"@id .
+
+ag:K2_Advantage a ag:Criterion ;
+    rdfs:comment "More efficient than carrier extension"@id .
+
+ag:K3_Disadvantage a ag:Criterion ;
+    rdfs:comment "Frames have to wait (delay"@id .
+
+ag:MultipleFrames a ag:Concept .
+
+ag:FrameBursting a ag:Concept .
+

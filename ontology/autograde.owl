@@ -276,6 +276,37 @@
   <rdf:type rdf:resource="#Relation"/>
 </owl:NamedIndividual>
 
+<owl:NamedIndividual rdf:about="#causes">
+  <rdf:type rdf:resource="#Relation"/>
+  <incompatibleWith rdf:resource="#prevents"/>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#determines">
+  <rdf:type rdf:resource="#Relation"/>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#follows">
+  <rdf:type rdf:resource="#Relation"/>
+  <incompatibleWith rdf:resource="#precedes"/>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#precedes">
+  <rdf:type rdf:resource="#Relation"/>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#increments">
+  <rdf:type rdf:resource="#Relation"/>
+  <incompatibleWith rdf:resource="#lowers"/>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#lowers">
+  <rdf:type rdf:resource="#Relation"/>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#reduces">
+  <rdf:type rdf:resource="#Relation"/>
+</owl:NamedIndividual>
+
 <swrl:Variable rdf:about="urn:swrl#t"/>
 
 <swrl:Variable rdf:about="urn:swrl#r"/>

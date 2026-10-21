@@ -1,0 +1,51 @@
+@prefix ag: <http://example.org/autograde#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+ag:SAF_IPV6EXT_R1 a ag:ReferenceTriple ;
+    ag:criterion ag:K1_Definition ;
+    ag:hasObject ag:OptionalInformation ;
+    ag:hasPredicate ag:provides ;
+    ag:hasSubject ag:ExtensionHeaders ;
+    ag:weight 1.0 .
+
+ag:SAF_IPV6EXT_R2 a ag:ReferenceTriple ;
+    ag:criterion ag:K2_Location ;
+    ag:hasObject ag:FixedHeader ;
+    ag:hasPredicate ag:follows ;
+    ag:hasSubject ag:ExtensionHeaders ;
+    ag:weight 1.0 .
+
+ag:SAF_IPV6EXT_R3 a ag:ReferenceTriple ;
+    ag:criterion ag:K2_Location ;
+    ag:hasObject ag:Payload ;
+    ag:hasPredicate ag:precedes ;
+    ag:hasSubject ag:ExtensionHeaders ;
+    ag:weight 1.0 .
+
+ag:SAF_IPV6EXT_R4 a ag:ReferenceTriple ;
+    ag:criterion ag:K3_Advantage ;
+    ag:hasObject ag:NewOptions ;
+    ag:hasPredicate ag:allows ;
+    ag:hasSubject ag:ExtensionHeaders ;
+    ag:weight 1.0 .
+
+ag:FixedHeader a ag:Concept .
+
+ag:K1_Definition a ag:Criterion ;
+    rdfs:comment "Extension headers carry optional extra information"@id .
+
+ag:K3_Advantage a ag:Criterion ;
+    rdfs:comment "New options without changing the fixed header"@id .
+
+ag:NewOptions a ag:Concept .
+
+ag:OptionalInformation a ag:Concept .
+
+ag:Payload a ag:Concept .
+
+ag:K2_Location a ag:Criterion ;
+    rdfs:comment "Between the fixed header and the payload"@id .
+
+ag:ExtensionHeaders a ag:Concept .
+

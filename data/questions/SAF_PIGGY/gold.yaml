@@ -7,6 +7,6 @@ validated_on: null
 drafted_by: Claude (AI draft)
 concepts:
   Piggybacking:     {aliases: [piggybacking, piggy backing, piggybacking extension, the piggybacking extension, piggyback extension]}
-  DuplexConnection: {aliases: [duplex, duplex mode, duplex operation, duplex connection, full-duplex, full duplex, full-duplex operation, full duplex operation, full-duplex connection, semi-duplex, half-duplex, half duplex, full-duplex or semi-duplex connection, two-way communication, two-way-communication, bidirectional communication, duplex communication, (semi)duplex data transfer]}
+  DuplexConnection: {aliases: [duplex, duplex mode, duplex operation, duplex connection, full-duplex, full duplex, full-duplex operation, full duplex operation, full-duplex connection, semi-duplex, half-duplex, half duplex, full-duplex or semi-duplex connection, two-way communication, two-way-communication, bidirectional communication, duplex communication, (semi)duplex data transfer, both directions, in both directions, sending in both directions, duplex communication channel]}
 triples:
   - {id: R1, s: Piggybacking, p: requires, o: DuplexConnection, criterion: K1_Requirement, weight: 2}

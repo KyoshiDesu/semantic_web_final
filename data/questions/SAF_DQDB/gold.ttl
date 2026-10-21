@@ -1,0 +1,29 @@
+@prefix ag: <http://example.org/autograde#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+ag:SAF_DQDB_R1 a ag:ReferenceTriple ;
+    ag:criterion ag:K1_Fairness ;
+    ag:hasObject ag:Fairness ;
+    ag:hasPredicate ag:lacks ;
+    ag:hasSubject ag:DQDB ;
+    ag:weight 1.0 .
+
+ag:SAF_DQDB_R2 a ag:ReferenceTriple ;
+    ag:criterion ag:K1_Fairness ;
+    ag:hasObject ag:AccessChance ;
+    ag:hasPredicate ag:determines ;
+    ag:hasSubject ag:StationPosition ;
+    ag:weight 1.0 .
+
+ag:AccessChance a ag:Concept .
+
+ag:DQDB a ag:Concept .
+
+ag:Fairness a ag:Concept .
+
+ag:StationPosition a ag:Concept .
+
+ag:K1_Fairness a ag:Criterion ;
+    rdfs:comment "Access depends on the station position"@id .
+

@@ -21,7 +21,8 @@ def test_saf_answers_and_scores_line_up():
     answers = io.load_answers(include_saf=True)
     saf = answers[answers.source == "saf"]
     scores = io.load_human_scores(include_saf=True)
-    assert set(saf.question_id) == set(SAF_QUESTIONS) and set(saf.split) == {"pilot", "test"}
+    assert set(SAF_QUESTIONS) <= set(saf.question_id) and set(saf.split) == {"pilot", "test"}
+    assert set(saf.question_id) <= set(io.question_ids())  # every imported question has a key
     assert set(saf.answer_id) == set(scores[scores.criterion == io.TOTAL].answer_id)
     assert io.load_answers().empty or "saf" not in set(io.load_answers().source)  # only on request
 

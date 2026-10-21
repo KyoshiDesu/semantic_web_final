@@ -1,0 +1,48 @@
+@prefix ag: <http://example.org/autograde#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+ag:SAF_ENC_R1 a ag:ReferenceTriple ;
+    ag:criterion ag:K1_Choice ;
+    ag:hasObject ag:BinaryEncoding ;
+    ag:hasPredicate ag:uses ;
+    ag:hasSubject ag:Network ;
+    ag:weight 1.0 .
+
+ag:SAF_ENC_R2 a ag:ReferenceTriple ;
+    ag:criterion ag:K2_Reasons ;
+    ag:hasObject ag:BandwidthEfficiency ;
+    ag:hasPredicate ag:has ;
+    ag:hasSubject ag:BinaryEncoding ;
+    ag:weight 1.0 .
+
+ag:SAF_ENC_R3 a ag:ReferenceTriple ;
+    ag:criterion ag:K2_Reasons ;
+    ag:hasObject ag:SelfClocking ;
+    ag:hasPredicate ag:lacks ;
+    ag:hasSubject ag:BinaryEncoding ;
+    ag:weight 0.5 .
+
+ag:SAF_ENC_R4 a ag:ReferenceTriple ;
+    ag:criterion ag:K2_Reasons ;
+    ag:hasObject ag:Simplicity ;
+    ag:hasPredicate ag:has ;
+    ag:hasSubject ag:BinaryEncoding ;
+    ag:weight 0.5 .
+
+ag:BandwidthEfficiency a ag:Concept .
+
+ag:K1_Choice a ag:Criterion ;
+    rdfs:comment "Recommends binary encoding"@id .
+
+ag:Network a ag:Concept .
+
+ag:SelfClocking a ag:Concept .
+
+ag:Simplicity a ag:Concept .
+
+ag:K2_Reasons a ag:Criterion ;
+    rdfs:comment "Gives reasons such as bandwidth efficiency"@id .
+
+ag:BinaryEncoding a ag:Concept .
+
