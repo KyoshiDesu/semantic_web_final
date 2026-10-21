@@ -1,69 +1,78 @@
-@prefix ag: <http://example.org/autograde#> .
+@prefix ag: <http://example.org/autograde/ontology#> .
+@prefix key: <http://example.org/autograde/key/> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
-ag:SAF_DUPMETH_R1 a ag:ReferenceTriple ;
-    ag:criterion ag:K1_TemporaryTSAP ;
-    ag:hasObject ag:DuplicatePackets ;
+key:SAF_DUPMETH_R1 a ag:ReferenceTriple ;
+    ag:criterion key:SAF_DUPMETH_K1_TemporaryTSAP ;
+    ag:hasObject key:DuplicatePackets ;
     ag:hasPredicate ag:prevents ;
-    ag:hasSubject ag:TemporaryTSAP ;
+    ag:hasSubject key:TemporaryTSAP ;
     ag:weight 1.0 .
 
-ag:SAF_DUPMETH_R2 a ag:ReferenceTriple ;
-    ag:criterion ag:K1_TemporaryTSAP ;
-    ag:hasObject ag:WellKnownTSAP ;
+key:SAF_DUPMETH_R2 a ag:ReferenceTriple ;
+    ag:criterion key:SAF_DUPMETH_K1_TemporaryTSAP ;
+    ag:hasObject key:WellKnownTSAP ;
     ag:hasPredicate ag:prevents ;
-    ag:hasSubject ag:TemporaryTSAP ;
+    ag:hasSubject key:TemporaryTSAP ;
     ag:weight 1.0 .
 
-ag:SAF_DUPMETH_R3 a ag:ReferenceTriple ;
-    ag:criterion ag:K2_ConnectionIds ;
-    ag:hasObject ag:DuplicatePackets ;
+key:SAF_DUPMETH_R3 a ag:ReferenceTriple ;
+    ag:criterion key:SAF_DUPMETH_K2_ConnectionIds ;
+    ag:hasObject key:DuplicatePackets ;
     ag:hasPredicate ag:prevents ;
-    ag:hasSubject ag:ConnectionIdentification ;
+    ag:hasSubject key:ConnectionIdentification ;
     ag:weight 1.0 .
 
-ag:SAF_DUPMETH_R4 a ag:ReferenceTriple ;
-    ag:criterion ag:K2_ConnectionIds ;
-    ag:hasObject ag:PersistentStorage ;
+key:SAF_DUPMETH_R4 a ag:ReferenceTriple ;
+    ag:criterion key:SAF_DUPMETH_K2_ConnectionIds ;
+    ag:hasObject key:PersistentStorage ;
     ag:hasPredicate ag:requires ;
-    ag:hasSubject ag:ConnectionIdentification ;
+    ag:hasSubject key:ConnectionIdentification ;
     ag:weight 1.0 .
 
-ag:SAF_DUPMETH_R5 a ag:ReferenceTriple ;
-    ag:criterion ag:K3_PduSeqNo ;
-    ag:hasObject ag:DuplicatePackets ;
+key:SAF_DUPMETH_R5 a ag:ReferenceTriple ;
+    ag:criterion key:SAF_DUPMETH_K3_PduSeqNo ;
+    ag:hasObject key:DuplicatePackets ;
     ag:hasPredicate ag:prevents ;
-    ag:hasSubject ag:PDUSequenceNumbers ;
+    ag:hasSubject key:PDUSequenceNumbers ;
     ag:weight 1.0 .
 
-ag:SAF_DUPMETH_R6 a ag:ReferenceTriple ;
-    ag:criterion ag:K3_PduSeqNo ;
-    ag:hasObject ag:BandwidthOverhead ;
+key:SAF_DUPMETH_R6 a ag:ReferenceTriple ;
+    ag:criterion key:SAF_DUPMETH_K3_PduSeqNo ;
+    ag:hasObject key:BandwidthOverhead ;
     ag:hasPredicate ag:requires ;
-    ag:hasSubject ag:PDUSequenceNumbers ;
+    ag:hasSubject key:PDUSequenceNumbers ;
     ag:weight 1.0 .
 
-ag:BandwidthOverhead a ag:Concept .
+key:BandwidthOverhead a ag:Concept,
+        skos:Concept .
 
-ag:PersistentStorage a ag:Concept .
+key:PersistentStorage a ag:Concept,
+        skos:Concept .
 
-ag:WellKnownTSAP a ag:Concept .
+key:WellKnownTSAP a ag:Concept,
+        skos:Concept .
 
-ag:ConnectionIdentification a ag:Concept .
+key:ConnectionIdentification a ag:Concept,
+        skos:Concept .
 
-ag:K1_TemporaryTSAP a ag:Criterion ;
-    rdfs:comment "Temporarily valid TSAPs"@id .
+key:PDUSequenceNumbers a ag:Concept,
+        skos:Concept .
 
-ag:K2_ConnectionIds a ag:Criterion ;
-    rdfs:comment "Identifying connections individually"@id .
+key:SAF_DUPMETH_K1_TemporaryTSAP a ag:Criterion ;
+    rdfs:comment "Temporarily valid TSAPs"@en .
 
-ag:K3_PduSeqNo a ag:Criterion ;
-    rdfs:comment "Identifying PDUs individually"@id .
+key:SAF_DUPMETH_K2_ConnectionIds a ag:Criterion ;
+    rdfs:comment "Identifying connections individually"@en .
 
-ag:PDUSequenceNumbers a ag:Concept .
+key:SAF_DUPMETH_K3_PduSeqNo a ag:Criterion ;
+    rdfs:comment "Identifying PDUs individually"@en .
 
-ag:TemporaryTSAP a ag:Concept .
+key:TemporaryTSAP a ag:Concept,
+        skos:Concept .
 
-ag:DuplicatePackets a ag:Concept .
+key:DuplicatePackets a ag:Concept,
+        skos:Concept .
 

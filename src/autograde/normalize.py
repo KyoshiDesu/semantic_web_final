@@ -71,10 +71,20 @@ def concept_label(concept_id):
     return norm_text(re.sub(r"(?<=[a-z0-9])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])", " ", concept_id))
 
 
-def make_sim(cosine):
-    """sim(concept_a, text_a, concept_b, text_b): two known concepts compare by id only (no embedding)."""
+def make_sim(cosine, ancestors=None, broader_similarity=0.70):
+    """sim(key concept, key text, student concept, student text).
+
+    Two known concepts compare by id and the lecturer's skos:broader hierarchy, never by embedding:
+    same concept 1.0 · student's concept narrower (more specific) than the key's 1.0 · student's concept broader
+    (more general) than the key's `broader_similarity` (partial credit) · otherwise 0.0.
+    At least one unknown concept: cosine similarity of the embeddings.
+    """
+    ancestors = ancestors or {}
+
     def sim(ca, ta, cb, tb):
         if ca and cb:
-            return 1.0 if ca == cb else 0.0
+            if ca == cb or ca in ancestors.get(cb, ()):
+                return 1.0
+            return broader_similarity if cb in ancestors.get(ca, ()) else 0.0
         return cosine(concept_label(ca) if ca else norm_text(ta), concept_label(cb) if cb else norm_text(tb))
     return sim

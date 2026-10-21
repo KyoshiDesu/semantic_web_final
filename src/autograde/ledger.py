@@ -5,12 +5,12 @@ from decimal import Decimal
 from rdflib import RDF, RDFS, XSD, Graph, Literal
 
 from autograde.gold import ref_iri
-from autograde.io import AG, PROV, save_json
+from autograde import io
+from autograde.io import AG, ANS, KEY, PROV, save_json
 from autograde.match import order_key
 from autograde.models import STATUS_IRI_NAME, LedgerEntry
 
-RECOMPUTE_QUERY = """
-PREFIX ag: <http://example.org/autograde#>
+RECOMPUTE_QUERY = io.SPARQL_PREFIXES + """
 SELECT ?ans ((100 * (SUM(?w * ?c) - ?lambda * SUM(?w * ?k))) / SUM(?w) AS ?raw)
 WHERE { ?e a ag:LedgerEntry ; ag:answer ?ans ; ag:reference ?r ;
            ag:credit ?c ; ag:contradiction ?k .
@@ -46,17 +46,16 @@ def _dec(x):
 
 
 def to_graph(qid, entries):
-    g = Graph()
-    g.bind("ag", AG)
+    g = io.bind_namespaces(Graph())
     for e in entries:
-        node = AG[e.entry_id]
+        node = ANS[e.entry_id]
         g.add((node, RDF.type, AG.LedgerEntry))
-        g.add((node, AG.answer, AG[e.answer_id]))
+        g.add((node, AG.answer, ANS[e.answer_id]))
         g.add((node, AG.reference, ref_iri(qid, e.reference_id)))
         if e.matched_by:
-            g.add((node, AG.matchedBy, AG[e.matched_by]))
+            g.add((node, AG.matchedBy, ANS[e.matched_by]))
         if e.contradicted_by:
-            g.add((node, AG.contradictedBy, AG[e.contradicted_by]))
+            g.add((node, AG.contradictedBy, ANS[e.contradicted_by]))
         g.add((node, AG.status, AG[STATUS_IRI_NAME[e.status]]))
         g.add((node, AG.credit, _dec(e.credit)))
         g.add((node, AG.contradiction, _dec(int(e.contradiction))))
@@ -68,33 +67,31 @@ def to_graph(qid, entries):
 def answer_graph(answer_id, students, sentences, qid=None, trace=None):
     """Student triples with provenance (the deck's jawaban.ttl), plus the reasoner's input and output when
     a trace is given: the alignedSubject/alignedObject pairs Python asserted and the inferred ag:contradicts."""
-    g = Graph()
-    g.bind("ag", AG)
-    g.bind("prov", PROV)
-    g.add((AG[answer_id], RDF.type, AG.Answer))
+    g = io.bind_namespaces(Graph())
+    g.add((ANS[answer_id], RDF.type, AG.Answer))
     for sid, text in sentences:
-        g.add((AG[sid], RDF.type, AG.Sentence))
-        g.add((AG[sid], RDFS.label, Literal(text, lang="id")))
+        g.add((ANS[sid], RDF.type, AG.Sentence))
+        g.add((ANS[sid], RDFS.label, Literal(text)))
     for t in students:
-        node = AG[t.id]
+        node = ANS[t.id]
         g.add((node, RDF.type, AG.StudentTriple))
         for prop, concept, text, suffix in ((AG.hasSubject, t.s_concept, t.s_text, "s"),
                                             (AG.hasObject, t.o_concept, t.o_text, "o")):
-            c = AG[concept] if concept else AG[f"{t.id}_{suffix}"]  # unknown concept: a node for this triple
+            c = KEY[concept] if concept else ANS[f"{t.id}_{suffix}"]  # unknown concept: a node for this triple
             g.add((node, prop, c))
             g.add((c, RDF.type, AG.Concept))
             if not concept:
                 g.add((c, RDFS.label, Literal(text, lang="id")))
         g.add((node, AG.hasPredicate, AG[t.p]))
         g.add((node, AG.negated, Literal(t.negated)))
-        g.add((node, AG.inAnswer, AG[answer_id]))
+        g.add((node, AG.inAnswer, ANS[answer_id]))
         for sid in t.sentence_ids:
-            g.add((node, PROV.wasDerivedFrom, AG[sid]))
+            g.add((node, PROV.wasDerivedFrom, ANS[sid]))
     for t_id, r_id in (trace or {}).get("aligned", []):
-        g.add((AG[t_id], AG.alignedSubject, ref_iri(qid, r_id)))
-        g.add((AG[t_id], AG.alignedObject, ref_iri(qid, r_id)))
+        g.add((ANS[t_id], AG.alignedSubject, ref_iri(qid, r_id)))
+        g.add((ANS[t_id], AG.alignedObject, ref_iri(qid, r_id)))
     for t_id, r_id in (trace or {}).get("contradictions", []):
-        g.add((AG[t_id], AG.contradicts, ref_iri(qid, r_id)))
+        g.add((ANS[t_id], AG.contradicts, ref_iri(qid, r_id)))
     return g
 
 

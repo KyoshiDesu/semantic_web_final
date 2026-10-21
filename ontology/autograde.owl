@@ -3,11 +3,11 @@
          xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
          xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
          xmlns:owl="http://www.w3.org/2002/07/owl#"
-         xml:base="http://example.org/autograde"
-         xmlns="http://example.org/autograde#"
+         xml:base="http://example.org/autograde/ontology"
+         xmlns="http://example.org/autograde/ontology#"
          xmlns:swrl="http://www.w3.org/2003/11/swrl#">
 
-<owl:Ontology rdf:about="http://example.org/autograde"/>
+<owl:Ontology rdf:about="http://example.org/autograde/ontology"/>
 
 <owl:ObjectProperty rdf:about="#hasSubject">
   <rdfs:domain rdf:resource="#Triple"/>

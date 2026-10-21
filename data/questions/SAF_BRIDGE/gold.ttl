@@ -1,60 +1,69 @@
-@prefix ag: <http://example.org/autograde#> .
+@prefix ag: <http://example.org/autograde/ontology#> .
+@prefix key: <http://example.org/autograde/key/> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
-ag:SAF_BRIDGE_R1 a ag:ReferenceTriple ;
-    ag:criterion ag:K1_Content ;
-    ag:hasObject ag:StationMapping ;
+key:SAF_BRIDGE_R1 a ag:ReferenceTriple ;
+    ag:criterion key:SAF_BRIDGE_K1_Content ;
+    ag:hasObject key:StationMapping ;
     ag:hasPredicate ag:has ;
-    ag:hasSubject ag:BridgeTable ;
+    ag:hasSubject key:BridgeTable ;
     ag:weight 1.0 .
 
-ag:SAF_BRIDGE_R2 a ag:ReferenceTriple ;
-    ag:criterion ag:K2_Learning ;
-    ag:hasObject ag:SourceAddress ;
+key:SAF_BRIDGE_R2 a ag:ReferenceTriple ;
+    ag:criterion key:SAF_BRIDGE_K2_Learning ;
+    ag:hasObject key:SourceAddress ;
     ag:hasPredicate ag:uses ;
-    ag:hasSubject ag:BackwardLearning,
-        ag:Bridge ;
+    ag:hasSubject key:BackwardLearning,
+        key:Bridge ;
     ag:weight 1.0 .
 
-ag:SAF_BRIDGE_R3 a ag:ReferenceTriple ;
-    ag:criterion ag:K3_Forwarding ;
-    ag:hasObject ag:BridgeTable ;
+key:SAF_BRIDGE_R3 a ag:ReferenceTriple ;
+    ag:criterion key:SAF_BRIDGE_K3_Forwarding ;
+    ag:hasObject key:BridgeTable ;
     ag:hasPredicate ag:uses ;
-    ag:hasSubject ag:Bridge,
-        ag:Forwarding ;
+    ag:hasSubject key:Bridge,
+        key:Forwarding ;
     ag:weight 1.0 .
 
-ag:SAF_BRIDGE_R4 a ag:ReferenceTriple ;
-    ag:criterion ag:K4_Benefit ;
-    ag:hasObject ag:Flooding ;
+key:SAF_BRIDGE_R4 a ag:ReferenceTriple ;
+    ag:criterion key:SAF_BRIDGE_K4_Benefit ;
+    ag:hasObject key:Flooding ;
     ag:hasPredicate ag:reduces ;
-    ag:hasSubject ag:Forwarding ;
+    ag:hasSubject key:Forwarding ;
     ag:weight 1.0 .
 
-ag:BackwardLearning a ag:Concept .
+key:BackwardLearning a ag:Concept,
+        skos:Concept .
 
-ag:Flooding a ag:Concept .
+key:Flooding a ag:Concept,
+        skos:Concept .
 
-ag:K1_Content a ag:Criterion ;
-    rdfs:comment "The table maps stations to LAN interfaces"@id .
+key:SAF_BRIDGE_K1_Content a ag:Criterion ;
+    rdfs:comment "The table maps stations to LAN interfaces"@en .
 
-ag:K2_Learning a ag:Criterion ;
-    rdfs:comment "Backward learning reads the source address of incoming frames"@id .
+key:SAF_BRIDGE_K2_Learning a ag:Criterion ;
+    rdfs:comment "Backward learning reads the source address of incoming frames"@en .
 
-ag:K3_Forwarding a ag:Criterion ;
-    rdfs:comment "Forwarding looks up the table"@id .
+key:SAF_BRIDGE_K3_Forwarding a ag:Criterion ;
+    rdfs:comment "Forwarding looks up the table"@en .
 
-ag:K4_Benefit a ag:Criterion ;
-    rdfs:comment "Less flooding than forwarding everywhere"@id .
+key:SAF_BRIDGE_K4_Benefit a ag:Criterion ;
+    rdfs:comment "Less flooding than forwarding everywhere"@en .
 
-ag:SourceAddress a ag:Concept .
+key:SourceAddress a ag:Concept,
+        skos:Concept .
 
-ag:StationMapping a ag:Concept .
+key:StationMapping a ag:Concept,
+        skos:Concept .
 
-ag:Bridge a ag:Concept .
+key:Bridge a ag:Concept,
+        skos:Concept .
 
-ag:BridgeTable a ag:Concept .
+key:BridgeTable a ag:Concept,
+        skos:Concept .
 
-ag:Forwarding a ag:Concept .
+key:Forwarding a ag:Concept,
+        skos:Concept .
 

@@ -1,55 +1,63 @@
-@prefix ag: <http://example.org/autograde#> .
+@prefix ag: <http://example.org/autograde/ontology#> .
+@prefix key: <http://example.org/autograde/key/> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
-ag:SAF_DHCP_R1 a ag:ReferenceTriple ;
-    ag:criterion ag:K1_Definition ;
-    ag:hasObject ag:NetworkProtocol ;
+key:SAF_DHCP_R1 a ag:ReferenceTriple ;
+    ag:criterion key:SAF_DHCP_K1_Definition ;
+    ag:hasObject key:NetworkProtocol ;
     ag:hasPredicate ag:is_a ;
-    ag:hasSubject ag:DHCP ;
+    ag:hasSubject key:DHCP ;
     ag:weight 1.0 .
 
-ag:SAF_DHCP_R2 a ag:ReferenceTriple ;
-    ag:criterion ag:K2_Purpose ;
-    ag:hasObject ag:IPAddress ;
+key:SAF_DHCP_R2 a ag:ReferenceTriple ;
+    ag:criterion key:SAF_DHCP_K2_Purpose ;
+    ag:hasObject key:IPAddress ;
     ag:hasPredicate ag:assigns ;
-    ag:hasSubject ag:DHCP,
-        ag:DHCPServer ;
+    ag:hasSubject key:DHCP,
+        key:DHCPServer ;
     ag:weight 2.0 .
 
-ag:SAF_DHCP_R3 a ag:ReferenceTriple ;
-    ag:criterion ag:K2_Purpose ;
-    ag:hasObject ag:Configuration ;
+key:SAF_DHCP_R3 a ag:ReferenceTriple ;
+    ag:criterion key:SAF_DHCP_K2_Purpose ;
+    ag:hasObject key:Configuration ;
     ag:hasPredicate ag:assigns ;
-    ag:hasSubject ag:DHCP,
-        ag:DHCPServer ;
+    ag:hasSubject key:DHCP,
+        key:DHCPServer ;
     ag:weight 1.0 .
 
-ag:SAF_DHCP_R4 a ag:ReferenceTriple ;
-    ag:criterion ag:K3_History ;
-    ag:hasObject ag:RARP ;
+key:SAF_DHCP_R4 a ag:ReferenceTriple ;
+    ag:criterion key:SAF_DHCP_K3_History ;
+    ag:hasObject key:RARP ;
     ag:hasPredicate ag:replaces ;
-    ag:hasSubject ag:DHCP ;
+    ag:hasSubject key:DHCP ;
     ag:weight 1.0 .
 
-ag:Configuration a ag:Concept .
+key:Configuration a ag:Concept,
+        skos:Concept .
 
-ag:IPAddress a ag:Concept .
+key:IPAddress a ag:Concept,
+        skos:Concept .
 
-ag:K1_Definition a ag:Criterion ;
-    rdfs:comment "States what DHCP is"@id .
+key:NetworkProtocol a ag:Concept,
+        skos:Concept .
 
-ag:K3_History a ag:Criterion ;
-    rdfs:comment "Relates DHCP to the protocols it replaced"@id .
+key:RARP a ag:Concept,
+        skos:Concept .
 
-ag:NetworkProtocol a ag:Concept .
+key:SAF_DHCP_K1_Definition a ag:Criterion ;
+    rdfs:comment "States what DHCP is"@en .
 
-ag:RARP a ag:Concept .
+key:SAF_DHCP_K3_History a ag:Criterion ;
+    rdfs:comment "Relates DHCP to the protocols it replaced"@en .
 
-ag:DHCPServer a ag:Concept .
+key:DHCPServer a ag:Concept,
+        skos:Concept .
 
-ag:K2_Purpose a ag:Criterion ;
-    rdfs:comment "Explains what DHCP is used for"@id .
+key:SAF_DHCP_K2_Purpose a ag:Criterion ;
+    rdfs:comment "Explains what DHCP is used for"@en .
 
-ag:DHCP a ag:Concept .
+key:DHCP a ag:Concept,
+        skos:Concept .
 

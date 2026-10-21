@@ -136,14 +136,16 @@ def page_question():
                  hide_index=True, use_container_width=True)
     view = st.radio("Tampilan graf", ["Graf konsep", "RDF terreifikasi"], horizontal=True)
     if view == "Graf konsep":
-        st.graphviz_chart(rdfviz.gold_concept_dot(ctx.refs))
-        st.caption("Garis putus: subjek alternatif yang juga diterima.")
+        st.graphviz_chart(rdfviz.gold_concept_dot(ctx.refs, ctx.gold_raw["concepts"]))
+        st.caption("Garis putus abu-abu: subjek alternatif yang juga diterima. Garis putus hijau-biru: hierarki konsep "
+                   "dosen (skos:broader) — menyebut konsep yang lebih umum memberi kredit parsial.")
     else:
         st.graphviz_chart(rdfviz.gold_reified_dot(qid, ctx.refs))
         st.caption("Triple RDF biasa tidak bisa diberi bobot, kriteria, atau sumber kalimat, "
                    "jadi setiap triple acuan dijadikan sumber daya `ag:ReferenceTriple`.")
     with st.expander("Konsep dan alias (normalisasi sebelum embedding)"):
-        st.dataframe(pd.DataFrame([{"Konsep": c, "Alias": ", ".join((v or {}).get("aliases", []))}
+        st.dataframe(pd.DataFrame([{"Konsep": f"key:{c}", "Alias": ", ".join((v or {}).get("aliases", [])),
+                                    "Lebih umum (skos:broader)": ", ".join((v or {}).get("broader") or [])}
                                    for c, v in ctx.gold_raw["concepts"].items()]), hide_index=True, use_container_width=True)
     with st.expander("gold.ttl"):
         st.code((d / "gold.ttl").read_text(encoding="utf-8"), language="turtle")
@@ -286,12 +288,12 @@ def show_reasoning(ctx, res):
     st.markdown(f"**3 · Fakta yang ditegaskan Python ke Pellet** (σ ≥ τ<sub>h</sub>): {len(aligned)} pasangan",
                 unsafe_allow_html=True)
     if aligned:
-        st.code("\n".join(f"ag:{t} ag:alignedSubject ag:{ctx.qid}_{r} ; ag:alignedObject ag:{ctx.qid}_{r} ." for t, r in aligned),
+        st.code("\n".join(f"ans:{t} ag:alignedSubject key:{ctx.qid}_{r} ; ag:alignedObject key:{ctx.qid}_{r} ." for t, r in aligned),
                 language="turtle")
     contra = res["trace"]["contradictions"]
     st.markdown(f"**4 · Disimpulkan Pellet dengan aturan SWRL:** {len(contra)} `ag:contradicts`")
     if contra:
-        st.code("\n".join(f"ag:{t} ag:contradicts ag:{ctx.qid}_{r} ." for t, r in contra), language="turtle")
+        st.code("\n".join(f"ans:{t} ag:contradicts key:{ctx.qid}_{r} ." for t, r in contra), language="turtle")
     else:
         st.caption("Tidak ada kontradiksi. Triple acuan yang tidak disebut tetap Hilang (asumsi dunia terbuka).")
     if res["log"]:
@@ -319,8 +321,7 @@ def page_sparql():
     st.header("Konsol SPARQL")
     st.caption("Kueri berjalan pada graf RDF lokal (rdflib), hanya baca. Kueri federasi (SERVICE) dinonaktifkan.")
     graded = st.session_state.get("graded")
-    runs = sorted((p for p in pipeline.runs_dir().glob("*") if (p / "scores.csv").exists()), reverse=True) \
-        if pipeline.runs_dir().exists() else []
+    runs = pipeline.completed_runs()
     options = (["Jawaban terakhir yang dinilai"] if graded else []) + [f"Run: {r.name}" for r in runs]
     if not options:
         st.info("Nilai sebuah jawaban dulu, atau buat run: `python -m autograde run …`.")
@@ -340,13 +341,13 @@ def page_sparql():
 
 def page_explorer():
     st.header("Penjelajah Graf (Semantic Explorer)")
-    st.caption("Graf pengetahuan satu soal: kunci dosen (gold.ttl), triple jawaban (answer.ttl), bukti ledger, dan "
-               "kosakata predikat dari ontologi. Node = sumber daya RDF (ag:…), garis = properti RDF/OWL.")
+    st.caption("Graf pengetahuan satu soal. Node = sumber daya RDF dari tiga namespace: ag: (skema/ontologi), "
+               "key: (data dosen: konsep, triple acuan, hierarki skos:broader), ans: (data mahasiswa: jawaban, triple, "
+               "ledger). Garis = properti RDF/OWL/SKOS/PROV.")
     qid = st.selectbox("Soal", io.question_ids(), format_func=question_label, key="explorer_q")
     ctx = context(qid)
     sources = {}
-    runs = sorted(pipeline.runs_dir().glob("*"), reverse=True) if pipeline.runs_dir().exists() else []
-    for run in runs:
+    for run in pipeline.completed_runs():
         dirs = sorted(d for d in run.iterdir() if d.is_dir() and d.name.startswith(qid + "_") and (d / "trace.json").exists())
         if dirs:
             sources[f"Run {run.name} · {len(dirs)} jawaban"] = (dirs, io.load_json(run / "run.json")["params"])
@@ -369,8 +370,7 @@ def page_explorer():
 
 
 def page_evaluation():
-    runs = sorted((p for p in pipeline.runs_dir().glob("*") if (p / "evaluation.md").exists()), reverse=True) \
-        if pipeline.runs_dir().exists() else []
+    runs = [p for p in pipeline.completed_runs() if (p / "evaluation.md").exists()]
     if not runs:
         st.info("Belum ada hasil evaluasi. Jalankan `python -m autograde evaluate --run <run_id>`.")
         return

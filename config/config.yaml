@@ -14,6 +14,9 @@ llm:
 embedding_model: sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2
 reasoner: pellet   # pellet | sparql
 grounding_threshold: 0.5
+# sim when the student's concept is BROADER than the key's (skos:broader, e.g. "makanan" for Glukosa).
+# Must lie in the partial band tau_l <= value < tau_h; 0.70 does for every calibration grid point.
+broader_similarity: 0.70
 seed: 42
 
 calibration_grid:

@@ -2,14 +2,14 @@
 import re
 
 import pandas as pd
-from rdflib import OWL, RDF, RDFS, Graph, Literal, URIRef
+from rdflib import OWL, RDF, RDFS, Graph, Literal
 
 from autograde import io
-from autograde.io import AG, PROV
+from autograde.io import AG
 
 STATUS_COLOR = {"MATCHED": "#2e7d32", "PARTIAL": "#b26a00", "MISSING": "#757575", "CONTRADICTED": "#c62828"}
-PREFIXES = "PREFIX ag: <http://example.org/autograde#>\nPREFIX prov: <http://www.w3.org/ns/prov#>\n" \
-           "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\nPREFIX owl: <http://www.w3.org/2002/07/owl#>\n"
+PREFIXES = io.SPARQL_PREFIXES + "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\n" \
+                                 "PREFIX owl: <http://www.w3.org/2002/07/owl#>\n"
 
 
 def esc(text):
@@ -21,15 +21,15 @@ def short(node):
     if isinstance(node, Literal):
         return node.toPython()
     s = str(node)
-    for prefix, ns in (("ag:", str(AG)), ("prov:", str(PROV)), ("rdfs:", str(RDFS)), ("owl:", str(OWL)),
-                       ("rdf:", str(RDF))):
+    for prefix, ns in [*((p + ":", str(ns)) for p, ns in io.NAMESPACES.items()),
+                       ("rdfs:", str(RDFS)), ("owl:", str(OWL)), ("rdf:", str(RDF))]:
         if s.startswith(ns):
             return prefix + s[len(ns):]
     return s
 
 
 def name(node):
-    return str(node).split("#")[-1]
+    return io.local_name(node)
 
 
 # ---------- ontology ----------
@@ -89,13 +89,18 @@ def properties_table(g):
 
 # ---------- gold graph ----------
 
-def gold_concept_dot(refs):
-    """Concept-level view: one edge per reference triple (alternative accepted subjects dashed)."""
+def gold_concept_dot(refs, concepts=None):
+    """Concept-level view: one edge per reference triple (alternative accepted subjects dashed), plus the
+    lecturer's concept hierarchy (skos:broader, teal)."""
     lines = ["digraph { rankdir=LR; node [shape=box, style=\"rounded,filled\", fillcolor=\"#e8f5e9\", fontname=Helvetica]; edge [fontsize=10];"]
     for r in refs:
         for i, s in enumerate(r.s):
             style = "solid" if i == 0 else "dashed"
             lines.append(f'"{esc(s)}" -> "{esc(r.o)}" [label="{esc(r.p)}  ({r.id}, w={r.weight:g})", style={style}];')
+    for c, spec in (concepts or {}).items():
+        for b in (spec or {}).get("broader") or []:
+            lines.append(f'"{esc(b)}" [fillcolor="#e0f2f1"];')
+            lines.append(f'"{esc(c)}" -> "{esc(b)}" [label="skos:broader", color="#0d9488", fontcolor="#0d9488", style=dashed];')
     return "\n".join(lines + ["}"])
 
 
@@ -103,15 +108,15 @@ def gold_reified_dot(qid, refs):
     """RDF view: each reference triple is a resource with hasSubject/hasPredicate/hasObject, criterion and weight."""
     lines = ["digraph { rankdir=LR; node [fontname=Helvetica, fontsize=10]; edge [fontsize=9];"]
     for r in refs:
-        node = f"ag:{qid}_{r.id}"
+        node = f"key:{qid}_{r.id}"
         lines.append(f'"{node}" [shape=box, style=filled, fillcolor="#e3f2fd", label="{node}\\na ag:ReferenceTriple"];')
         for s in r.s:
-            lines.append(f'"{node}" -> "ag:{esc(s)}" [label="hasSubject"];')
-        lines.append(f'"{node}" -> "ag:{esc(r.p)}" [label="hasPredicate"];')
-        lines.append(f'"{node}" -> "ag:{esc(r.o)}" [label="hasObject"];')
-        lines.append(f'"{node}" -> "ag:{esc(r.criterion)}" [label="criterion"];')
+            lines.append(f'"{node}" -> "key:{esc(s)}" [label="ag:hasSubject"];')
+        lines.append(f'"{node}" -> "ag:{esc(r.p)}" [label="ag:hasPredicate"];')
+        lines.append(f'"{node}" -> "key:{esc(r.o)}" [label="ag:hasObject"];')
+        lines.append(f'"{node}" -> "key:{qid}_{esc(r.criterion)}" [label="ag:criterion"];')
         lines.append(f'"w_{node}" [shape=plaintext, label="\\"{r.weight:g}\\"^^xsd:decimal"];')
-        lines.append(f'"{node}" -> "w_{node}" [label="weight"];')
+        lines.append(f'"{node}" -> "w_{node}" [label="ag:weight"];')
         lines.append(f'"ag:{esc(r.p)}" [shape=ellipse, style=filled, fillcolor="#fff7e0"];')
     return "\n".join(lines + ["}"])
 
@@ -164,9 +169,7 @@ def sigma_table(refs, students, sigmas):
 # ---------- RDF graphs and SPARQL ----------
 
 def merged_graph(paths):
-    g = Graph()
-    g.bind("ag", AG)
-    g.bind("prov", PROV)
+    g = io.bind_namespaces(Graph())
     for triple in io.ontology_graph():
         g.add(triple)
     for p in paths:
@@ -196,9 +199,7 @@ def run_query(g, query):
                             columns=[str(v) for v in result.vars])
     if result.type == "ASK":
         return pd.DataFrame({"ASK": [bool(result.askAnswer)]})
-    out = Graph()
-    out.bind("ag", AG)
-    out.bind("prov", PROV)
+    out = io.bind_namespaces(Graph())
     for t in result.graph:
         out.add(t)
     return out.serialize(format="turtle")
@@ -262,6 +263,21 @@ WHERE {
   ?studentTriple a ag:StudentTriple ; ?role ?concept .
   VALUES ?role { ag:hasSubject ag:hasObject }
   ?concept rdfs:label ?text .     # only unknown concepts carry their raw text as a label
+}""",
+    "Hierarki konsep (skos:broader+)": PREFIXES + """
+# The lecturer's concept hierarchy; + follows skos:broader transitively (Glukosa -> Makanan -> ...).
+SELECT ?concept ?broader
+WHERE { ?concept skos:broader+ ?broader . }
+ORDER BY ?concept""",
+    "Kredit parsial karena konsep lebih umum": PREFIXES + """
+# Partial entries where the student named a BROADER concept than the key (e.g. "makanan" for Glukosa).
+SELECT ?entry ?reference ?keyConcept ?studentConcept
+WHERE {
+  ?entry ag:status ag:Parsial ; ag:reference ?reference ; ag:matchedBy ?t .
+  { ?reference ag:hasObject ?keyConcept . ?t ag:hasObject ?studentConcept . }
+  UNION
+  { ?reference ag:hasSubject ?keyConcept . ?t ag:hasSubject ?studentConcept . }
+  ?keyConcept skos:broader+ ?studentConcept .
 }""",
     "Predikat setara (property path)": PREFIXES + """
 SELECT DISTINCT ?predicate ?equivalent

@@ -158,8 +158,8 @@ This section refines the formulas on the deck's slides 3.4 (1)–(3). The differ
 - Student graph: `G_S = {(t_j, e_j)}`, where `t_j = <s_j, p_j, o_j, neg_j>` and `e_j` is a list of sentence IDs.
 - `eq(p, q)` is true if `p == q`, or if they are linked by `equivalentPredicate`. Use symmetric and transitive closure, computed **from the ontology only**. Aliases in `predicates.yaml` are surface-form normalization applied before `eq` is evaluated; they never define equivalence.
 - `inc(p, q)` is true if `p` and `q` are linked by `incompatibleWith` (symmetric), from the ontology only.
-- `sim(x, y)`:
-  - both resolve to known concept IDs: 1.0 if the IDs are equal, otherwise **0.0** (no embedding fallback; this stops e.g. Oksigen vs CO2 from earning credit);
+- `sim(x, y)` (x = the key's concept, y = the student's):
+  - both resolve to known concept IDs: 1.0 if the IDs are equal or y is narrower than x in the lecturer's `skos:broader` hierarchy; `broader_similarity` (0.70, inside the partial band) if y is broader than x; otherwise **0.0** (no embedding fallback; this stops e.g. Oksigen vs CO2 from earning credit);
   - at least one side is unknown (`concept=None`): cosine similarity of the label embeddings, clipped to [0, 1].
 - `σ_ij = min(max_{s ∈ S_i} sim(s, s_j), sim(o_i, o_j))`.
 
@@ -275,7 +275,8 @@ triples:
 This is example content from the presentation. Real questions come from the lecturer.
 
 - `s` is a list of accepted subject concepts. A plain string is accepted and treated as a one-item list. Students often write "tumbuhan menghasilkan oksigen" instead of "fotosintesis menghasilkan oksigen"; the lecturer decides which subjects are acceptable per triple.
-- Reference IDs repeat across questions, so RDF IRIs are always `ag:{question_id}_{ref_id}` (e.g. `ag:Q1_R2`). The same IRI is used in `gold.ttl` and `ledger.ttl`.
+- A concept may list `broader:` concepts (e.g. `Glukosa: {aliases: [gula], broader: [Makanan]}`), written as `skos:broader`.
+- Schema and data use separate namespaces: `ag:` (`…/autograde/ontology#`) for the ontology, `key:` (`…/autograde/key/`) for the lecturer's data, `ans:` (`…/autograde/answer/`) for student data. Reference IDs repeat across questions, so key-fact IRIs are always `key:{question_id}_{ref_id}` (e.g. `key:Q1_R2`), the same in `gold.ttl` and `ledger.ttl`; criteria are `key:{question_id}_{criterion}`.
 
 ### 5.4 pydantic models (`models.py`)
 
@@ -341,7 +342,7 @@ class Feedback(BaseModel):
 
 ## 6. Ontology design (Protégé)
 
-**Namespace:** `http://example.org/autograde#` (prefix `ag:`). Also import or declare `prov:wasDerivedFrom` from PROV-O.
+**Namespaces:** schema `http://example.org/autograde/ontology#` (prefix `ag:`); data in `key:` and `ans:` (Section 5.3). Also uses `prov:wasDerivedFrom` from PROV-O and `skos:broader` from SKOS.
 
 ### Classes
 
@@ -448,7 +449,7 @@ Acceptance:
 ### Phase 2 — Gold graph and rubric
 
 Tasks:
-- `gold.py`: validate `gold.yaml` against `rubric.yaml`. Every criterion must have at least 1 triple, every weight must be > 0, every predicate must exist in the ontology, and every subject/object must be a declared concept. Also run the `predicates.yaml` checks from Section 5.1. Then emit `gold.ttl` with rdflib, using reified `ag:ReferenceTriple` individuals with IRIs `ag:{question_id}_{ref_id}` (one `ag:hasSubject` per accepted subject).
+- `gold.py`: validate `gold.yaml` against `rubric.yaml`. Every criterion must have at least 1 triple, every weight must be > 0, every predicate must exist in the ontology, and every subject/object must be a declared concept. Also run the `predicates.yaml` checks from Section 5.1. Then emit `gold.ttl` with rdflib, using reified `ag:ReferenceTriple` individuals with IRIs `key:{question_id}_{ref_id}` (one `ag:hasSubject` per accepted subject), plus `skos:broader` for the concept hierarchy.
 - CLI: `python -m autograde gold --question Q1`.
 - Produce `docs/gold_Q1_review.md`, a readable table for the lecturer to sign off.
 
@@ -522,7 +523,7 @@ Acceptance:
 ### Phase 7 — Ledger and score
 
 Tasks:
-- `ledger.py`: build one `LedgerEntry` per reference triple using the status mapping. Write `ledger.json`, `ledger.csv`, and `ledger.ttl`, plus `answer.ttl` (the student triples with `ag:hasSubject/hasPredicate/hasObject`, `ag:negated` and `prov:wasDerivedFrom` sentence IRIs; the deck's `jawaban.ttl`). `ledger.ttl` follows deck slide 3.2: each entry is `ag:L_<answer>_<ref>` with `ag:answer`, `ag:reference` (the `ag:{question_id}_{ref_id}` IRI from `gold.ttl`), `ag:matchedBy` / `ag:contradictedBy` when set, `ag:status` (one of `ag:Cocok|Parsial|Hilang|Kontradiksi`), `ag:credit`, and `ag:contradiction` (xsd:decimal, 1 or 0).
+- `ledger.py`: build one `LedgerEntry` per reference triple using the status mapping. Write `ledger.json`, `ledger.csv`, and `ledger.ttl`, plus `answer.ttl` (the student triples with `ag:hasSubject/hasPredicate/hasObject`, `ag:negated` and `prov:wasDerivedFrom` sentence IRIs; the deck's `jawaban.ttl`). `ledger.ttl` follows deck slide 3.2: each entry is `ans:L_<answer>_<ref>` with `ag:answer`, `ag:reference` (the `key:{question_id}_{ref_id}` IRI from `gold.ttl`), `ag:matchedBy` / `ag:contradictedBy` when set, `ag:status` (one of `ag:Cocok|Parsial|Hilang|Kontradiksi`), `ag:credit`, and `ag:contradiction` (xsd:decimal, 1 or 0).
 - **Lecturer correction** (deck slide 1.4, "Nilai tambah"): `data/human/overrides.yaml` holds a list of `{answer_id, reference_id, status, reason, by, date}`. `python -m autograde override --run <run_id>` applies them to copies of the affected ledgers, recomputes credit from the new status (MATCHED 1, PARTIAL delta, MISSING 0, CONTRADICTED 0 with κ = 1), sets `override` on each changed entry, and writes `ledger_corrected.{json,ttl}` and `score_corrected.json` with the same SPARQL parity check. The original ledger and score are never modified. An override whose `reference_id` has no ledger entry is an error. Corrected scores are **never** used in `evaluate` (they contain human judgement) and are shown only in the UI and the manual.
 - `score.py`: Equation (6).
 - `ledger.recompute_sparql(ledger.ttl, gold.ttl, lambda)`: load both files into one rdflib graph, run the SPARQL aggregate below with `?lambda` bound via `initBindings`, and return `max(0, ?raw)`.

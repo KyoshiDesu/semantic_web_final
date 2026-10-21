@@ -36,7 +36,7 @@ def worked():
     gold_raw, rubric, refs = gold.load("Q1")
     index = ConceptIndex(gold_raw["concepts"])
     table = {frozenset((a, b)): v for a, b, v in fx["stub_cosine"]}
-    sim = make_sim(lambda a, b: 1.0 if a == b else table.get(frozenset((a, b)), 0.0))
+    sim = make_sim(lambda a, b: 1.0 if a == b else table.get(frozenset((a, b)), 0.0), gold.ancestors(gold_raw["concepts"]))
     variant_raws = fx["triples"][:3] + [fx["contradiction_variant"]["replace_triple_4"]]
     return {"fx": fx, "refs": refs, "rubric": rubric, "sim": sim, "rel": Relations.from_ontology(),
             "params": fx["params"], "students": _students(fx["answer_id"], fx["triples"], index),

@@ -26,15 +26,18 @@ class Context:
     rel: Relations
     params: dict
     reasoner: str
+    broader_similarity: float
 
     @classmethod
     def load(cls, qid, params=None, reasoner=None, cosine=None):
         gold_raw, rubric, refs = gold.load(qid)
         if not (io.question_dir(qid) / "gold.ttl").exists():
             gold.build(qid)
-        return cls(qid, gold_raw, rubric, refs, ConceptIndex(gold_raw["concepts"]),
-                   make_sim(cosine or Embedder().cosine), Relations.from_ontology(),
-                   params or io.load_params(), reasoner or io.load_config()["reasoner"])
+        cfg = io.load_config()
+        broader = float(cfg.get("broader_similarity", 0.70))
+        sim = make_sim(cosine or Embedder().cosine, gold.ancestors(gold_raw["concepts"]), broader)
+        return cls(qid, gold_raw, rubric, refs, ConceptIndex(gold_raw["concepts"]), sim, Relations.from_ontology(),
+                   params or io.load_params(), reasoner or cfg["reasoner"], broader)
 
 
 def grade(ctx, answer_id, students, params=None):
@@ -43,6 +46,9 @@ def grade(ctx, answer_id, students, params=None):
     Returns (students, entries, score, trace); trace holds σ for every pair, the aligned pairs given to the
     reasoner, and the contradictions it inferred."""
     params = params or ctx.params
+    if not params["tau_l"] <= ctx.broader_similarity < params["tau_h"]:
+        raise ValueError(f"broader_similarity {ctx.broader_similarity} must lie in the partial band "
+                         f"[{params['tau_l']}, {params['tau_h']}) so a broader concept earns partial credit")
     students = fill_concepts(students, ctx.index)
     results, sigmas, aligned = match(ctx.refs, students, params, ctx.sim, ctx.rel)
     contra = reason.contradictions(ctx.qid, ctx.refs, students, aligned, ctx.reasoner)
@@ -84,6 +90,13 @@ def run_answer(ctx, answer_id, text, mode, out_dir, use_llm_feedback=True):
 
 def runs_dir():
     return io.ROOT / "outputs" / "runs"
+
+
+def completed_runs():
+    """Finished runs, newest first; skips stray files (e.g. macOS .DS_Store) and runs that stopped half-way."""
+    if not runs_dir().exists():
+        return []
+    return sorted((p for p in runs_dir().iterdir() if p.is_dir() and (p / "run.json").exists()), reverse=True)
 
 
 def run_split(question, mode, split, include_synthetic=False, use_llm_feedback=True, answer_ids=None, run_id=None,

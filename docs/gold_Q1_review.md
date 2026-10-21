@@ -15,8 +15,11 @@ Date: ________
 
 - **Fotosintesis**: proses fotosintesis
 - **Tumbuhan**: tanaman
-- **Cahaya**: sinar matahari, cahaya matahari
-- **CO2**: karbon dioksida, CO2
+- **Cahaya**: sinar matahari, cahaya matahari — lebih khusus dari (skos:broader): Energi
+- **CO2**: karbon dioksida, CO2 — lebih khusus dari (skos:broader): Gas
 - **Air**: H2O
-- **Glukosa**: gula
-- **Oksigen**: O2
+- **Glukosa**: gula — lebih khusus dari (skos:broader): Makanan
+- **Oksigen**: O2 — lebih khusus dari (skos:broader): Gas
+- **Makanan**: zat makanan, bahan makanan
+- **Gas**: gas-gas
+- **Energi**: sumber energi

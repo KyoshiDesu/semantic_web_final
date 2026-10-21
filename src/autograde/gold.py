@@ -3,9 +3,10 @@ from collections import defaultdict
 
 from pydantic import ValidationError
 from rdflib import RDF, RDFS, XSD, Graph, Literal
+from rdflib.namespace import SKOS
 
 from autograde import io
-from autograde.io import AG
+from autograde.io import AG, KEY
 from autograde.models import ReferenceTriple
 
 
@@ -14,7 +15,30 @@ class GoldError(ValueError):
 
 
 def ref_iri(qid, ref_id):
-    return AG[f"{qid}_{ref_id}"]
+    return KEY[f"{qid}_{ref_id}"]
+
+
+def criterion_iri(qid, criterion):
+    return KEY[f"{qid}_{criterion}"]
+
+
+def broader_links(concepts):
+    """{concept: [broader concepts]} from gold.yaml's optional `broader:` lists."""
+    return {c: list((spec or {}).get("broader") or []) for c, spec in concepts.items()}
+
+
+def ancestors(concepts):
+    """Transitive closure of skos:broader: {concept: every more general concept}."""
+    links, out = broader_links(concepts), {}
+    for c in links:
+        seen, stack = set(), list(links[c])
+        while stack:
+            b = stack.pop()
+            if b not in seen:
+                seen.add(b)
+                stack.extend(links.get(b, []))
+        out[c] = seen
+    return out
 
 
 def check_predicates(predicates, relations):
@@ -56,6 +80,14 @@ def validate(gold, rubric, relations):
         errors.append("duplicate reference triple ids")
     for c in sorted(criteria - {r.criterion for r in refs}):
         errors.append(f"criterion {c} has no reference triple")
+    for c, broader in broader_links(gold.get("concepts") or {}).items():
+        for b in broader:
+            if b not in concepts:
+                errors.append(f"concept {c}: broader concept {b!r} is not declared")
+    if not errors:
+        for c, above in ancestors(gold.get("concepts") or {}).items():
+            if c in above:
+                errors.append(f"concept {c} is its own broader concept (cycle)")
     if errors:
         raise GoldError("; ".join(errors))
     return refs
@@ -77,22 +109,27 @@ def criterion_weights(refs):
     return dict(w)
 
 
-def to_graph(qid, refs, rubric):
-    g = Graph()
-    g.bind("ag", AG)
+def to_graph(qid, refs, rubric, concepts=None):
+    g = io.bind_namespaces(Graph())
+    lang = rubric.get("language", "id")
     for c in rubric["criteria"]:
-        g.add((AG[c["id"]], RDF.type, AG.Criterion))
-        g.add((AG[c["id"]], RDFS.comment, Literal(c["description"], lang="id")))
+        g.add((criterion_iri(qid, c["id"]), RDF.type, AG.Criterion))
+        g.add((criterion_iri(qid, c["id"]), RDFS.comment, Literal(c["description"], lang=lang)))
+    for c, broader in broader_links(concepts or {}).items():  # the lecturer's concept hierarchy (SKOS)
+        g.add((KEY[c], RDF.type, AG.Concept))
+        g.add((KEY[c], RDF.type, SKOS.Concept))
+        for b in broader:
+            g.add((KEY[c], SKOS.broader, KEY[b]))
     for r in refs:
         node = ref_iri(qid, r.id)
         g.add((node, RDF.type, AG.ReferenceTriple))
         for s in r.s:
-            g.add((node, AG.hasSubject, AG[s]))
-            g.add((AG[s], RDF.type, AG.Concept))
+            g.add((node, AG.hasSubject, KEY[s]))
+            g.add((KEY[s], RDF.type, AG.Concept))
         g.add((node, AG.hasPredicate, AG[r.p]))
-        g.add((node, AG.hasObject, AG[r.o]))
-        g.add((AG[r.o], RDF.type, AG.Concept))
-        g.add((node, AG.criterion, AG[r.criterion]))
+        g.add((node, AG.hasObject, KEY[r.o]))
+        g.add((KEY[r.o], RDF.type, AG.Concept))
+        g.add((node, AG.criterion, criterion_iri(qid, r.criterion)))
         g.add((node, AG.weight, Literal(str(r.weight), datatype=XSD.decimal)))
     return g
 
@@ -109,14 +146,16 @@ def review_md(qid, gold, rubric, refs):
                      f"| {r.weight:g} | ☐ |")
     lines += ["", "## Konsep dan alias", ""]
     for c, v in (gold.get("concepts") or {}).items():
-        lines.append(f"- **{c}**: {', '.join((v or {}).get('aliases', [])) or '—'}")
+        broader = (v or {}).get("broader") or []
+        lines.append(f"- **{c}**: {', '.join((v or {}).get('aliases', [])) or '—'}"
+                     + (f" — lebih khusus dari (skos:broader): {', '.join(broader)}" if broader else ""))
     return "\n".join(lines) + "\n"
 
 
 def build(qid):
     gold, rubric, refs = load(qid)
     out = io.question_dir(qid) / "gold.ttl"
-    to_graph(qid, refs, rubric).serialize(out, format="turtle")
+    to_graph(qid, refs, rubric, gold.get("concepts")).serialize(out, format="turtle")
     (io.ROOT / "docs").mkdir(exist_ok=True)
     (io.ROOT / "docs" / f"gold_{qid}_review.md").write_text(review_md(qid, gold, rubric, refs), encoding="utf-8")
     return out, refs

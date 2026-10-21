@@ -10,7 +10,7 @@ from pathlib import Path
 import owlready2 as o
 
 HERE = Path(__file__).resolve().parent
-IRI = "http://example.org/autograde#"
+IRI = "http://example.org/autograde/ontology#"  # schema namespace (prefix ag:)
 
 # Every predicate id in config/predicates.yaml except `other` must exist here.
 # Q1 (Indonesian; validate with the lecturer) and the SAF subset (English; AI-drafted).

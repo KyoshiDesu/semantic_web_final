@@ -60,10 +60,27 @@ Agent Rule 2: formula changes need a human decision recorded here. Newest last.
   - an unknown wrong concept can earn partial credit by embedding ("character oriented encoding" vs Binary Encoding);
   - SAF graders accept reasons the key doesn't list (e.g. "duplicates waste bandwidth" scored full marks).
 
+## 2026-10-21 — Separate namespaces and a concept hierarchy
+
+- **Namespaces.** Schema and data no longer share one namespace:
+  - `ag:` = `http://example.org/autograde/ontology#`: classes, properties, the predicate vocabulary, status values;
+  - `key:` = `http://example.org/autograde/key/`: the lecturer's data (concepts, key facts, rubric criteria);
+  - `ans:` = `http://example.org/autograde/answer/`: student data (answers, sentences, student facts, ledger entries).
+
+  Criteria now include the question id (`key:Q1_K2_Produk`), since criterion names repeat across questions.
+- **Concept hierarchy (formula change to §4 `sim`).** `gold.yaml` concepts may list `broader:` concepts, written to `gold.ttl` as `skos:broader` (W3C SKOS). For two known concepts, sim(key, student) is:
+  - 1.0 if they are the same, or the student's concept is narrower (more specific) than the key's;
+  - `broader_similarity` = 0.70 if the student's concept is broader (more general) than the key's (partial credit, flagged for review);
+  - 0.0 otherwise.
+
+  The hierarchy is transitive (`skos:broader+`). 0.70 lies in the partial band for every calibration grid point, and grading refuses to run if it doesn't.
+- **Q1 hierarchy (demonstration, to confirm with the lecturer):** Glukosa → Makanan, Oksigen → Gas, CO2 → Gas, Cahaya → Energi. With it, the deck's answer A07 scores 70 with the real embedding model, through a link the lecturer wrote. (Before, it scored 60, because cos(makanan, glukosa) = 0.36.)
+- A broader concept never aligns for the reasoner (0.70 < τh), so a vague answer can't trigger a contradiction.
+
 ## Open — needs a human decision
 
 - **Pronoun subjects.** Many SAF answers start "It is used to…". In LLM mode the grounding check keeps "it" as the subject, which doesn't match "DHCP". Options: resolve pronouns to the question's topic concept, or accept the miss. (The AI-drafted annotations keep the student's explicit subjects.)
 - **SAF in the article.** The deck lists SAF as an optional comparison, pending the lecturer's approval. If it's used, the gold triples need a human review first.
 
-- **The deck's partial-credit example does not hold with the chosen embedding model.** cos(makanan, glukosa) = 0.358 with `paraphrase-multilingual-MiniLM-L12-v2`, below τ_l, so A07 scores 60, not 70, on real embeddings. The test fixture stubs the value at 0.70, as the plan specifies. Options: add "makanan" as a lecturer alias, choose a different embedding model, or keep it as is and let calibration decide.
+- ~~The deck's partial-credit example does not hold with the chosen embedding model~~: resolved by the concept hierarchy (see the namespaces and hierarchy entry above).
 - **Unknown concept vs gold concept** compares against the concept's id label only ("glukosa"), not its aliases ("gula", cos 0.541). Taking the max over id and aliases is a candidate change to `sim`.

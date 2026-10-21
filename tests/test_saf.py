@@ -53,7 +53,7 @@ def test_annotated_contradiction_is_stored_as_rdf(tmp_path):
     res = pipeline.run_answer(ctx, "SAF_CSMA_V002", text, "gold", tmp_path, use_llm_feedback=False)
     assert res["entries"][0].status == "CONTRADICTED" and res["score"].score == 0.0
     ttl = (tmp_path / "answer.ttl").read_text()
-    assert "ag:contradicts ag:SAF_CSMA_R1" in ttl and "ag:alignedSubject ag:SAF_CSMA_R1" in ttl
+    assert "ag:contradicts key:SAF_CSMA_R1" in ttl and "ag:alignedSubject key:SAF_CSMA_R1" in ttl
 
 
 @pytest.mark.parametrize("answer_id", sorted(p.stem for p in (io.SAF_DIR / "annotations").glob("*.yaml")))

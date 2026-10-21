@@ -452,35 +452,35 @@ pre{margin:0;background:var(--code);border:1px solid var(--line);border-radius:6
     <div class="box">
       <span class="label">Contoh Turtle (domain fotosintesis)</span>
 <pre><span class="cmt"># triple acuan dari kunci dosen</span>
-ag:Q1_R5 a ag:ReferenceTriple ;
-  ag:hasSubject   ag:Fotosintesis, ag:Tumbuhan ;  <span class="cmt"># subjek yang diterima</span>
+key:Q1_R5 a ag:ReferenceTriple ;
+  ag:hasSubject   key:Fotosintesis, key:Tumbuhan ;  <span class="cmt"># subjek yang diterima</span>
   ag:hasPredicate ag:menghasilkan ;
-  ag:hasObject    ag:Oksigen ;
-  ag:criterion    ag:K2_Produk ;
+  ag:hasObject    key:Oksigen ;
+  ag:criterion    key:Q1_K2_Produk ;
   ag:weight       "2"^^xsd:decimal .
 
 <span class="cmt"># triple dari jawaban A07, kalimat 1</span>
-ag:Q1_A07_t3 a ag:StudentTriple ;
-  ag:hasSubject   ag:Tumbuhan ;
+ans:Q1_A07_t3 a ag:StudentTriple ;
+  ag:hasSubject   key:Tumbuhan ;
   ag:hasPredicate ag:menghasilkan ;
-  ag:hasObject    ag:Oksigen ;
+  ag:hasObject    key:Oksigen ;
   ag:negated      false ;
-  prov:wasDerivedFrom ag:Q1_A07_s1 .
+  prov:wasDerivedFrom ans:Q1_A07_s1 .
 
 <span class="cmt"># entri ledger</span>
-ag:L_Q1_A07_R5 a ag:LedgerEntry ;
-  ag:answer ag:Q1_A07 ; ag:reference ag:Q1_R5 ;
-  ag:matchedBy ag:Q1_A07_t3 ;
+ans:L_Q1_A07_R5 a ag:LedgerEntry ;
+  ag:answer ans:Q1_A07 ; ag:reference key:Q1_R5 ;
+  ag:matchedBy ans:Q1_A07_t3 ;
   ag:status ag:Cocok ;
   ag:credit "1.0"^^xsd:decimal ;
   ag:contradiction "0"^^xsd:decimal .
 
-ag:menyerap ag:equivalentPredicate ag:menggunakan .
+key:Glukosa skos:broader key:Makanan .  <span class="cmt"># hierarki konsep dosen</span>
 
 ag:menghasilkan ag:incompatibleWith ag:mengonsumsi .</pre>
     </div>
   </div>
-  <div class="foot"><span><b>Peneliti 2</b> · selesai</span><span>Namespace ag: bersifat ilustratif; IRI diawali ID soal (Q1_)</span></div>
+  <div class="foot"><span><b>Peneliti 2</b> · selesai</span><span>ag: skema (ontologi) · key: data dosen · ans: data mahasiswa</span></div>
   <aside class="notes"><b>Catatan:</b> Jelaskan kenapa triple direifikasi: triple RDF biasa tidak bisa langsung diberi bobot dan sumber kalimat. Ledger juga berbentuk RDF, sehingga bisa dikueri dengan SPARQL.</aside>
 </section>
 
@@ -513,7 +513,7 @@ ag:menghasilkan ag:incompatibleWith ag:mengonsumsi .</pre>
   <div class="formula"><span class="eq">(4)</span><var>m</var><sub>i</sub> = max<sub><var>j</var></sub> μ(<var>r</var><sub>i</sub>, <var>t</var><sub>j</sub>)</div>
   <div class="formula"><span class="eq">(5)</span>κ<sub>i</sub> = 1 jika ∃ <var>t</var><sub>j</sub>: σ<sub>ij</sub> ≥ τ<sub>h</sub> ∧ [ (inc(<var>p</var><sub>i</sub>,<var>p</var><sub>j</sub>) ∧ ¬neg<sub>j</sub>) ∨ (eq(<var>p</var><sub>i</sub>,<var>p</var><sub>j</sub>) ∧ neg<sub>j</sub>) ]; maka <var>m</var><sub>i</sub> := 0 dan status = Kontradiksi</div>
   <div class="grid g3">
-    <div class="box"><span class="label">sim(·,·)</span><p>1 jika konsep sama; 0 jika keduanya konsep dikenal tetapi berbeda; selain itu kemiripan kosinus embedding, setelah normalisasi istilah</p></div>
+    <div class="box"><span class="label">sim(·,·)</span><p>1 jika konsep sama atau lebih khusus; 0,7 (parsial) jika lebih umum menurut hierarki <span class="mono">skos:broader</span> dosen; 0 jika konsep dikenal lain; selain itu kemiripan kosinus embedding</p></div>
     <div class="box"><span class="label">eq, inc</span><p>Relasi predikat ekuivalen dan inkompatibel dalam ontologi, ditetapkan dosen (bukan dipelajari)</p></div>
     <div class="box"><span class="label">τ<sub>h</sub>, τ<sub>l</sub>, δ</span><p>Ambang tinggi/rendah disetel pada set pilot; kredit parsial δ = 0,5 tetap</p></div>
   </div>
@@ -529,7 +529,7 @@ ag:menghasilkan ag:incompatibleWith ag:mengonsumsi .</pre>
     <div class="box">
       <span class="label">Jawaban A07 (contoh hipotetis)</span>
       <p>"Tumbuhan menyerap sinar matahari dan menghasilkan makanan serta oksigen. Tumbuhan juga mengonsumsi karbon dioksida."</p>
-      <p class="small">Asumsi ilustrasi: δ = 0,5; λ = 0; "makanan" vs "glukosa" jatuh di zona parsial.</p>
+      <p class="small">Asumsi ilustrasi: δ = 0,5; λ = 0; dosen menyatakan Glukosa <span class="mono">skos:broader</span> Makanan, sehingga "makanan" mendapat kredit parsial.</p>
     </div>
     <div class="box">
       <span class="label">Ledger A07</span>

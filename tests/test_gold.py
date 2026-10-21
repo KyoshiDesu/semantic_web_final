@@ -4,7 +4,7 @@ import pytest
 from rdflib import RDF, Graph
 
 from autograde import gold, io
-from autograde.io import AG
+from autograde.io import AG, KEY
 
 RELS = {"menggunakan", "menyerap", "mengonsumsi", "menghasilkan"}
 
@@ -49,7 +49,27 @@ def test_gold_ttl_round_trip(tmp_path, q1):
     path = tmp_path / "gold.ttl"
     gold.to_graph("Q1", refs, q1[1]).serialize(path, format="turtle")
     g = Graph().parse(path)
-    ids = sorted(str(s).split("#")[1] for s in g.subjects(RDF.type, AG.ReferenceTriple))
+    ids = sorted(io.local_name(s) for s in g.subjects(RDF.type, AG.ReferenceTriple))
     assert ids == [f"Q1_{r.id}" for r in refs]
-    assert len(list(g.objects(AG.Q1_R2, AG.hasSubject))) == 2
+    assert len(list(g.objects(KEY.Q1_R2, AG.hasSubject))) == 2
+    assert str(KEY.Q1_R2).startswith("http://example.org/autograde/key/")
+    assert str(AG.hasSubject).startswith("http://example.org/autograde/ontology#")
     assert len(g) == len(gold.to_graph("Q1", refs, q1[1]))
+
+
+@pytest.mark.parametrize("broader, msg", [(["Buah"], "is not declared"), (["Tumbuhan"], "cycle")])
+def test_hierarchy_validation(q1, broader, msg):
+    g = copy.deepcopy(q1[0])
+    g["concepts"]["Tumbuhan"] = {"aliases": [], "broader": ["Fotosintesis"]}
+    g["concepts"]["Fotosintesis"] = {"aliases": [], "broader": broader}
+    if broader == ["Buah"]:
+        g["concepts"]["Tumbuhan"] = None
+    with pytest.raises(gold.GoldError, match=msg):
+        gold.validate(g, q1[1], RELS)
+
+
+def test_gold_ttl_has_skos_hierarchy(q1):
+    from rdflib.namespace import SKOS
+    g = gold.to_graph("Q1", gold.validate(*q1, RELS), q1[1], q1[0]["concepts"])
+    assert (KEY.Glukosa, SKOS.broader, KEY.Makanan) in g
+    assert gold.ancestors(q1[0]["concepts"])["Glukosa"] == {"Makanan"}

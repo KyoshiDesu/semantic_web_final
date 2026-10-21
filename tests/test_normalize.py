@@ -22,3 +22,11 @@ def test_known_different_concepts_never_similar():
     assert sim("Oksigen", "oksigen", "Glukosa", "glukosa") == 0.0
     assert sim("Oksigen", "oksigen", "Oksigen", "O2") == 1.0
     assert sim(None, "makanan", "Glukosa", "glukosa") == 0.99
+
+
+def test_concept_hierarchy_similarity():
+    ancestors = {"Glukosa": {"Makanan"}, "Makanan": set(), "Oksigen": {"Gas"}, "CO2": {"Gas"}, "Gas": set()}
+    sim = make_sim(lambda a, b: 0.99, ancestors, broader_similarity=0.70)
+    assert sim("Makanan", "makanan", "Glukosa", "glukosa") == 1.0   # student more specific than the key
+    assert sim("Glukosa", "glukosa", "Makanan", "makanan") == 0.70  # student more general: partial
+    assert sim("Oksigen", "oksigen", "CO2", "co2") == 0.0           # siblings under Gas: different

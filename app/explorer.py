@@ -1,13 +1,13 @@
 """Interactive knowledge-graph explorer ("Semantic Explorer") for the demo app.
 
-Node ids are the RDF names (ag:…) and edge labels are the RDF/OWL property names, so the picture is the same
+Node ids are the RDF names (ag: schema, key: lecturer's data, ans: student data) and edge labels are the RDF/OWL property names, so the picture is the same
 graph stored in gold.ttl, answer.ttl, ledger.ttl and the ontology. Drawn with vis-network 9.1.9, vendored in
 app/static/ so the demo works offline.
 """
 import json
 from pathlib import Path
 
-from autograde import io
+from autograde import gold, io
 from autograde.match import mu
 from autograde.models import STATUS_IRI_NAME, LedgerEntry, StudentTriple
 
@@ -28,6 +28,7 @@ EDGE_TYPES = {  # key: (legend label, colour, dashed, width, shown by default)
     "match": ("Cocok / Parsial (ledger)", "#10b981", True, 2, True),
     "inferred": ("Disimpulkan Pellet (SWRL)", "#dc2626", True, 3, True),
     "aligned": ("Selaras (masukan reasoner)", "#a855f7", True, 1, False),
+    "hierarchy": ("Hierarki konsep (skos:broader)", "#0d9488", True, 2, True),
 }
 
 
@@ -64,15 +65,26 @@ def build(ctx, answer_dirs, params, human=None, predicates=None):
     # --- the lecturer's key (gold.ttl) ---
     ref_status = {r.id: [] for r in ctx.refs}
     for r in ctx.refs:
-        rid = f"ag:{qid}_{r.id}"
+        rid = f"key:{qid}_{r.id}"
         node(rid, "reference", r.id, f"{r.id}: {' / '.join(r.s)} {r.p} {r.o}")
         for s in r.s:
-            edge(rid, f"ag:{s}", "asserted", "hasSubject")
+            edge(rid, f"key:{s}", "asserted", "hasSubject")
         edge(rid, f"ag:{r.p}", "asserted", "hasPredicate")
-        edge(rid, f"ag:{r.o}", "asserted", "hasObject")
+        edge(rid, f"key:{r.o}", "asserted", "hasObject")
     concepts = ctx.gold_raw["concepts"]
+    above = gold.ancestors(concepts)
     for c, spec in concepts.items():
-        node(f"ag:{c}", "concept", c, c)
+        node(f"key:{c}", "concept", c, c)
+        for b in (spec or {}).get("broader") or []:
+            edge(f"key:{c}", f"key:{b}", "hierarchy", "skos:broader")
+
+    def hierarchy_note(key_c, stud_c):
+        if key_c and stud_c and key_c != stud_c:
+            if stud_c in above.get(key_c, ()):
+                return f"{stud_c} lebih umum dari {key_c} (skos:broader) → kredit parsial"
+            if key_c in above.get(stud_c, ()):
+                return f"{stud_c} lebih khusus dari {key_c} (skos:broader) → dihitung sama"
+        return None
 
     # --- the graded answers (answer.ttl + ledger.ttl) ---
     answers = [load_answer(d) for d in answer_dirs]
@@ -80,30 +92,30 @@ def build(ctx, answer_dirs, params, human=None, predicates=None):
     by_triple = {}
     for a in answers:
         aid, short = a["answer_id"], short_answer(qid, a["answer_id"])
-        node(f"ag:{aid}", "answer", f"{short} · {a['score']['score']:.0f}", f"Jawaban {aid}")
+        node(f"ans:{aid}", "answer", f"{short} · {a['score']['score']:.0f}", f"Jawaban {aid}")
         text = dict(a["sentences"])
         matched = {(e.matched_by, e.reference_id): e for e in a["entries"] if e.matched_by}
         for e in a["entries"]:
             ref_status[e.reference_id].append((short, e))
         for sid, sent in a["sentences"]:
-            node(f"ag:{sid}", "sentence", sid.rsplit("_", 1)[1], sent)
-            details[f"ag:{sid}"] = {"kind": "Kalimat (prov:Entity)", "title": f"ag:{sid}",
+            node(f"ans:{sid}", "sentence", sid.rsplit("_", 1)[1], sent)
+            details[f"ans:{sid}"] = {"kind": "Kalimat (prov:Entity)", "title": f"ans:{sid}",
                                     "fields": [["Teks", sent], ["Jawaban", aid]],
                                     "sections": [{"heading": "Triple yang berasal dari kalimat ini",
                                                   "items": [t.id for t in a["students"] if sid in t.sentence_ids] or ["—"]}]}
         for t in a["students"]:
-            tid, tn = f"ag:{t.id}", t.id.rsplit("_", 1)[1]
+            tid, tn = f"ans:{t.id}", t.id.rsplit("_", 1)[1]
             by_triple[t.id] = t
             used_preds.add(t.p)
             neg = "NOT " if t.negated else ""
             node(tid, "student", f"{short}·{tn}", f"{t.s_text} —{neg}{t.p}→ {t.o_text}")
-            edge(tid, f"ag:{aid}", "asserted", "inAnswer")
+            edge(tid, f"ans:{aid}", "asserted", "inAnswer")
             edge(tid, f"ag:{t.p}", "asserted", "hasPredicate")
             for role, concept, raw in (("hasSubject", t.s_concept, t.s_text), ("hasObject", t.o_concept, t.o_text)):
                 if concept:
-                    edge(tid, f"ag:{concept}", "asserted", role)
+                    edge(tid, f"key:{concept}", "asserted", role)
                 else:
-                    cid = f"ag:{t.id}_{'s' if role == 'hasSubject' else 'o'}"
+                    cid = f"ans:{t.id}_{'s' if role == 'hasSubject' else 'o'}"
                     node(cid, "unknown", raw, f"“{raw}” — tidak ada di tabel alias")
                     details[cid] = {"kind": "Konsep tak dikenal", "title": raw,
                                     "fields": [["Dari triple", t.id], ["Peran", role]],
@@ -112,11 +124,11 @@ def build(ctx, answer_dirs, params, human=None, predicates=None):
                                         "lewat kemiripan embedding (0–1)."]}]}
                     edge(tid, cid, "asserted", role)
             for sid in t.sentence_ids:
-                edge(tid, f"ag:{sid}", "asserted", "prov:wasDerivedFrom")
+                edge(tid, f"ans:{sid}", "asserted", "prov:wasDerivedFrom")
             reasoning = []
             for r in ctx.refs:
                 sig = a["sigmas"].get((t.id, r.id), 0.0)
-                rid, e = f"ag:{qid}_{r.id}", matched.get((t.id, r.id))
+                rid, e = f"key:{qid}_{r.id}", matched.get((t.id, r.id))
                 if (t.id, r.id) in a["contradictions"]:
                     if t.negated:
                         rule = "Aturan 2 (predikat sama, dinegasi)" if t.p == r.p else "Aturan 3 (predikat setara, dinegasi)"
@@ -132,8 +144,10 @@ def build(ctx, answer_dirs, params, human=None, predicates=None):
                     band = (f"σ = {sig:.2f} ≥ τh {params['tau_h']} → kredit 1" if kind == "Cocok" else
                             f"τl {params['tau_l']} ≤ σ = {sig:.2f} < τh {params['tau_h']} → kredit δ {params['delta']}, perlu ditinjau")
                     same = "predikat sama" if t.p == r.p else f"predikat {t.p} setara dengan {r.p} (ontologi)"
-                    reasoning.append(f"{r.id} · {kind.upper()} — {same}; {band}. "
-                                     f"Dicatat di ledger sebagai bukti (ag:matchedBy).")
+                    notes = [n for n in (hierarchy_note(r.o, t.o_concept),
+                                         *(hierarchy_note(k, t.s_concept) for k in r.s)) if n]
+                    reasoning.append(f"{r.id} · {kind.upper()} — {same}; {band}"
+                                     + (f" ({'; '.join(notes)})" if notes else "") + ". Dicatat di ledger sebagai bukti (ag:matchedBy).")
                 elif mu(r, t, sig, params, ctx.rel) > 0:
                     reasoning.append(f"{r.id} · juga cocok (σ = {sig:.2f}), tetapi triple lain dipilih sebagai bukti (aturan seri).")
                 elif (t.id, r.id) in a["aligned"]:
@@ -143,9 +157,9 @@ def build(ctx, answer_dirs, params, human=None, predicates=None):
             details[tid] = {
                 "kind": "Triple jawaban (ag:StudentTriple)", "title": f"{t.s_text} —{neg}{t.p}→ {t.o_text}",
                 "fields": [["IRI", tid], ["Jawaban", aid],
-                           ["Subjek", f"“{t.s_text}” → " + (f"ag:{t.s_concept} (tabel alias)" if t.s_concept else "? (embedding)")],
+                           ["Subjek", f"“{t.s_text}” → " + (f"key:{t.s_concept} (tabel alias)" if t.s_concept else "? (embedding)")],
                            ["Predikat", f"ag:{t.p}" + (" — DINEGASI" if t.negated else "")],
-                           ["Objek", f"“{t.o_text}” → " + (f"ag:{t.o_concept} (tabel alias)" if t.o_concept else "? (embedding)")]],
+                           ["Objek", f"“{t.o_text}” → " + (f"key:{t.o_concept} (tabel alias)" if t.o_concept else "? (embedding)")]],
                 "sections": [{"heading": "Provenance (prov:wasDerivedFrom)",
                               "items": [f"{s.rsplit('_', 1)[1]}: “{text.get(s, '')}”" for s in t.sentence_ids]},
                              {"heading": "Penalaran", "items": reasoning or [
@@ -156,7 +170,7 @@ def build(ctx, answer_dirs, params, human=None, predicates=None):
         fields = [["Skor sistem", f"{sc['score']:.1f}"], ["Hitung ulang SPARQL", f"{sc['sparql_score']:.1f}"]]
         if aid in human:
             fields.append(["Nilai manusia", f"{human[aid]:.1f}"])
-        details[f"ag:{aid}"] = {"kind": "Jawaban (ag:Answer)", "title": aid, "fields": fields,
+        details[f"ans:{aid}"] = {"kind": "Jawaban (ag:Answer)", "title": f"ans:{aid}", "fields": fields,
                                 "sections": [{"heading": "Teks", "items": [s for _, s in a["sentences"]] or ["(kosong)"]},
                                              {"heading": "Ledger (satu baris per triple acuan)",
                                               "items": [status_line(e) for e in a["entries"]]}]}
@@ -197,17 +211,20 @@ def build(ctx, answer_dirs, params, human=None, predicates=None):
         lines = [f"{s} · {STATUS_IRI_NAME[e.status]}" + (f" (oleh {(e.matched_by or e.contradicted_by).rsplit('_', 1)[1]})"
                                                        if e.matched_by or e.contradicted_by else "")
                  for s, e in ref_status[r.id]]
-        details[f"ag:{qid}_{r.id}"] = {
+        details[f"key:{qid}_{r.id}"] = {
             "kind": "Triple acuan (ag:ReferenceTriple)", "title": f"{r.id}: {' / '.join(r.s)} {r.p} {r.o}",
-            "fields": [["IRI", f"ag:{qid}_{r.id}"], ["Subjek diterima", ", ".join(r.s)], ["Predikat", r.p],
+            "fields": [["IRI", f"key:{qid}_{r.id}"], ["Subjek diterima", ", ".join(r.s)], ["Predikat", r.p],
                        ["Objek", r.o], ["Kriteria", f"{r.criterion} — {criteria[r.criterion]}"], ["Bobot", f"{r.weight:g}"]],
             "sections": [{"heading": f"Status di {len(lines)} jawaban yang dimuat", "items": lines or ["Belum ada jawaban dinilai."]}]}
     for c, spec in concepts.items():
         users = [f"{r.id} ({'subjek' if c in r.s else 'objek'})" for r in ctx.refs if c in r.s or c == r.o]
         users += [t.id.rsplit("_", 2)[-2] + "·" + t.id.rsplit("_", 1)[1] for t in by_triple.values()
                   if c in (t.s_concept, t.o_concept)]
-        details[f"ag:{c}"] = {"kind": "Konsep (ag:Concept)", "title": f"ag:{c}",
-                              "fields": [["Alias (tabel dosen)", ", ".join((spec or {}).get("aliases", [])) or "—"]],
+        narrower = sorted(x for x, ups in above.items() if c in ups)
+        details[f"key:{c}"] = {"kind": "Konsep (ag:Concept, skos:Concept)", "title": f"key:{c}",
+                              "fields": [["Alias (tabel dosen)", ", ".join((spec or {}).get("aliases", [])) or "—"],
+                                         ["Lebih umum (skos:broader+)", ", ".join(sorted(above.get(c, ()))) or "—"],
+                                         ["Lebih khusus", ", ".join(narrower) or "—"]],
                               "sections": [{"heading": "Dipakai oleh", "items": users or ["—"]}]}
     return {"nodes": list(nodes.values()), "edges": edges, "details": details}
 

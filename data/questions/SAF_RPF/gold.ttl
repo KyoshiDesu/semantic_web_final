@@ -1,45 +1,52 @@
-@prefix ag: <http://example.org/autograde#> .
+@prefix ag: <http://example.org/autograde/ontology#> .
+@prefix key: <http://example.org/autograde/key/> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
-ag:SAF_RPF_R1 a ag:ReferenceTriple ;
-    ag:criterion ag:K1_Purpose ;
-    ag:hasObject ag:DuplicatePackets ;
+key:SAF_RPF_R1 a ag:ReferenceTriple ;
+    ag:criterion key:SAF_RPF_K1_Purpose ;
+    ag:hasObject key:DuplicatePackets ;
     ag:hasPredicate ag:reduces ;
-    ag:hasSubject ag:RPB,
-        ag:RPF ;
+    ag:hasSubject key:RPB,
+        key:RPF ;
     ag:weight 2.0 .
 
-ag:SAF_RPF_R2 a ag:ReferenceTriple ;
-    ag:criterion ag:K2_RPF ;
-    ag:hasObject ag:UnicastRoutingTable ;
+key:SAF_RPF_R2 a ag:ReferenceTriple ;
+    ag:criterion key:SAF_RPF_K2_RPF ;
+    ag:hasObject key:UnicastRoutingTable ;
     ag:hasPredicate ag:uses ;
-    ag:hasSubject ag:RPF ;
+    ag:hasSubject key:RPF ;
     ag:weight 1.0 .
 
-ag:SAF_RPF_R3 a ag:ReferenceTriple ;
-    ag:criterion ag:K3_RPB ;
-    ag:hasObject ag:SpanningTree ;
+key:SAF_RPF_R3 a ag:ReferenceTriple ;
+    ag:criterion key:SAF_RPF_K3_RPB ;
+    ag:hasObject key:SpanningTree ;
     ag:hasPredicate ag:uses ;
-    ag:hasSubject ag:RPB ;
+    ag:hasSubject key:RPB ;
     ag:weight 1.0 .
 
-ag:DuplicatePackets a ag:Concept .
+key:DuplicatePackets a ag:Concept,
+        skos:Concept .
 
-ag:K1_Purpose a ag:Criterion ;
-    rdfs:comment "Both reduce duplicate packets compared to flooding"@id .
+key:SAF_RPF_K1_Purpose a ag:Criterion ;
+    rdfs:comment "Both reduce duplicate packets compared to flooding"@en .
 
-ag:K2_RPF a ag:Criterion ;
-    rdfs:comment "RPF uses the unicast routing table"@id .
+key:SAF_RPF_K2_RPF a ag:Criterion ;
+    rdfs:comment "RPF uses the unicast routing table"@en .
 
-ag:K3_RPB a ag:Criterion ;
-    rdfs:comment "RPB forwards only along spanning-tree edges"@id .
+key:SAF_RPF_K3_RPB a ag:Criterion ;
+    rdfs:comment "RPB forwards only along spanning-tree edges"@en .
 
-ag:SpanningTree a ag:Concept .
+key:SpanningTree a ag:Concept,
+        skos:Concept .
 
-ag:UnicastRoutingTable a ag:Concept .
+key:UnicastRoutingTable a ag:Concept,
+        skos:Concept .
 
-ag:RPB a ag:Concept .
+key:RPB a ag:Concept,
+        skos:Concept .
 
-ag:RPF a ag:Concept .
+key:RPF a ag:Concept,
+        skos:Concept .
 

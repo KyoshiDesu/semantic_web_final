@@ -1,41 +1,48 @@
-@prefix ag: <http://example.org/autograde#> .
+@prefix ag: <http://example.org/autograde/ontology#> .
+@prefix key: <http://example.org/autograde/key/> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
-ag:SAF_STREE_R1 a ag:ReferenceTriple ;
-    ag:criterion ag:K1_Property ;
-    ag:hasObject ag:Loops ;
+key:SAF_STREE_R1 a ag:ReferenceTriple ;
+    ag:criterion key:SAF_STREE_K1_Property ;
+    ag:hasObject key:Loops ;
     ag:hasPredicate ag:lacks ;
-    ag:hasSubject ag:SpanningTree ;
+    ag:hasSubject key:SpanningTree ;
     ag:weight 1.0 .
 
-ag:SAF_STREE_R2 a ag:ReferenceTriple ;
-    ag:criterion ag:K1_Property ;
-    ag:hasObject ag:DuplicatePackets ;
+key:SAF_STREE_R2 a ag:ReferenceTriple ;
+    ag:criterion key:SAF_STREE_K1_Property ;
+    ag:hasObject key:DuplicatePackets ;
     ag:hasPredicate ag:prevents ;
-    ag:hasSubject ag:SpanningTree ;
+    ag:hasSubject key:SpanningTree ;
     ag:weight 1.0 .
 
-ag:SAF_STREE_R3 a ag:ReferenceTriple ;
-    ag:criterion ag:K2_LinkState ;
-    ag:hasObject ag:MulticastGroupInfo ;
+key:SAF_STREE_R3 a ag:ReferenceTriple ;
+    ag:criterion key:SAF_STREE_K2_LinkState ;
+    ag:hasObject key:MulticastGroupInfo ;
     ag:hasPredicate ag:has ;
-    ag:hasSubject ag:LinkStatePacket ;
+    ag:hasSubject key:LinkStatePacket ;
     ag:weight 1.0 .
 
-ag:DuplicatePackets a ag:Concept .
+key:DuplicatePackets a ag:Concept,
+        skos:Concept .
 
-ag:K2_LinkState a ag:Criterion ;
-    rdfs:comment "Link state packets carry multicast group information"@id .
+key:LinkStatePacket a ag:Concept,
+        skos:Concept .
 
-ag:LinkStatePacket a ag:Concept .
+key:Loops a ag:Concept,
+        skos:Concept .
 
-ag:Loops a ag:Concept .
+key:MulticastGroupInfo a ag:Concept,
+        skos:Concept .
 
-ag:MulticastGroupInfo a ag:Concept .
+key:SAF_STREE_K2_LinkState a ag:Criterion ;
+    rdfs:comment "Link state packets carry multicast group information"@en .
 
-ag:K1_Property a ag:Criterion ;
-    rdfs:comment "No loops"@id .
+key:SAF_STREE_K1_Property a ag:Criterion ;
+    rdfs:comment "No loops"@en .
 
-ag:SpanningTree a ag:Concept .
+key:SpanningTree a ag:Concept,
+        skos:Concept .
 

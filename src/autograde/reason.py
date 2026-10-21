@@ -2,10 +2,9 @@
 from rdflib import RDF, Graph, Literal
 
 from autograde import io
-from autograde.io import AG
+from autograde.io import AG, ANS, KEY
 
-CONTRADICTS_QUERY = """
-PREFIX ag: <http://example.org/autograde#>
+CONTRADICTS_QUERY = io.SPARQL_PREFIXES + """
 CONSTRUCT { ?t ag:contradicts ?r }
 WHERE {
   ?t a ag:StudentTriple ; ag:hasPredicate ?pt ; ag:alignedSubject ?r ; ag:alignedObject ?r .
@@ -31,18 +30,18 @@ def contradictions_sparql(qid, refs, students, aligned):
     for triple in io.ontology_graph():
         g.add(triple)
     for r in refs:
-        node = AG[_ref_name(qid, r.id)]
+        node = KEY[_ref_name(qid, r.id)]
         g.add((node, RDF.type, AG.ReferenceTriple))
         g.add((node, AG.hasPredicate, AG[r.p]))
     for t in students:
-        g.add((AG[t.id], RDF.type, AG.StudentTriple))
-        g.add((AG[t.id], AG.hasPredicate, AG[t.p]))
-        g.add((AG[t.id], AG.negated, Literal(t.negated)))
+        g.add((ANS[t.id], RDF.type, AG.StudentTriple))
+        g.add((ANS[t.id], AG.hasPredicate, AG[t.p]))
+        g.add((ANS[t.id], AG.negated, Literal(t.negated)))
     for t_id, r_id in aligned:
-        g.add((AG[t_id], AG.alignedSubject, AG[_ref_name(qid, r_id)]))
-        g.add((AG[t_id], AG.alignedObject, AG[_ref_name(qid, r_id)]))
+        g.add((ANS[t_id], AG.alignedSubject, KEY[_ref_name(qid, r_id)]))
+        g.add((ANS[t_id], AG.alignedObject, KEY[_ref_name(qid, r_id)]))
     result = g.query(CONTRADICTS_QUERY).graph
-    return {(str(t).split("#")[1], _strip(qid, str(r).split("#")[1])) for t, _, r in result}
+    return {(io.local_name(t), _strip(qid, io.local_name(r))) for t, _, r in result}
 
 
 class PelletReasoner:

@@ -29,7 +29,7 @@ def grade(at, qid, answer_prefix):
 
 
 def test_static_pages(at):
-    for name in ["Ontologi", "Soal & Kunci", "Konsol SPARQL", "Evaluasi"]:
+    for name in ["Ontologi", "Soal & Kunci", "Penjelajah Graf", "Konsol SPARQL", "Evaluasi"]:
         page(at, name)
 
 

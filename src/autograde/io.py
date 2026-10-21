@@ -2,6 +2,7 @@
 import glob
 import json
 import os
+import re
 import shutil
 from functools import lru_cache
 from pathlib import Path
@@ -9,11 +10,28 @@ from pathlib import Path
 import pandas as pd
 import yaml
 from rdflib import RDF, Graph, Namespace
+from rdflib.namespace import SKOS
 
 ROOT = Path(os.environ.get("AUTOGRADE_ROOT", Path(__file__).resolve().parents[2]))
-AG = Namespace("http://example.org/autograde#")
+# Schema and data live in separate namespaces (docs/DECISIONS.md):
+AG = Namespace("http://example.org/autograde/ontology#")  # schema: classes, properties, predicates, statuses
+KEY = Namespace("http://example.org/autograde/key/")      # lecturer's data: concepts, key facts, criteria
+ANS = Namespace("http://example.org/autograde/answer/")   # student data: answers, sentences, triples, ledger
 PROV = Namespace("http://www.w3.org/ns/prov#")
+NAMESPACES = {"ag": AG, "key": KEY, "ans": ANS, "prov": PROV, "skos": SKOS}
+SPARQL_PREFIXES = "".join(f"PREFIX {p}: <{ns}>\n" for p, ns in NAMESPACES.items())
 PARAM_KEYS = ("tau_h", "tau_l", "delta", "lambda")
+
+
+def bind_namespaces(graph):
+    for prefix, ns in NAMESPACES.items():
+        graph.bind(prefix, ns)
+    return graph
+
+
+def local_name(iri):
+    """Last part of an IRI, after '#' or '/': ag:hasSubject -> hasSubject, key:Q1_R5 -> Q1_R5."""
+    return re.split(r"[#/]", str(iri))[-1]
 
 
 def load_yaml(path):
@@ -130,7 +148,7 @@ def ontology_graph():
 def ontology_relations():
     """Relation ids, equivalence closure (symmetric+transitive) and incompatible pairs, from the ontology only."""
     g = ontology_graph()
-    name = lambda iri: str(iri).split("#")[-1]
+    name = local_name
     rels = {name(s) for s in g.subjects(RDF.type, AG.Relation)}
     adj = {r: set() for r in rels}
     for a, b in g.subject_objects(AG.equivalentPredicate):

@@ -4,7 +4,7 @@ import pytest
 from rdflib import Graph
 
 from autograde import gold, io, ledger
-from autograde.io import AG
+from autograde.io import AG, ANS, KEY
 from autograde.score import score
 from test_score import ledger_for
 
@@ -42,17 +42,20 @@ def test_sparql_recompute_matches(worked, tmp_path, gold_ttl, students, lam):
 def test_ttl_shape(worked, tmp_path):
     ledger.write(tmp_path, "Q1", ledger_for(worked, worked["students"]))
     g = Graph().parse(tmp_path / "ledger.ttl")
-    node = AG.L_Q1_A07_R5
-    assert (node, AG.reference, AG.Q1_R5) in g and (node, AG.status, AG.Cocok) in g
-    assert (node, AG.matchedBy, AG.Q1_A07_t3) in g
+    node = ANS.L_Q1_A07_R5
+    assert (node, AG.reference, KEY.Q1_R5) in g and (node, AG.status, AG.Cocok) in g
+    assert (node, AG.matchedBy, ANS.Q1_A07_t3) in g
     assert (tmp_path / "ledger.csv").read_text().count("\n") == 6
 
 
 def test_answer_graph_provenance(worked):
     g = ledger.answer_graph("Q1_A07", worked["students"], [("Q1_A07_s1", "x"), ("Q1_A07_s2", "y")])
-    assert (AG.Q1_A07_t4, io.PROV.wasDerivedFrom, AG.Q1_A07_s2) in g
-    assert (AG.Q1_A07_t4, AG.hasObject, AG.CO2) in g
-    assert (AG.Q1_A07_t2, AG.hasObject, AG.Q1_A07_t2_o) in g  # "makanan" is not a gold concept
+    assert (ANS.Q1_A07_t4, io.PROV.wasDerivedFrom, ANS.Q1_A07_s2) in g
+    assert (ANS.Q1_A07_t4, AG.hasObject, KEY.CO2) in g
+    assert (ANS.Q1_A07_t2, AG.hasObject, KEY.Makanan) in g  # in the alias table since the concept hierarchy
+    unknown = ledger.answer_graph("X", [st.model_copy(update={"o_concept": None, "id": "X_t1"})
+                                        for st in worked["students"][:1]], [])
+    assert (ANS.X_t1, AG.hasObject, ANS.X_t1_o) in unknown  # an unknown concept stays in the answer namespace
 
 
 def test_override_r3_gives_90(worked, tmp_path, gold_ttl):
