@@ -5,16 +5,16 @@ validated_by: null
 validated_on: null
 drafted_by: Claude (AI draft, demonstration)
 concepts:
-  CongestionControl:   {aliases: [congestion control, tcp congestion control, the two phases, the 2 phases]}
+  CongestionControl:   {aliases: [congestion control, tcp congestion control, the two phases, the 2 phases, congestion control with tcp]}
   SlowStart:           {aliases: [slow start, slow-start, slow start phase, phase 1, the first phase]}
   CongestionAvoidance: {aliases: [congestion avoidance, congestion avoidance phase, phase 2, the second phase]}
   Cwnd:                {aliases: [cwnd, congestion window, the congestion window, congestion window (cwnd)]}
-  SsThresh:            {aliases: [ss_thresh, ssthresh, ss-thresh, slow start threshold, the threshold]}
-  PacketLoss:          {aliases: [packet loss, loss, lost packet, a lost packet, timeout, a timeout, time out, congestion]}
+  SsThresh:            {aliases: [ss_thresh, ssthresh, ss-thresh, slow start threshold, the threshold, ss_tresh, threshhold]}
+  PacketLoss:          {aliases: [packet loss, loss, lost packet, a lost packet, timeout, a timeout, time out, congestion, a packet is lost, package loss]}
 triples:
   - {id: R1, s: CongestionControl,   p: has,        o: SlowStart,           criterion: K1_Phases, weight: 1}
   - {id: R2, s: CongestionControl,   p: has,        o: CongestionAvoidance, criterion: K1_Phases, weight: 1}
-  - {id: R3, s: SlowStart,           p: increments, o: Cwnd,                criterion: K2_Growth, weight: 1}
-  - {id: R4, s: CongestionAvoidance, p: increments, o: Cwnd,                criterion: K2_Growth, weight: 1}
-  - {id: R5, s: PacketLoss,          p: lowers,     o: SsThresh,            criterion: K3_Loss,   weight: 1}
-  - {id: R6, s: PacketLoss,          p: lowers,     o: Cwnd,                criterion: K3_Loss,   weight: 1}
+  - {id: R3, s: SlowStart,           p: increases,  o: Cwnd,                criterion: K2_Growth, weight: 1}
+  - {id: R4, s: CongestionAvoidance, p: increases,  o: Cwnd,                criterion: K2_Growth, weight: 1}
+  - {id: R5, s: PacketLoss,          p: decreases,  o: SsThresh,            criterion: K3_Loss,   weight: 1}
+  - {id: R6, s: PacketLoss,          p: decreases,  o: Cwnd,                criterion: K3_Loss,   weight: 1}

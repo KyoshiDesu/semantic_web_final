@@ -17,10 +17,10 @@ IRI = "http://example.org/autograde#"
 RELATIONS = ["menggunakan", "menyerap", "mengonsumsi", "menghasilkan",
              "is_a", "uses", "utilizes", "requires", "has", "lacks", "assigns", "provides", "replaces",
              "transmits", "allows", "enables", "prevents", "decreases", "increases",
-             "causes", "determines", "follows", "precedes", "increments", "lowers", "reduces"]
+             "causes", "determines", "follows", "precedes", "reduces"]
 EQUIVALENT = [("menyerap", "menggunakan"), ("utilizes", "uses"), ("enables", "allows"), ("provides", "assigns")]
 INCOMPATIBLE = [("menghasilkan", "mengonsumsi"), ("has", "lacks"), ("allows", "prevents"),
-                ("decreases", "increases"), ("causes", "prevents"), ("increments", "lowers"), ("follows", "precedes")]
+                ("decreases", "increases"), ("causes", "prevents"), ("follows", "precedes")]
 
 LABELS = {  # Indonesian rdfs:label per class (Protégé can render labels instead of IRIs)
     "Concept": "Konsep", "Relation": "Relasi", "Triple": "Triple", "ReferenceTriple": "Triple Acuan",

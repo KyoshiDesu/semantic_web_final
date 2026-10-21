@@ -10,7 +10,7 @@ Date: ________
 
 ## Konsep dan alias
 
-- **DQDB**: dqdb, distributed queue dual buses, distributed queue dual bus, the dqdb architecture
+- **DQDB**: dqdb, distributed queue dual buses, distributed queue dual bus, the dqdb architecture, this system
 - **Fairness**: fairness, fair access, equal chances
 - **StationPosition**: position, the position, location, the location, position on the bus, location in the queue, position of the station
 - **AccessChance**: transmission rights, reservation, chance to reserve, waiting time, access, chance to send

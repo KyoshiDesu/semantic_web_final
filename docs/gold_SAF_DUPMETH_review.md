@@ -15,9 +15,9 @@ Date: ________
 ## Konsep dan alias
 
 - **TemporaryTSAP**: temporarily valid tsaps, temporarily valid tsap, temporary tsaps, temporary tsap, use temporarily valid tsaps, to use temporarily valid tsaps
-- **ConnectionIdentification**: identify connections individually, to identify connections individually, identifying connections individually, connection identifiers, unique connection numbers
-- **PDUSequenceNumbers**: identify pdus individually, to identify pdus individually, pdu sequence numbers, sequence numbers for each pdu, individual sequential numbers, sequence numbers
+- **ConnectionIdentification**: identify connections individually, to identify connections individually, identifying connections individually, connection identifiers, unique connection numbers, identify each connection by seqno
+- **PDUSequenceNumbers**: identify pdus individually, to identify pdus individually, pdu sequence numbers, sequence numbers for each pdu, individual sequential numbers, sequence numbers, identify each pdu by seqno
 - **DuplicatePackets**: duplicate packets, duplicates, duplicate pdus, the duplicate problem
 - **WellKnownTSAP**: well-known tsaps, well known tsaps, well-known tsap, process server addressing, designated tsap, known tsap
-- **PersistentStorage**: storage, memory, persistent storage, storing this information, large memory capacity, remembering assigned sequence numbers
+- **PersistentStorage**: storage, memory, persistent storage, storing this information, large memory capacity, remembering assigned sequence numbers, store this information
 - **BandwidthOverhead**: bandwidth overhead, higher usage of bandwidth and memory, more bandwidth, higher bandwidth usage, overhead

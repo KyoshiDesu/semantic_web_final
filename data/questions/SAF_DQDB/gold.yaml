@@ -5,7 +5,7 @@ validated_by: null
 validated_on: null
 drafted_by: Claude (AI draft, demonstration)
 concepts:
-  DQDB:            {aliases: [dqdb, distributed queue dual buses, distributed queue dual bus, the dqdb architecture]}
+  DQDB:            {aliases: [dqdb, distributed queue dual buses, distributed queue dual bus, the dqdb architecture, this system]}
   Fairness:        {aliases: [fairness, fair access, equal chances]}
   StationPosition: {aliases: [position, the position, location, the location, position on the bus, location in the queue, position of the station]}
   AccessChance:    {aliases: [transmission rights, reservation, chance to reserve, waiting time, access, chance to send]}

@@ -12,4 +12,4 @@ concepts:
 triples:
   - {id: R1, s: FrameBursting, p: transmits, o: MultipleFrames, criterion: K1_Definition,   weight: 1}
   - {id: R2, s: FrameBursting, p: has,       o: Efficiency,     criterion: K2_Advantage,    weight: 1}
-  - {id: R3, s: FrameBursting, p: causes,    o: Delay,          criterion: K3_Disadvantage, weight: 1}
+  - {id: R3, s: FrameBursting, p: requires,  o: Delay,          criterion: K3_Disadvantage, weight: 1}

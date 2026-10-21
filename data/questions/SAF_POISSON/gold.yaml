@@ -8,7 +8,7 @@ drafted_by: Claude (AI draft, demonstration)
 concepts:
   InternetTraffic: {aliases: [internet traffic, real internet traffic, traffic, the internet, network traffic]}
   PacketArrivals:  {aliases: [packet arrivals, arrivals, the arrivals, packets]}
-  Burstiness:      {aliases: [burstiness, bursts, bursty, burst-like nature, comes in bursts, bursty traffic]}
+  Burstiness:      {aliases: [burstiness, bursts, bursty, burst-like nature, comes in bursts, bursty traffic, very bursty]}
   Independence:    {aliases: [independence, independent, independent arrivals, independently, depend on each other]}
 triples:
   - {id: R1, s: InternetTraffic,                  p: has,   o: Burstiness,   criterion: K1_Answer, weight: 1}

@@ -12,5 +12,5 @@ Date: ________
 
 - **InternetTraffic**: internet traffic, real internet traffic, traffic, the internet, network traffic
 - **PacketArrivals**: packet arrivals, arrivals, the arrivals, packets
-- **Burstiness**: burstiness, bursts, bursty, burst-like nature, comes in bursts, bursty traffic
+- **Burstiness**: burstiness, bursts, bursty, burst-like nature, comes in bursts, bursty traffic, very bursty
 - **Independence**: independence, independent, independent arrivals, independently, depend on each other

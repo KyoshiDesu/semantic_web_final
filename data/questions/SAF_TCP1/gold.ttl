@@ -19,28 +19,28 @@ ag:SAF_TCP1_R2 a ag:ReferenceTriple ;
 ag:SAF_TCP1_R3 a ag:ReferenceTriple ;
     ag:criterion ag:K2_Growth ;
     ag:hasObject ag:Cwnd ;
-    ag:hasPredicate ag:increments ;
+    ag:hasPredicate ag:increases ;
     ag:hasSubject ag:SlowStart ;
     ag:weight 1.0 .
 
 ag:SAF_TCP1_R4 a ag:ReferenceTriple ;
     ag:criterion ag:K2_Growth ;
     ag:hasObject ag:Cwnd ;
-    ag:hasPredicate ag:increments ;
+    ag:hasPredicate ag:increases ;
     ag:hasSubject ag:CongestionAvoidance ;
     ag:weight 1.0 .
 
 ag:SAF_TCP1_R5 a ag:ReferenceTriple ;
     ag:criterion ag:K3_Loss ;
     ag:hasObject ag:SsThresh ;
-    ag:hasPredicate ag:lowers ;
+    ag:hasPredicate ag:decreases ;
     ag:hasSubject ag:PacketLoss ;
     ag:weight 1.0 .
 
 ag:SAF_TCP1_R6 a ag:ReferenceTriple ;
     ag:criterion ag:K3_Loss ;
     ag:hasObject ag:Cwnd ;
-    ag:hasPredicate ag:lowers ;
+    ag:hasPredicate ag:decreases ;
     ag:hasSubject ag:PacketLoss ;
     ag:weight 1.0 .
 

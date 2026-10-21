@@ -19,7 +19,7 @@ ag:SAF_BURST_R2 a ag:ReferenceTriple ;
 ag:SAF_BURST_R3 a ag:ReferenceTriple ;
     ag:criterion ag:K3_Disadvantage ;
     ag:hasObject ag:Delay ;
-    ag:hasPredicate ag:causes ;
+    ag:hasPredicate ag:requires ;
     ag:hasSubject ag:FrameBursting ;
     ag:weight 1.0 .
 

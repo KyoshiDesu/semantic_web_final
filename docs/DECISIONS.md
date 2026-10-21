@@ -42,12 +42,23 @@ Agent Rule 2: formula changes need a human decision recorded here. Newest last.
 
 - 13 more SAF questions imported (549 answers in total), each with a rubric and gold key **drafted by Claude as a demonstration, not lecturer-validated**. The 8 questions that can't be written as fixed triples were skipped (see `data/external/saf/README.md`).
 - SAF scores are now divided by each question's maximum (0.5–3.5 points), not assumed to be out of 1.
-- New English predicates `causes`, `determines`, `follows`, `precedes`, `increments`, `lowers`, `reduces`; new incompatible pairs causes ⊥ prevents, increments ⊥ lowers, follows ⊥ precedes. The alias "reduces" moved from `decreases` to the new `reduces`.
+- New English predicates `causes`, `determines`, `follows`, `precedes`, `reduces`; new incompatible pairs causes ⊥ prevents, follows ⊥ precedes. `increases`/`decreases` cover both senses ("cwnd increases" and "slow start increases cwnd"), because students use the same verb for both. The alias "reduces" moved from `decreases` to the new `reduces`.
 - Known misfits, kept on purpose to show the method's limits:
   - **"Any two of three reasons"** (SAF_ENC): the key lists all three, so a correct answer can lose points.
   - **Rates** (SAF_TCP1/2): triples say *that* cwnd grows, not *how fast* (exponential vs linear).
   - **Implicit subjects**: many answers never name the topic ("we need a duplex operation"), so the subject goes unmatched.
 - **Some aliases were added after reading pilot-split answers only.** The keyword check afterwards showed pilot coverage improving but unseen test answers barely changing (SAF_DUP: 20 of 23 test answers still match no key concept). Exact alias lists don't keep up with paraphrase, which is why LLM extraction and the embedding step matter.
+
+### Offline grading of the extended SAF subset (same day)
+
+- 40 more AI-drafted annotations (55 in total, about 3 answers per question), following the rules in `data/external/saf/README.md`, including filling in subjects the question implies (marked `# implied subject`).
+- Fixed after reading real answers: merged `increments`/`lowers` back into `increases`/`decreases` (students use the same verbs), frame bursting's disadvantage uses `requires`, bridges accept "bridge" as subject. Pilot-derived aliases added for TCP, DUPMETH, DQDB, IPv6 and Poisson.
+- Gold-mode result on the 32 annotated test answers (AI-drafted keys and annotations, so a demonstration only): Pearson r 0.61, Spearman ρ 0.66, MAE 34.2. The keyword baseline scores r 0.64, MAE 28.8.
+- Failure patterns seen, useful for the article's discussion:
+  - near-synonym predicates count as different: *avoids* vs *reduces*, *minimizes* vs *prevents*, *requires* vs *causes*;
+  - typos and long paraphrases fall below τl ("the playload", "the source of the received packet");
+  - an unknown wrong concept can earn partial credit by embedding ("character oriented encoding" vs Binary Encoding);
+  - SAF graders accept reasons the key doesn't list (e.g. "duplicates waste bandwidth" scored full marks).
 
 ## Open — needs a human decision
 

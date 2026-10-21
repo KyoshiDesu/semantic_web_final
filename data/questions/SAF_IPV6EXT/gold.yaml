@@ -8,7 +8,7 @@ concepts:
   ExtensionHeaders:    {aliases: [extension headers, extension header, ipv6 extension headers, extensions header, optional headers]}
   OptionalInformation: {aliases: [optional information, additional information, additional options, supplementary information, optional network layer information]}
   FixedHeader:         {aliases: [fixed header, fixed headers, main header, ipv6 header, standard header, base header, the header]}
-  Payload:             {aliases: [payload, the payload, upper-layer header, transport-layer header, upper-level headers]}
+  Payload:             {aliases: [payload, the payload, upper-layer header, transport-layer header, upper-level headers, the data]}
   NewOptions:          {aliases: [new options, appending new options, future requirements, extensibility, flexibility]}
 triples:
   - {id: R1, s: ExtensionHeaders, p: provides, o: OptionalInformation, criterion: K1_Definition, weight: 1}

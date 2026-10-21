@@ -13,14 +13,16 @@ ag:SAF_BRIDGE_R2 a ag:ReferenceTriple ;
     ag:criterion ag:K2_Learning ;
     ag:hasObject ag:SourceAddress ;
     ag:hasPredicate ag:uses ;
-    ag:hasSubject ag:BackwardLearning ;
+    ag:hasSubject ag:BackwardLearning,
+        ag:Bridge ;
     ag:weight 1.0 .
 
 ag:SAF_BRIDGE_R3 a ag:ReferenceTriple ;
     ag:criterion ag:K3_Forwarding ;
     ag:hasObject ag:BridgeTable ;
     ag:hasPredicate ag:uses ;
-    ag:hasSubject ag:Forwarding ;
+    ag:hasSubject ag:Bridge,
+        ag:Forwarding ;
     ag:weight 1.0 .
 
 ag:SAF_BRIDGE_R4 a ag:ReferenceTriple ;
@@ -49,6 +51,8 @@ ag:K4_Benefit a ag:Criterion ;
 ag:SourceAddress a ag:Concept .
 
 ag:StationMapping a ag:Concept .
+
+ag:Bridge a ag:Concept .
 
 ag:BridgeTable a ag:Concept .
 

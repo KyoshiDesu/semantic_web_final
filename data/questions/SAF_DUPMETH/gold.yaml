@@ -6,11 +6,11 @@ validated_on: null
 drafted_by: Claude (AI draft, demonstration)
 concepts:
   TemporaryTSAP:            {aliases: [temporarily valid tsaps, temporarily valid tsap, temporary tsaps, temporary tsap, use temporarily valid tsaps, to use temporarily valid tsaps]}
-  ConnectionIdentification: {aliases: [identify connections individually, to identify connections individually, identifying connections individually, connection identifiers, unique connection numbers]}
-  PDUSequenceNumbers:       {aliases: [identify pdus individually, to identify pdus individually, pdu sequence numbers, sequence numbers for each pdu, individual sequential numbers, sequence numbers]}
+  ConnectionIdentification: {aliases: [identify connections individually, to identify connections individually, identifying connections individually, connection identifiers, unique connection numbers, identify each connection by seqno]}
+  PDUSequenceNumbers:       {aliases: [identify pdus individually, to identify pdus individually, pdu sequence numbers, sequence numbers for each pdu, individual sequential numbers, sequence numbers, identify each pdu by seqno]}
   DuplicatePackets:         {aliases: [duplicate packets, duplicates, duplicate pdus, the duplicate problem]}
   WellKnownTSAP:            {aliases: [well-known tsaps, well known tsaps, well-known tsap, process server addressing, designated tsap, known tsap]}
-  PersistentStorage:        {aliases: [storage, memory, persistent storage, storing this information, large memory capacity, remembering assigned sequence numbers]}
+  PersistentStorage:        {aliases: [storage, memory, persistent storage, storing this information, large memory capacity, remembering assigned sequence numbers, store this information]}
   BandwidthOverhead:        {aliases: [bandwidth overhead, higher usage of bandwidth and memory, more bandwidth, higher bandwidth usage, overhead]}
 triples:
   - {id: R1, s: TemporaryTSAP,            p: prevents, o: DuplicatePackets,  criterion: K1_TemporaryTSAP, weight: 1}

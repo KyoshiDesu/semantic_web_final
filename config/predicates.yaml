@@ -75,12 +75,12 @@ predicates:
     aliases: [avoids, eliminates, rules out, protects against]
   - id: decreases
     lang: en
-    description: the subject becomes smaller by the amount in the object
-    aliases: [shrinks, drops, is reduced, gets smaller, decreases by]
+    description: the subject becomes smaller (by the object), or makes the object smaller
+    aliases: [shrinks, drops, is reduced, gets smaller, decreases by, halves, is halved, resets, is reset, cuts, sets back]
   - id: increases
     lang: en
-    description: the subject becomes larger by the amount in the object
-    aliases: [grows, rises, gets larger, increases by, expands]
+    description: the subject becomes larger (by the object), or makes the object larger
+    aliases: [grows, rises, gets larger, increases by, expands, raises, doubles, is doubled, is incremented, increments]
 
   - id: causes
     lang: en
@@ -98,14 +98,6 @@ predicates:
     lang: en
     description: the subject comes before the object (in order or position)
     aliases: [comes before, is placed before, is located before]
-  - id: increments
-    lang: en
-    description: the subject makes the object larger
-    aliases: [raises, doubles, is doubled, is incremented, grows by]
-  - id: lowers
-    lang: en
-    description: the subject makes the object smaller or sets it back
-    aliases: [halves, is halved, resets, is reset, cuts, sets back]
   - id: reduces
     lang: en
     description: the subject lessens the amount of the object

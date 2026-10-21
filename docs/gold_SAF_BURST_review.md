@@ -7,7 +7,7 @@ Date: ________
 |---|---|---|---|---|---|---|
 | R1 | FrameBursting | transmits | MultipleFrames | K1_Definition (Frame bursting sends several frames in one transmission) | 1 | ☐ |
 | R2 | FrameBursting | has | Efficiency | K2_Advantage (More efficient than carrier extension) | 1 | ☐ |
-| R3 | FrameBursting | causes | Delay | K3_Disadvantage (Frames have to wait (delay) | 1 | ☐ |
+| R3 | FrameBursting | requires | Delay | K3_Disadvantage (Frames have to wait (delay) | 1 | ☐ |
 
 ## Konsep dan alias
 

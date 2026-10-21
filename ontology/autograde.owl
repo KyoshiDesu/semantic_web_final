@@ -294,15 +294,6 @@
   <rdf:type rdf:resource="#Relation"/>
 </owl:NamedIndividual>
 
-<owl:NamedIndividual rdf:about="#increments">
-  <rdf:type rdf:resource="#Relation"/>
-  <incompatibleWith rdf:resource="#lowers"/>
-</owl:NamedIndividual>
-
-<owl:NamedIndividual rdf:about="#lowers">
-  <rdf:type rdf:resource="#Relation"/>
-</owl:NamedIndividual>
-
 <owl:NamedIndividual rdf:about="#reduces">
   <rdf:type rdf:resource="#Relation"/>
 </owl:NamedIndividual>
