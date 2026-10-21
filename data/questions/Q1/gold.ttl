@@ -1,0 +1,67 @@
+@prefix ag: <http://example.org/autograde#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+ag:Q1_R1 a ag:ReferenceTriple ;
+    ag:criterion ag:K3_Energi ;
+    ag:hasObject ag:Cahaya ;
+    ag:hasPredicate ag:menggunakan ;
+    ag:hasSubject ag:Fotosintesis,
+        ag:Tumbuhan ;
+    ag:weight 2.0 .
+
+ag:Q1_R2 a ag:ReferenceTriple ;
+    ag:criterion ag:K1_Bahan ;
+    ag:hasObject ag:CO2 ;
+    ag:hasPredicate ag:mengonsumsi ;
+    ag:hasSubject ag:Fotosintesis,
+        ag:Tumbuhan ;
+    ag:weight 2.0 .
+
+ag:Q1_R3 a ag:ReferenceTriple ;
+    ag:criterion ag:K1_Bahan ;
+    ag:hasObject ag:Air ;
+    ag:hasPredicate ag:mengonsumsi ;
+    ag:hasSubject ag:Fotosintesis,
+        ag:Tumbuhan ;
+    ag:weight 2.0 .
+
+ag:Q1_R4 a ag:ReferenceTriple ;
+    ag:criterion ag:K2_Produk ;
+    ag:hasObject ag:Glukosa ;
+    ag:hasPredicate ag:menghasilkan ;
+    ag:hasSubject ag:Fotosintesis,
+        ag:Tumbuhan ;
+    ag:weight 2.0 .
+
+ag:Q1_R5 a ag:ReferenceTriple ;
+    ag:criterion ag:K2_Produk ;
+    ag:hasObject ag:Oksigen ;
+    ag:hasPredicate ag:menghasilkan ;
+    ag:hasSubject ag:Fotosintesis,
+        ag:Tumbuhan ;
+    ag:weight 2.0 .
+
+ag:Air a ag:Concept .
+
+ag:CO2 a ag:Concept .
+
+ag:Cahaya a ag:Concept .
+
+ag:Glukosa a ag:Concept .
+
+ag:K3_Energi a ag:Criterion ;
+    rdfs:comment "Menyebutkan sumber energi"@id .
+
+ag:Oksigen a ag:Concept .
+
+ag:K1_Bahan a ag:Criterion ;
+    rdfs:comment "Menyebutkan bahan fotosintesis"@id .
+
+ag:K2_Produk a ag:Criterion ;
+    rdfs:comment "Menyebutkan hasil fotosintesis"@id .
+
+ag:Fotosintesis a ag:Concept .
+
+ag:Tumbuhan a ag:Concept .
+

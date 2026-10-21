@@ -1,0 +1,8 @@
+pyproject.toml
+src/autograde/__init__.py
+src/autograde/__main__.py
+src/autograde_rdf.egg-info/PKG-INFO
+src/autograde_rdf.egg-info/SOURCES.txt
+src/autograde_rdf.egg-info/dependency_links.txt
+src/autograde_rdf.egg-info/top_level.txt
+tests/test_smoke.py

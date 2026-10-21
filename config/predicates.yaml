@@ -1,0 +1,18 @@
+# Controlled predicate vocabulary. Aliases only normalize raw LLM wording into ids;
+# equivalence and incompatibility live in the ontology (plan Section 5.1).
+predicates:
+  - id: menggunakan
+    description: subjek memakai sesuatu sebagai sumber atau sarana
+    aliases: [memakai, membutuhkan, memerlukan]
+  - id: menyerap
+    description: subjek mengambil sesuatu dari lingkungan ke dalam dirinya
+    aliases: []        # equivalentPredicate menggunakan, asserted in the ontology
+  - id: mengonsumsi
+    description: subjek memakai habis atau mengubah sesuatu sebagai bahan
+    aliases: [menghabiskan, mengubah]       # validate with lecturer
+  - id: menghasilkan
+    description: subjek membuat atau mengeluarkan sesuatu sebagai hasil
+    aliases: [memproduksi, membentuk, melepaskan]
+  - id: other
+    description: relasi lain yang tidak ada di daftar ini
+    aliases: []        # catch-all; never matches anything
