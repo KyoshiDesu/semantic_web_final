@@ -8,8 +8,10 @@ import re
 
 import pandas as pd
 import streamlit as st
+import streamlit.components.v1 as components
 from rdflib import OWL, RDF, Namespace
 
+import explorer
 import rdfviz
 from autograde import baselines, io, pipeline
 from autograde import feedback as fb_mod
@@ -209,17 +211,21 @@ def show_result(qid, answer_id, res):
     ok = abs(sc.score - sc.sparql_score) < 1e-9
     c[4].metric("Hitung ulang SPARQL", fb_mod.display_score(sc.sparql_score), "✓ sama" if ok else "✗ berbeda",
                 delta_color="normal" if ok else "inverse")
-    tabs = st.tabs(["Ledger & umpan balik", "Graf penyelarasan", "Penalaran", "RDF (Turtle)", "SPARQL"])
+    tabs = st.tabs(["Ledger & umpan balik", "Graf interaktif", "Graf penyelarasan", "Penalaran", "RDF (Turtle)", "SPARQL"])
     with tabs[0]:
         show_ledger(ctx, answer_id, res)
     with tabs[1]:
+        human = answers_table().set_index("answer_id").human.dropna().to_dict()
+        components.html(explorer.html(explorer.build(ctx, [res["out_dir"]], ctx.params, human), height=600),
+                        height=700, scrolling=False)
+    with tabs[2]:
         st.graphviz_chart(rdfviz.alignment_dot(ctx.refs, res["students"], entries, res["trace"]))
         st.caption("Kiri: triple hasil ekstraksi ([konsep] dari tabel alias, [?] = tidak dikenal → embedding). "
                    "Kanan: triple acuan berwarna sesuai status. Panah tebal: bukti di ledger; "
                    "merah: `ag:contradicts` dari SWRL; titik-titik: selaras tetapi predikat lain.")
-    with tabs[2]:
-        show_reasoning(ctx, res)
     with tabs[3]:
+        show_reasoning(ctx, res)
+    with tabs[4]:
         out = res["out_dir"]
         for name, caption in (("answer.ttl", "Triple jawaban + provenance PROV-O + masukan/keluaran penalaran"),
                               ("ledger.ttl", "Ledger: satu ag:LedgerEntry per triple acuan"),
@@ -228,7 +234,7 @@ def show_result(qid, answer_id, res):
             with st.expander(f"{name} — {caption}", expanded=name == "ledger.ttl"):
                 st.code(path.read_text(encoding="utf-8"), language="turtle")
                 st.download_button(f"Unduh {name}", path.read_text(encoding="utf-8"), file_name=name, key=f"dl_{name}")
-    with tabs[4]:
+    with tabs[5]:
         g = rdfviz.merged_graph(rdfviz.answer_graph_paths(qid, res["out_dir"]))
         st.caption(f"Graf gabungan: ontologi + gold.ttl + answer.ttl + ledger.ttl ({len(g)} triple). Hanya baca.")
         sparql_console(g, rdfviz.ANSWER_QUERIES, "ans")
@@ -332,6 +338,36 @@ def page_sparql():
     sparql_console(g, presets, "global")
 
 
+def page_explorer():
+    st.header("Penjelajah Graf (Semantic Explorer)")
+    st.caption("Graf pengetahuan satu soal: kunci dosen (gold.ttl), triple jawaban (answer.ttl), bukti ledger, dan "
+               "kosakata predikat dari ontologi. Node = sumber daya RDF (ag:…), garis = properti RDF/OWL.")
+    qid = st.selectbox("Soal", io.question_ids(), format_func=question_label, key="explorer_q")
+    ctx = context(qid)
+    sources = {}
+    runs = sorted(pipeline.runs_dir().glob("*"), reverse=True) if pipeline.runs_dir().exists() else []
+    for run in runs:
+        dirs = sorted(d for d in run.iterdir() if d.is_dir() and d.name.startswith(qid + "_") and (d / "trace.json").exists())
+        if dirs:
+            sources[f"Run {run.name} · {len(dirs)} jawaban"] = (dirs, io.load_json(run / "run.json")["params"])
+    ui = io.ROOT / "outputs" / "ui"
+    dirs = sorted(d for d in ui.glob(qid + "_*") if (d / "trace.json").exists()) if ui.exists() else []
+    if dirs:
+        sources[f"Dinilai di aplikasi · {len(dirs)} jawaban"] = (dirs, ctx.params)
+    if not sources:
+        st.info("Belum ada jawaban yang dinilai untuk soal ini. Nilai jawaban di halaman *Nilai Jawaban*, atau buat run "
+                "dengan `python -m autograde run …`. Graf kunci tetap ditampilkan di bawah.")
+        dirs, params = [], ctx.params
+    else:
+        dirs, params = sources[st.selectbox("Sumber jawaban", list(sources))]
+    names = [d.name for d in dirs]
+    chosen = st.multiselect("Jawaban yang ditampilkan", names, default=names[:12]) if names else []
+    human = answers_table().set_index("answer_id").human.dropna().to_dict()
+    graph = explorer.build(ctx, [d for d in dirs if d.name in chosen], params, human)
+    st.caption(f"{len(graph['nodes'])} node · {len(graph['edges'])} relasi")
+    components.html(explorer.html(graph, height=640), height=740, scrolling=False)
+
+
 def page_evaluation():
     runs = sorted((p for p in pipeline.runs_dir().glob("*") if (p / "evaluation.md").exists()), reverse=True) \
         if pipeline.runs_dir().exists() else []
@@ -346,9 +382,9 @@ def page_evaluation():
             col.image(str(run / name))
 
 
-PAGES = {"Ontologi": page_ontology, "Soal & Kunci": page_question, "Nilai Jawaban": page_grade,
-         "Konsol SPARQL": page_sparql, "Evaluasi": page_evaluation}
+PAGES = {"Ontologi": page_ontology, "Soal & Kunci": page_question, "Penjelajah Graf": page_explorer,
+         "Nilai Jawaban": page_grade, "Konsol SPARQL": page_sparql, "Evaluasi": page_evaluation}
 st.sidebar.title("AutoGrade-RDF")
-page = st.sidebar.radio("Halaman", list(PAGES), index=2)
+page = st.sidebar.radio("Halaman", list(PAGES), index=3)
 st.sidebar.caption("Skor = fungsi eksplisit atas ledger triple RDF (Pers. 6). LLM tidak pernah menentukan skor.")
 PAGES[page]()
