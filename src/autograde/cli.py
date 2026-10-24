@@ -73,30 +73,20 @@ def cmd_recompute(args):
 
 
 def cmd_override(args):
-    from autograde import db, kg, ledger, pipeline
-    from autograde.models import LedgerEntry
-    from autograde.score import score
-    params = _run_or_exit(args.run)["params"]
+    from autograde import db, pipeline
+    _run_or_exit(args.run)
     if args.file:
         db.add_overrides(io.load_yaml(args.file) or [])
-    overrides = db.overrides()
-    for answer_id in sorted({o["answer_id"] for o in overrides}):
+    for answer_id in sorted({o["answer_id"] for o in db.overrides()}):
         res = db.result(args.run, answer_id)
         if res is None:
             print(f"{answer_id}: not in run {args.run}, skipped")
             continue
-        qid = res["question_id"]
-        fixed = ledger.apply_overrides([LedgerEntry(**e) for e in res["ledger"]],
-                                       [o for o in overrides if o["answer_id"] == answer_id], params)
-        name = kg.answer_graph_name(args.run, answer_id, "ledger_corrected")
-        kg.put_graph(name, ledger.to_graph(qid, fixed))
-        sc = score(answer_id, fixed, params)
-        sc.sparql_score = ledger.recompute_sparql(kg.get_graph(name), kg.get_graph(kg.gold_graph_name(qid)),
-                                                  params["lambda"])
-        if abs(sc.score - sc.sparql_score) >= 1e-9:
-            raise pipeline.ParityError(f"{answer_id}: corrected score parity failed")
-        db.save_corrected(args.run, answer_id, fixed, sc)
-        print(f"{answer_id}: {res['score']['score']:.1f} -> {sc.score:.1f} (corrected)")
+        sc, skipped = pipeline.apply_corrections(args.run, answer_id)
+        for o in skipped:
+            print(f"{answer_id}: override for {o['reference_id']} skipped (not in the ledger)")
+        if sc:
+            print(f"{answer_id}: {res['score']['score']:.1f} -> {sc.score:.1f} (corrected)")
 
 
 def cmd_audit_template(args):

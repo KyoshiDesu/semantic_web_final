@@ -4,6 +4,7 @@ from datetime import datetime
 
 from autograde import db, extract, feedback, gold, io, kg, ledger, reason, segment
 from autograde.match import Relations, match
+from autograde.models import LedgerEntry
 from autograde.normalize import ConceptIndex, Embedder, fill_concepts, make_sim
 from autograde.score import score
 
@@ -116,8 +117,56 @@ def run_split(question, mode, split, include_synthetic=False, use_llm_feedback=T
         if a.answer_id in done:
             print(f"{a.answer_id}: already graded, skipped")
             continue
-        ctx = contexts.setdefault(a.question_id, Context.load(a.question_id))
+        if a.question_id not in contexts:
+            contexts[a.question_id] = Context.load(a.question_id)
+        ctx = contexts[a.question_id]
         res = run_answer(ctx, a.answer_id, a.text, mode, run_id, use_llm_feedback)
         print(f"{a.answer_id}: {res['score'].score:.1f}")
     db.finish_run(run_id)
     return run_id
+
+
+def apply_corrections(run_id, answer_id):
+    """The lecturer's overrides for this answer applied to its graded ledger: the ledger_corrected graph and the
+    corrected score (SPARQL parity checked). Overrides for reference triples that are no longer in the ledger (the key
+    changed) are skipped. Returns (corrected ScoreResult or None when no override applies, skipped overrides)."""
+    res = db.result(run_id, answer_id)
+    if res is None:
+        raise KeyError(f"{answer_id} is not graded in run {run_id}")
+    params, qid = db.run(run_id)["params"], res["question_id"]
+    entries = [LedgerEntry(**e) for e in res["ledger"]]
+    refs = {e.reference_id for e in entries}
+    overrides = db.overrides(answer_id)
+    use = [o for o in overrides if o["reference_id"] in refs]
+    skipped = [o for o in overrides if o["reference_id"] not in refs]
+    if not use:
+        return None, skipped
+    fixed = ledger.apply_overrides(entries, use, params)
+    name = kg.answer_graph_name(run_id, answer_id, "ledger_corrected")
+    kg.put_graph(name, ledger.to_graph(qid, fixed))
+    sc = score(answer_id, fixed, params)
+    sc.sparql_score = ledger.recompute_sparql(kg.get_graph(name), kg.get_graph(kg.gold_graph_name(qid)),
+                                              params["lambda"])
+    if abs(sc.score - sc.sparql_score) >= 1e-9:
+        raise ParityError(f"{answer_id}: corrected score parity failed")
+    db.save_corrected(run_id, answer_id, fixed, sc)
+    return sc, skipped
+
+
+def assessment_run(assessment_id):
+    """The one grading run of an assessment, created on first use. Mode auto: see grade_assessment_answer."""
+    run_id = f"assessment-{assessment_id}"
+    db.create_run(run_id, "auto", "all", "all", io.load_params(), io.frozen_path().exists(),
+                  io.load_config()["reasoner"], True, assessment_id)
+    return run_id
+
+
+def grade_assessment_answer(run_id, answer, contexts, use_llm_feedback=False):
+    """One row of db.assessment_answers: gold extraction when hand-annotated, else LLM. The lecturer's earlier
+    corrections for this answer are re-applied to the new ledger."""
+    if answer.question_id not in contexts:
+        contexts[answer.question_id] = Context.load(answer.question_id)
+    res = run_answer(contexts[answer.question_id], answer.answer_id, answer.text,
+                     "gold" if answer.annotated else "llm", run_id, use_llm_feedback)
+    apply_corrections(run_id, answer.answer_id)
+    return res

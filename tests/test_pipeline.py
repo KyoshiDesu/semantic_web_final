@@ -75,3 +75,27 @@ def test_skos_preset_finds_the_broader_concept(ctx):
                                         "keyConcept": "key:Glukosa", "studentConcept": "key:Makanan"}]
     for name, query in rdfviz.ANSWER_QUERIES.items():
         rdfviz.run_query(g, query)  # every preset still parses and runs against the stored graphs
+
+
+def test_assessment_grading_auto_mode_and_corrections(fresh_db, fast_context, monkeypatch):
+    from autograde import importer
+    importer.import_files()  # own database: other tests add overrides for Q1_A07
+    assessment = db.assessments(next(c["id"] for c in db.courses() if c["code"] == "DEMO"))[0]["id"]
+    run_id = pipeline.assessment_run(assessment)
+    assert pipeline.assessment_run(assessment) == run_id and db.run(run_id)["assessment_id"] == assessment
+    modes, orig = [], pipeline.run_answer
+    monkeypatch.setattr(pipeline, "run_answer", lambda *a, **k: modes.append(a[3]) or orig(*a, **k))
+    answers = db.assessment_answers(assessment)
+    a07 = next(a for a in answers.itertuples() if a.answer_id == "Q1_A07")
+    contexts = {}
+    pipeline.grade_assessment_answer(run_id, a07, contexts)
+    assert modes == ["gold"] and list(contexts) == ["Q1"]
+    assert db.results(run_id)["Q1_A07"]["score_corrected"] is None
+    db.add_overrides([{"answer_id": "Q1_A07", "reference_id": "R3", "status": "MATCHED", "by": "DS",
+                       "date": "2026-10-24", "reason": "air disebut"},
+                      {"answer_id": "Q1_A07", "reference_id": "R99", "status": "MATCHED", "by": "DS",
+                       "date": "2026-10-24", "reason": "old key"}])
+    sc, skipped = pipeline.apply_corrections(run_id, "Q1_A07")
+    assert sc.score == pytest.approx(90.0) and [o["reference_id"] for o in skipped] == ["R99"]
+    pipeline.grade_assessment_answer(run_id, a07, contexts)  # re-grade: the correction is re-applied
+    assert db.results(run_id)["Q1_A07"]["score_corrected"]["score"] == pytest.approx(90.0)
