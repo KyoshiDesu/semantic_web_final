@@ -393,3 +393,54 @@ def vis_graph(g, limit=400):
             nodes.setdefault(oid, {"id": oid, "kind": kind(o), "label": short(o), "title": oid})
         edges.append({"from": str(s), "to": oid, "kind": "triple", "label": short(p), "title": str(p)})
     return {"nodes": list(nodes.values()), "edges": edges, "details": {}, "truncated": len(triples) > limit}
+
+
+# ---------- Pellet before/after ----------
+
+def swrl_rule(t_pred, r_pred, negated, eq, inc):
+    """Which SWRL rule explains `t ag:contradicts r`: 1 incompatible predicate, not negated; 2 same predicate,
+    negated; 3 equivalent predicate, negated. A display aid derived from the inputs; not stored."""
+    if not negated and frozenset((t_pred, r_pred)) in inc:
+        return 1
+    if negated and t_pred == r_pred:
+        return 2
+    if negated and r_pred in eq.get(t_pred, ()):
+        return 3
+    return None
+
+
+def pellet_dots(g, eq, inc):
+    """(before, after) DOT from a stored answer graph plus its gold graph.
+
+    Before: the facts Python asserted for Pellet (alignment, negation, predicates and their ontology relations).
+    After: the same plus the inferred ag:contradicts edges, labelled with the SWRL rule that fired."""
+    pred = {s: name(o) for s, o in g.subject_objects(AG.hasPredicate)}
+    negated = {s: bool(o.toPython()) for s, o in g.subject_objects(AG.negated)}
+    aligned = sorted(set(g.subject_objects(AG.alignedSubject)) & set(g.subject_objects(AG.alignedObject)))
+    contra = sorted(g.subject_objects(AG.contradicts))
+    nodes = sorted({t for t, _ in aligned} | {r for _, r in aligned})
+    preds = sorted({pred[n] for n in nodes})
+    lines = ['digraph { rankdir=LR; node [fontname=Helvetica, fontsize=10]; edge [fontname=Helvetica, fontsize=9];']
+    for n in nodes:
+        is_student = n in negated
+        neg = "NOT " if negated.get(n) else ""
+        fill = "#e0e7ff" if is_student else "#dbeafe"
+        lines.append(f'"{name(n)}" [shape=box, style="rounded,filled", fillcolor="{fill}", '
+                     f'label="{esc(name(n))}\\n{neg}{esc(pred[n])}"];')
+        lines.append(f'"{name(n)}" -> "ag:{pred[n]}" [label="hasPredicate", color="#94a3b8", fontcolor="#64748b"];')
+    for p in preds:
+        lines.append(f'"ag:{p}" [shape=diamond, style=filled, fillcolor="#fef3c7", label="ag:{esc(p)}"];')
+    for i, a in enumerate(preds):
+        for b in preds[i + 1:]:
+            if frozenset((a, b)) in inc:
+                lines.append(f'"ag:{a}" -> "ag:{b}" [dir=none, color="#c62828", label="incompatibleWith"];')
+            elif b in eq.get(a, ()):
+                lines.append(f'"ag:{a}" -> "ag:{b}" [dir=none, color="#1d4ed8", label="equivalentPredicate"];')
+    for t, r in aligned:
+        lines.append(f'"{name(t)}" -> "{name(r)}" [label="alignedSubject +\\nalignedObject", color="#a855f7", '
+                     f'style=dashed];')
+    before = "\n".join(lines + ["}"])
+    inferred = [f'"{name(t)}" -> "{name(r)}" [label="ag:contradicts\\n(Aturan '
+                f'{swrl_rule(pred[t], pred[r], negated.get(t, False), eq, inc)})", color="#dc2626", '
+                f'fontcolor="#dc2626", style=dashed, penwidth=2.5];' for t, r in contra]
+    return before, "\n".join(lines + inferred + ["}"])

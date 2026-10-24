@@ -40,3 +40,25 @@ def test_vis_graph_covers_every_triple_and_truncates():
     assert rdfviz.vis_graph(g, limit=2)["truncated"]
     page = explorer.html(vis, node_types=rdfviz.VIS_NODE_TYPES, edge_types=rdfviz.VIS_EDGE_TYPES)
     assert "Literal" in page
+
+
+def test_swrl_rule_labels():
+    eq = {"menyerap": {"menyerap", "menggunakan"}, "menggunakan": {"menyerap", "menggunakan"}}
+    inc = {frozenset(("menghasilkan", "mengonsumsi"))}
+    assert rdfviz.swrl_rule("menghasilkan", "mengonsumsi", False, eq, inc) == 1
+    assert rdfviz.swrl_rule("menghasilkan", "menghasilkan", True, eq, inc) == 2
+    assert rdfviz.swrl_rule("menyerap", "menggunakan", True, eq, inc) == 3
+    assert rdfviz.swrl_rule("menyerap", "menggunakan", False, eq, inc) is None
+
+
+@pytest.mark.parametrize("answer_id, triple, ref, rule", [("Q1_A08", "Q1_A08_t4", "Q1_R2", 1),
+                                                          ("Q1_S03", "Q1_S03_t1", "Q1_R5", 2)])
+def test_pellet_before_after(answer_id, triple, ref, rule):
+    ctx = pipeline.Context.load("Q1", reasoner="sparql", cosine=STUB)
+    text = io.load_answers(include_synthetic=True).set_index("answer_id").text[answer_id]
+    pipeline.run_answer(ctx, answer_id, text, "gold", pipeline.ui_run(), use_llm_feedback=False)
+    g = kg.get_graph(kg.answer_graph_name("ui", answer_id, "answer"), kg.gold_graph_name("Q1"))
+    _, eq, inc = io.ontology_relations()
+    before, after = rdfviz.pellet_dots(g, eq, inc)
+    assert "alignedSubject" in before and "contradicts" not in before
+    assert f'"{triple}" -> "{ref}" [label="ag:contradicts\\n(Aturan {rule})"' in after

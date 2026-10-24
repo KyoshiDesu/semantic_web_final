@@ -216,6 +216,14 @@ def show_result(qid, answer_id, res):
     ok = abs(sc.score - sc.sparql_score) < 1e-9
     c[4].metric("Hitung ulang SPARQL", fb_mod.display_score(sc.sparql_score), "✓ sama" if ok else "✗ berbeda",
                 delta_color="normal" if ok else "inverse")
+    with st.expander("Bukti hitung ulang SPARQL (dibaca dari graf tersimpan)"):
+        gold_name, _, ledger_name = rdfviz.answer_graph_names(qid, res["run_id"], answer_id)
+        rows = ledger_mod.recompute_rows(kg.get_graph(ledger_name), kg.get_graph(gold_name), ctx.params["lambda"])
+        st.code(ledger_mod.RECOMPUTE_QUERY.strip(), language="sparql")
+        st.dataframe(pd.DataFrame([{"answer": rdfviz.short(r.ans), "skor (sebelum dipotong di 0)": float(r.raw.toPython())}
+                                   for r in rows]), hide_index=True)
+        st.caption(f"Skor Python = {sc.score:.4f} · skor SPARQL dari triple store = {sc.sparql_score:.4f} "
+                   f"{'✓' if ok else '✗'} · graf: `{ledger_name}` + `{gold_name}`")
     tabs = st.tabs(["Ledger & umpan balik", "Graf interaktif", "Graf penyelarasan", "Penalaran", "RDF (Turtle)", "SPARQL"])
     with tabs[0]:
         show_ledger(ctx, answer_id, res)
@@ -230,7 +238,7 @@ def show_result(qid, answer_id, res):
                    "merah: `ag:contradicts` dari SWRL; titik-titik: selaras tetapi predikat lain. "
                    f"Dibaca dari `{kg.answer_graph_name(res['run_id'], answer_id, 'answer')}`.")
     with tabs[3]:
-        show_reasoning(ctx, res)
+        show_reasoning(ctx, answer_id, res)
     names = rdfviz.answer_graph_names(qid, res["run_id"], answer_id)
     with tabs[4]:
         captions = ["Graf acuan (kunci dosen)", "Triple jawaban + provenance PROV-O + masukan/keluaran penalaran",
@@ -273,7 +281,7 @@ def show_ledger(ctx, answer_id, res):
     st.markdown(f"_{html.escape(fb.summary)}_ · sumber: {'LLM' if fb.source == 'llm' else 'templat'}")
 
 
-def show_reasoning(ctx, res):
+def show_reasoning(ctx, answer_id, res):
     p = ctx.params
     st.markdown(f"**1 · Normalisasi konsep** — tabel alias dulu, embedding hanya untuk konsep yang tidak dikenal. "
                 f"Parameter: τ<sub>h</sub> = {p['tau_h']}, τ<sub>l</sub> = {p['tau_l']}, δ = {p['delta']}, λ = {p['lambda']}.",
@@ -299,6 +307,20 @@ def show_reasoning(ctx, res):
         st.code("\n".join(f"ans:{t} ag:contradicts key:{ctx.qid}_{r} ." for t, r in contra), language="turtle")
     else:
         st.caption("Tidak ada kontradiksi. Triple acuan yang tidak disebut tetap Hilang (asumsi dunia terbuka).")
+    st.markdown("**5 · Pellet: sebelum dan sesudah penalaran**")
+    if aligned:
+        answer_name = kg.answer_graph_name(res["run_id"], answer_id, "answer")
+        g = kg.get_graph(answer_name, kg.gold_graph_name(ctx.qid))
+        _, eq, inc = io.ontology_relations()
+        before, after = rdfviz.pellet_dots(g, eq, inc)
+        c = st.columns(2)
+        c[0].caption("Sebelum: fakta yang ditegaskan Python (masukan Pellet)")
+        c[0].graphviz_chart(before)
+        c[1].caption("Sesudah: + `ag:contradicts` yang disimpulkan (merah putus-putus, dengan nomor aturan SWRL)")
+        c[1].graphviz_chart(after)
+        st.caption(f"Dibaca dari named graph `{answer_name}` + `{kg.gold_graph_name(ctx.qid)}`.")
+    else:
+        st.caption("Tidak ada pasangan selaras (σ ≥ τh), jadi Pellet tidak punya masukan untuk aturan kontradiksi.")
     if res["log"]:
         with st.expander(f"{len(res['log'])} triple dibuang saat ekstraksi (cek grounding)"):
             st.json(res["log"])
