@@ -125,6 +125,7 @@ def page_question():
     ctx = context(qid)
     q = db.question(qid)
     gold_notice(ctx)
+    st.caption("Ubah soal, rubrik dan triple acuan di halaman **Editor Soal**.")
     c1, c2 = st.columns(2)
     c1.subheader("Soal")
     c1.markdown(strip_comments(q["prompt"]))
@@ -458,6 +459,7 @@ PAGES = {"Ontologi": page_ontology, "Soal & Kunci": page_question, "Penjelajah G
          "Graf Pengetahuan": page_kg}
 nav = st.navigation({
     "Data": [st.Page(manage.page_courses, title="Mata Kuliah", url_path="mata-kuliah"),
+             st.Page(manage.page_editor, title="Editor Soal", url_path="editor"),
              st.Page(manage.page_import, title="Impor Jawaban", url_path="impor")],
     "Penilaian & Semantic Web": [st.Page(fn, title=title, url_path=fn.__name__.removeprefix("page_"),
                                          default=title == "Nilai Jawaban") for title, fn in PAGES.items()]})

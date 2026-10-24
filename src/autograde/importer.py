@@ -34,14 +34,14 @@ def validate_question(prompt, reference_answer, rubric, gold_raw, relations):
     return gold.validate(gold_raw, rubric, relations)
 
 
-def _relations():
+def checked_relations():
     relations, _, _ = io.ontology_relations()
     gold.check_predicates(io.load_predicates(), relations)
     return relations
 
 
 def read_questions(data_dir):
-    relations = _relations()
+    relations = checked_relations()
     out = {}
     for d in sorted(p for p in (data_dir / "questions").iterdir() if (p / "gold.yaml").exists()):
         gold_raw, rubric = io.load_yaml(d / "gold.yaml"), io.load_yaml(d / "rubric.yaml")
@@ -72,7 +72,7 @@ def add_question(assessment_id, files):
 def save_question(qid, prompt, reference_answer, rubric, gold_raw, assessment_id=None):
     """Create a question in assessment_id, or (without one) update an existing question. Validates before writing;
     the gold graph urn:ag:gold:<qid> is replaced either way."""
-    refs = validate_question(prompt, reference_answer, rubric, gold_raw, _relations())
+    refs = validate_question(prompt, reference_answer, rubric, gold_raw, checked_relations())
     if rubric["question_id"] != qid:
         raise ImportDataError(f"rubric.yaml says question_id {rubric['question_id']!r}, expected {qid!r}")
     exists = qid in db.questions()

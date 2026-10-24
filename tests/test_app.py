@@ -31,7 +31,7 @@ def grade(at, qid, answer_prefix):
 
 
 def test_static_pages(at):
-    for name in ["ontology", "question", "explorer", "sparql", "evaluation", "kg", "mata-kuliah", "impor"]:
+    for name in ["ontology", "question", "explorer", "sparql", "evaluation", "kg", "mata-kuliah", "editor", "impor"]:
         page(at, name)
         assert at.header or at.selectbox or at.info, name  # the page body rendered
 
@@ -97,3 +97,41 @@ def test_course_setup_and_lms_import(fresh_db, monkeypatch):
     assert not at.error, [e.value for e in at.error]
     assert db.students(course).values.tolist() == [["101", "Ani", 1]]
     assert db.answers().answer_id.tolist() == ["Q1B_101"]
+
+
+def test_question_editor_create_and_edit(fresh_db):
+    from autograde import authoring
+    from autograde.models import Feedback, ScoreResult
+    importer.import_files()
+    at = AppTest.from_file(str(io.ROOT / "app" / "streamlit_app.py"), default_timeout=180).run()
+    page(at, "editor")
+    assert not at.warning  # Q1 has no graded results yet
+    at.radio(key="ed_mode").set_value("Soal baru").run()
+    at.text_input(key="ed_new_id").set_value("Q1E")
+    at.selectbox(key="ed_copy").set_value("Q1").run()
+    assert not at.exception and not at.error, [e.value for e in at.error]
+    assert any("urn:ag:gold:Q1E" in c.value for c in at.caption)  # preview of the future named graph
+    draft = at.session_state["ed_draft"]
+    draft["criteria"].loc[0, "description"] = "Bahan baku"
+    at.session_state["ed_draft"] = draft
+    at.button(key="ed_save").click().run()
+    assert not at.exception and not at.error, [e.value for e in at.error]
+    assert db.question("Q1E")["rubric"]["criteria"][0]["description"] == "Bahan baku"
+    assert at.selectbox(key="ed_qid").value == "Q1E"  # switched to editing the new question
+
+    # a broken key blocks saving
+    draft = at.session_state["ed_draft"]
+    draft["triples"].loc[0, "o"] = None
+    at.session_state["ed_draft"] = draft
+    at.run()
+    assert at.error and at.button(key="ed_save").disabled
+
+    sc = ScoreResult(answer_id="Q1_A07", score=1, sum_weighted_credit=0, sum_penalty=0, sum_weights=1, params={},
+                     sparql_score=1)
+    db.create_run("r1", "gold", "all", "Q1", {}, False, "pellet", True)
+    db.save_result("r1", "Q1", "Q1_A07", {"sentences": [], "students": [], "entries": [], "score": sc, "log": [],
+                                          "feedback": Feedback(answer_id="Q1_A07", claims=[], summary=""),
+                                          "trace": {"sigmas": {}, "aligned": [], "contradictions": []}})
+    at.selectbox(key="ed_qid").set_value("Q1").run()
+    assert any("1 hasil penilaian" in w.value for w in at.warning)
+    assert authoring.to_tables(db.question("Q1"))["criteria"].description[0] != "Bahan baku"
