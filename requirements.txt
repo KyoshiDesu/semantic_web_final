@@ -50,6 +50,7 @@ pydantic==2.14.1
 pydantic-core==2.50.1
 pydeck==0.9.3
 pygments==2.21.0
+pyoxigraph==0.5.13
 pyparsing==3.3.3
 pytest==9.1.1
 python-dateutil==2.9.0.post0
