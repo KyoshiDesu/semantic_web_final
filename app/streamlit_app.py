@@ -13,7 +13,7 @@ from rdflib import OWL, RDF, Namespace
 
 import explorer
 import rdfviz
-from autograde import baselines, io, pipeline
+from autograde import baselines, db, io, kg, pipeline
 from autograde import feedback as fb_mod
 from autograde import ledger as ledger_mod
 from autograde.evaluate import human_totals
@@ -22,6 +22,13 @@ from autograde.models import STATUS_IRI_NAME
 from autograde.score import score
 
 st.set_page_config(page_title="AutoGrade-RDF", layout="wide")
+try:
+    if db.is_empty():
+        raise db.NoDatabaseError("no questions in the database; run `python -m autograde db import`")
+    kg.sync_ontology()
+except (db.NoDatabaseError, db.SchemaVersionError, kg.KGBusyError) as e:
+    st.error(str(e))
+    st.stop()
 
 
 # ---------- cached loaders ----------
@@ -43,7 +50,6 @@ def answers_table():
             totals.update(human_totals(sub, {qid: criterion_weights(ctx.refs)},
                                        dict.fromkeys(sub.answer_id.unique(), qid)).to_dict())
     df["human"] = df.answer_id.map(totals)
-    df["annotated"] = df.answer_id.map(lambda a: io.annotation_path(a) is not None)
     return df
 
 
@@ -59,8 +65,8 @@ def gold_notice(ctx):
         st.info("Triple acuan ini adalah contoh dari presentasi dan belum divalidasi dosen.")
 
 
-def read_md(path):
-    return re.sub(r"<!--.*?-->", "", path.read_text(encoding="utf-8"), flags=re.S).strip()
+def strip_comments(text):
+    return re.sub(r"<!--.*?-->", "", text, flags=re.S).strip()
 
 
 def chip(status):
@@ -116,13 +122,13 @@ def page_ontology():
 def page_question():
     qid = st.selectbox("Soal", io.question_ids(), format_func=question_label)
     ctx = context(qid)
-    d = io.question_dir(qid)
+    q = db.question(qid)
     gold_notice(ctx)
     c1, c2 = st.columns(2)
     c1.subheader("Soal")
-    c1.markdown(read_md(d / "question.md"))
+    c1.markdown(strip_comments(q["prompt"]))
     c2.subheader("Jawaban acuan")
-    c2.markdown(read_md(d / "reference_answer.md"))
+    c2.markdown(strip_comments(q["reference_answer"]))
     st.subheader("Rubrik dan triple acuan")
     w = criterion_weights(ctx.refs)
     st.dataframe(pd.DataFrame([{"Kriteria": c["id"], "Deskripsi": c["description"], "Bobot total": w[c["id"]]}
@@ -143,8 +149,9 @@ def page_question():
         st.dataframe(pd.DataFrame([{"Konsep": f"key:{c}", "Alias": ", ".join((v or {}).get("aliases", [])),
                                     "Lebih umum (skos:broader)": ", ".join((v or {}).get("broader") or [])}
                                    for c, v in ctx.gold_raw["concepts"].items()]), hide_index=True, use_container_width=True)
-    with st.expander("gold.ttl"):
-        st.code((d / "gold.ttl").read_text(encoding="utf-8"), language="turtle")
+    gold_name = kg.gold_graph_name(qid)
+    with st.expander(f"Turtle — named graph `{gold_name}`"):
+        st.code(kg.get_graph(gold_name).serialize(format="turtle"), language="turtle")
 
 
 def page_grade():
@@ -170,15 +177,13 @@ def page_grade():
         if pd.notna(a.human):
             c[0].metric("Nilai manusia" + (" (sintetis)" if a.synthetic else ""), f"{a.human:.1f}")
         c[1].metric("Baseline B1 (kata kunci)", f"{baselines.b1_keyword(text, ctx.refs, ctx.gold_raw['concepts']):.1f}")
-        annotation = io.annotation_path(answer_id)
-        if annotation is not None:
-            by = (io.load_yaml(annotation) or {}).get("annotated_by")
-            if by:
-                st.warning(f"Anotasi triple jawaban ini ditulis oleh **{by}**.")
+        by = (db.annotation(answer_id) or {}).get("annotated_by")
+        if by:
+            st.warning(f"Anotasi triple jawaban ini ditulis oleh **{by}**.")
     else:
         answer_id = f"{qid}_UI"
         text = st.text_area("Jawaban mahasiswa", height=120)
-    has_annotation = io.annotation_path(answer_id) is not None
+    has_annotation = db.annotation(answer_id) is not None
     mode = st.radio("Ekstraksi triple", ["gold", "llm"], horizontal=True, index=0 if has_annotation else 1,
                     format_func=lambda m: "Anotasi (gold)" if m == "gold" else "LLM (butuh API key)")
     use_llm_fb = st.checkbox("Umpan balik dari LLM (butuh API key)", value=False)

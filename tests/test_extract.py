@@ -63,11 +63,16 @@ def test_empty_answer_skips_llm():
     assert extract.extract_llm("A", [], backend=lambda *a: pytest.fail("called")) == ([], [])
 
 
-def test_gold_mode(tmp_path):
-    path = tmp_path / "a.yaml"
-    path.write_text("triples:\n  - {s: tumbuhan, p: memakai, o: cahaya, sentences: [3]}\n")
-    [st] = extract.extract_gold("Q1_A07", path=path, predicates=PREDS)
+def test_gold_mode():
+    annotation = {"triples": [{"s": "tumbuhan", "p": "memakai", "o": "cahaya", "sentences": [3]}]}
+    [st] = extract.extract_gold("Q1_A07", annotation=annotation, predicates=PREDS)
     assert (st.p, st.sentence_ids, st.negated) == ("menggunakan", ["Q1_A07_s3"], False)
+
+
+def test_gold_mode_reads_the_database_and_reports_missing():
+    assert [t.p for t in extract.extract_gold("Q1_A08")][-1] == "menghasilkan"
+    with pytest.raises(LookupError, match="Q1_NONE"):
+        extract.extract_gold("Q1_NONE")
 
 
 def test_english_extraction_prompt(monkeypatch, tmp_path):

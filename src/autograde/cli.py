@@ -8,7 +8,7 @@ from autograde import io
 def cmd_gold(args):
     from autograde import gold
     path, refs = gold.build(args.question)
-    print(f"{len(refs)} reference triples -> {path}\nreview table -> docs/gold_{args.question}_review.md")
+    print(f"{len(refs)} reference triples -> named graph {path}\nreview table -> docs/gold_{args.question}_review.md")
 
 
 def cmd_extract(args):
@@ -104,7 +104,7 @@ def cmd_db(args):
 def main(argv=None):
     p = argparse.ArgumentParser(prog="python -m autograde")
     sub = p.add_subparsers(dest="command", required=True)
-    s = sub.add_parser("gold", help="validate gold.yaml and write gold.ttl + review table")
+    s = sub.add_parser("gold", help="validate the question's gold key and write its named graph + review table")
     s.add_argument("--question", required=True)
     s.set_defaults(func=cmd_gold)
     s = sub.add_parser("extract", help="extract student triples only")

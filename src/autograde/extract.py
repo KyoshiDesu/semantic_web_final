@@ -1,7 +1,7 @@
 """Answer text -> StudentTriple[] (LLM mode with grounding check, or gold mode from hand annotations)."""
 import unicodedata
 
-from autograde import io, llm
+from autograde import db, io, llm
 from autograde.models import StudentTriple
 from autograde.normalize import content_tokens
 
@@ -132,17 +132,18 @@ def extract_llm(answer_id, sentences, *, backend=None, predicates=None, threshol
     return parse(answer_id, sentences, data, predicates, threshold)
 
 
-def extract_gold(answer_id, path=None, predicates=None):
-    """Hand-annotated triples: {triples: [{s, p, o, negated, sentences: [1, 2]}]}."""
-    path = path or io.annotation_path(answer_id)
-    if path is None:
-        raise FileNotFoundError(f"no annotation for {answer_id} in data/annotations/")
+def extract_gold(answer_id, annotation=None, predicates=None):
+    """Hand-annotated triples {triples: [{s, p, o, negated, sentences: [1, 2]}]}; from the database by default."""
+    if annotation is None:
+        annotation = db.annotation(answer_id)
+    if annotation is None:
+        raise LookupError(f"no triple annotation for {answer_id}")
     aliases = alias_map(predicates or io.load_predicates())
     out = []
-    for i, raw in enumerate(io.load_yaml(path)["triples"], 1):
+    for i, raw in enumerate(annotation.get("triples") or [], 1):
         p = aliases.get(raw["p"].lower())
         if p is None or p == "other":
-            raise ValueError(f"{path}: triple {i} has unusable predicate {raw['p']!r}")
+            raise ValueError(f"{answer_id}: triple {i} has unusable predicate {raw['p']!r}")
         out.append(StudentTriple(id=f"{answer_id}_t{i}", answer_id=answer_id, s_text=raw["s"], p=p, o_text=raw["o"],
                                  negated=bool(raw.get("negated", False)),
                                  sentence_ids=[f"{answer_id}_s{n}" for n in raw["sentences"]]))

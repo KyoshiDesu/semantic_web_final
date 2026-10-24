@@ -3,7 +3,7 @@ import copy
 import pytest
 from rdflib import RDF, Graph
 
-from autograde import gold, io
+from autograde import db, gold, io, kg
 from autograde.io import AG, KEY
 
 RELS = {"menggunakan", "menyerap", "mengonsumsi", "menghasilkan"}
@@ -11,8 +11,8 @@ RELS = {"menggunakan", "menyerap", "mengonsumsi", "menghasilkan"}
 
 @pytest.fixture
 def q1():
-    d = io.question_dir("Q1")
-    return io.load_yaml(d / "gold.yaml"), io.load_yaml(d / "rubric.yaml")
+    q = db.question("Q1")
+    return q["gold"], q["rubric"]
 
 
 def test_valid_gold(q1):
@@ -73,3 +73,10 @@ def test_gold_ttl_has_skos_hierarchy(q1):
     g = gold.to_graph("Q1", gold.validate(*q1, RELS), q1[1], q1[0]["concepts"])
     assert (KEY.Glukosa, SKOS.broader, KEY.Makanan) in g
     assert gold.ancestors(q1[0]["concepts"])["Glukosa"] == {"Makanan"}
+
+
+def test_store_graph_writes_the_named_graph():
+    name, refs = gold.store_graph("Q1")
+    assert name == "urn:ag:gold:Q1" and kg.has_graph(name)
+    assert len(kg.get_graph(name)) == len(gold.to_graph("Q1", refs, db.question("Q1")["rubric"],
+                                                          db.question("Q1")["gold"]["concepts"]))

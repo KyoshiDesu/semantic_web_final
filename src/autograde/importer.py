@@ -45,7 +45,7 @@ def read_answers(data_dir, question_ids):
             ann_path = ann_dir / f"{a.answer_id}.yaml"
             annotation = io.load_yaml(ann_path) if ann_path.exists() else None
             if annotation is not None:
-                extract.extract_gold(a.answer_id, path=ann_path, predicates=predicates)  # predicate check
+                extract.extract_gold(a.answer_id, annotation=annotation, predicates=predicates)  # predicate check
             rows.append({"answer_id": a.answer_id, "question_id": a.question_id, "text": a.text, "split": a.split,
                          "source": source, "annotation": annotation})
     ids = [r["answer_id"] for r in rows]

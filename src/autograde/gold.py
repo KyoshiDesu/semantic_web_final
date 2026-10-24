@@ -1,11 +1,11 @@
-"""gold.yaml -> validated ReferenceTriples -> gold.ttl (reified ag:ReferenceTriple individuals)."""
+"""Gold key (from the database) -> validated ReferenceTriples -> urn:ag:gold:<qid> (reified ag:ReferenceTriple individuals)."""
 from collections import defaultdict
 
 from pydantic import ValidationError
 from rdflib import RDF, RDFS, XSD, Graph, Literal
 from rdflib.namespace import SKOS
 
-from autograde import io
+from autograde import db, io, kg
 from autograde.io import AG, KEY
 from autograde.models import ReferenceTriple
 
@@ -95,11 +95,10 @@ def validate(gold, rubric, relations):
 
 def load(qid):
     """Validated (gold_raw, rubric, refs) for a question."""
-    d = io.question_dir(qid)
-    gold, rubric = io.load_yaml(d / "gold.yaml"), io.load_yaml(d / "rubric.yaml")
+    q = db.question(qid)
     relations, _, _ = io.ontology_relations()
     check_predicates(io.load_predicates(), relations)
-    return gold, rubric, validate(gold, rubric, relations)
+    return q["gold"], q["rubric"], validate(q["gold"], q["rubric"], relations)
 
 
 def criterion_weights(refs):
@@ -152,10 +151,18 @@ def review_md(qid, gold, rubric, refs):
     return "\n".join(lines) + "\n"
 
 
-def build(qid):
+def store_graph(qid):
+    """Write the question's gold graph to the knowledge graph store."""
     gold, rubric, refs = load(qid)
-    out = io.question_dir(qid) / "gold.ttl"
-    to_graph(qid, refs, rubric, gold.get("concepts")).serialize(out, format="turtle")
+    name = kg.gold_graph_name(qid)
+    kg.put_graph(name, to_graph(qid, refs, rubric, gold.get("concepts")))
+    return name, refs
+
+
+def build(qid):
+    """Gold graph into the store, plus the lecturer's review table in docs/."""
+    name, refs = store_graph(qid)
+    gold, rubric, _ = load(qid)
     (io.ROOT / "docs").mkdir(exist_ok=True)
     (io.ROOT / "docs" / f"gold_{qid}_review.md").write_text(review_md(qid, gold, rubric, refs), encoding="utf-8")
-    return out, refs
+    return name, refs

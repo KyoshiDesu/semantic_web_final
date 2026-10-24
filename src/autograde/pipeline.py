@@ -5,7 +5,7 @@ from datetime import datetime
 
 import pandas as pd
 
-from autograde import extract, feedback, gold, io, ledger, reason, segment
+from autograde import extract, feedback, gold, io, kg, ledger, reason, segment
 from autograde.match import Relations, match
 from autograde.normalize import ConceptIndex, Embedder, fill_concepts, make_sim
 from autograde.score import score
@@ -31,8 +31,8 @@ class Context:
     @classmethod
     def load(cls, qid, params=None, reasoner=None, cosine=None):
         gold_raw, rubric, refs = gold.load(qid)
-        if not (io.question_dir(qid) / "gold.ttl").exists():
-            gold.build(qid)
+        if not kg.has_graph(kg.gold_graph_name(qid)):
+            gold.store_graph(qid)
         cfg = io.load_config()
         broader = float(cfg.get("broader_similarity", 0.70))
         sim = make_sim(cosine or Embedder().cosine, gold.ancestors(gold_raw["concepts"]), broader)

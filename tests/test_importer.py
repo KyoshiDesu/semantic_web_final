@@ -63,3 +63,9 @@ def test_answer_for_unknown_question_is_rejected(fresh_db, tmp_path):
     (data / "answers" / "answers.csv").write_text("answer_id,question_id,text,split\nQ7_A1,Q7,x,test\n")
     with pytest.raises(importer.ImportDataError, match="unknown question Q7"):
         importer.import_files(data_dir=data)
+
+
+def test_io_reads_the_database():
+    assert io.question_ids() == ["Q1"]
+    assert io.load_answers().empty and len(io.load_answers(include_synthetic=True)) == 7
+    assert set(io.load_human_scores(include_synthetic=True).answer_id) <= set(SYNTHETIC)

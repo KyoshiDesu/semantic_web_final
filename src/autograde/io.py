@@ -80,53 +80,31 @@ def question_dir(qid):
 
 
 def question_ids():
-    return sorted(p.name for p in (ROOT / "data" / "questions").iterdir() if (p / "gold.yaml").exists())
+    from autograde import db
+    return db.questions()
 
 
 TOTAL = "_total"  # criterion name for a holistic score (one score per answer, no criteria)
 
 
 def load_answers(include_synthetic=False):
-    """answer_id, question_id, text, split, source, synthetic. Real lecturer data always; synthetic on request.
-
-    Synthetic rows are invented (Agent Rule 4).
-    """
-    sources = [(ROOT / "data" / "answers" / "answers.csv", "real")]
-    if include_synthetic:
-        sources.append((ROOT / "data" / "synthetic" / "answers.csv", "synthetic"))
-    frames = [pd.read_csv(path, dtype=str).assign(source=src) for path, src in sources if path.exists()]
-    if not frames:
-        return pd.DataFrame(columns=["answer_id", "question_id", "text", "split", "source", "synthetic"])
-    df = pd.concat(frames, ignore_index=True)
-    df["synthetic"] = df.source == "synthetic"
-    dupes = df["answer_id"][df["answer_id"].duplicated()]
-    if len(dupes):
-        raise ValueError(f"answer_id must be globally unique; duplicates: {sorted(set(dupes))}")
-    return df
+    """answer_id, question_id, text, split, source, synthetic, annotated. Synthetic rows only on request (Rule 4)."""
+    from autograde import db
+    return db.answers(include_synthetic)
 
 
 def load_human_scores(include_synthetic=False):
-    paths = [ROOT / "data" / "human" / "scores.csv"]
-    if include_synthetic:
-        paths.append(ROOT / "data" / "synthetic" / "scores.csv")
-    return pd.concat([load_scores(p) for p in paths], ignore_index=True)
+    from autograde import db
+    return db.human_scores(include_synthetic)
 
 
-def load_scores(path=None):
-    """Per-criterion human scores: answer_id, rater_id, criterion, score_0_100."""
-    path = path or ROOT / "data" / "human" / "scores.csv"
+def load_scores(path):
+    """Per-criterion human scores CSV: answer_id, rater_id, criterion, score_0_100 (used by the importer)."""
     if not Path(path).exists():
         return pd.DataFrame(columns=["answer_id", "rater_id", "criterion", "score_0_100"])
     df = pd.read_csv(path, dtype={"answer_id": str, "rater_id": str, "criterion": str})
     df["score_0_100"] = df["score_0_100"].astype(float)
     return df
-
-
-def annotation_path(answer_id):
-    for base in (ROOT / "data" / "annotations", ROOT / "data" / "synthetic" / "annotations"):
-        if (base / f"{answer_id}.yaml").exists():
-            return base / f"{answer_id}.yaml"
-    return None
 
 
 def ontology_path():
