@@ -93,8 +93,8 @@ The **final score** of an answer is `score_corrected` if present, else `score`.
 
 ### `grades.py` (new)
 
-- `status_table(assessment_id) -> DataFrame`: one row per answer with `answer_id, question_id, external_id, name, source, status, score, final, flags` (the number of ⚑ entries), `contradictions` and `reviewed_by`. It is computed from `assessment_answers`, `results` and `question_updated`.
-- `bulk_approvable(table)`: the answer ids with status `dinilai`, `flags == 0` and `contradictions == 0`.
+- `status_table(assessment_id) -> DataFrame`: one row per answer with `answer_id, question_id, external_id, name, source, status, score, final, flagged` (the number of ⚑ entries), `contradictions` and `reviewed_by`. It is computed from `assessment_answers`, `results` and `question_updated`.
+- `bulk_approvable(table)`: the answer ids with status `dinilai`, `flagged == 0` and `contradictions == 0`.
 - `ready(table)`: True when every row is `ditinjau`.
 - `grades_csv(table, qids, draft)`:
   - One row per student: the `external_id`, `name`, one column per question id (final score, 1 decimal) and `rata_rata`.
