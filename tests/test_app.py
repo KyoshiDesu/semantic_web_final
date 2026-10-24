@@ -31,7 +31,7 @@ def grade(at, qid, answer_prefix):
 
 
 def test_static_pages(at):
-    for name in ["ontology", "question", "explorer", "sparql", "evaluation", "kg", "mata-kuliah", "editor", "impor"]:
+    for name in ["ontology", "question", "explorer", "sparql", "evaluation", "kg", "mata-kuliah", "editor", "impor", "penilaian"]:
         page(at, name)
         assert at.header or at.selectbox or at.info, name  # the page body rendered
 
@@ -49,6 +49,10 @@ def test_grade_contradiction(at):
     grade(at, "Q1", "Q1_A08")
     assert next(m.value for m in at.metric if m.label == "Skor sistem") == "50.0"
     assert any("ag:contradicts" in c.value for c in at.code)
+
+
+def download(at, key):
+    return next(d for d in at.get("download_button") if d.key == key)
 
 
 class Upload:
@@ -135,3 +139,37 @@ def test_question_editor_create_and_edit(fresh_db):
     at.selectbox(key="ed_qid").set_value("Q1").run()
     assert any("1 hasil penilaian" in w.value for w in at.warning)
     assert authoring.to_tables(db.question("Q1"))["criteria"].description[0] != "Bahan baku"
+
+
+def test_grade_review_and_export_an_assessment(fresh_db, monkeypatch):
+    from autograde import pipeline
+    from test_pipeline import STUB
+    importer.import_files()
+    orig = pipeline.Context.load.__func__
+    monkeypatch.setattr(pipeline.Context, "load",
+                        classmethod(lambda cls, q, **k: orig(cls, q, reasoner="sparql", cosine=STUB)))
+    at = AppTest.from_file(str(io.ROOT / "app" / "streamlit_app.py"), default_timeout=180).run()
+    page(at, "penilaian")
+    at.button(key="gr_new").click().run()
+    assert not at.exception and not at.error, [e.value for e in at.error]
+    assert any("7 jawaban dinilai" in s.value for s in at.success)
+    assert download(at, "gr_final_grades").disabled and not download(at, "gr_draft_grades").disabled
+
+    at.text_input(key="gr_by").set_value("DS")
+    at.button(key="gr_bulk").click().run()
+    assert not at.error, [e.value for e in at.error]
+    run_id = "assessment-1"
+    pending = [a for a, r in db.results(run_id).items() if not r["reviewed"]]
+    assert "Q1_A08" in pending
+
+    at.selectbox(key="gr_answer").set_value("Q1_A08").run()
+    assert not at.exception, at.exception
+    at.button(key="gr_reviewed").click().run()  # approve as graded
+    for aid in [a for a, r in db.results(run_id).items() if not r["reviewed"]]:
+        at.selectbox(key="gr_answer").set_value(aid).run()
+        at.button(key="gr_reviewed").click().run()
+    assert not at.error, [e.value for e in at.error]
+    assert all(r["reviewed_by"] == "DS" for r in db.results(run_id).values())
+    assert not download(at, "gr_final_grades").disabled
+    for name in ["explorer", "kg", "evaluation"]:  # the assessment run (mode auto) shows on the graph pages
+        page(at, name)

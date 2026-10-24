@@ -11,6 +11,7 @@ import streamlit as st
 from rdflib import OWL, RDF, Namespace
 
 import explorer
+import grading
 import manage
 import rdfviz
 from autograde import baselines, db, evaluate, io, kg, pipeline
@@ -461,6 +462,7 @@ nav = st.navigation({
     "Data": [st.Page(manage.page_courses, title="Mata Kuliah", url_path="mata-kuliah"),
              st.Page(manage.page_editor, title="Editor Soal", url_path="editor"),
              st.Page(manage.page_import, title="Impor Jawaban", url_path="impor")],
+    "Penilaian Kelas": [st.Page(grading.page_grading, title="Penilaian", url_path="penilaian")],
     "Penilaian & Semantic Web": [st.Page(fn, title=title, url_path=fn.__name__.removeprefix("page_"),
                                          default=title == "Nilai Jawaban") for title, fn in PAGES.items()]})
 st.sidebar.caption("Skor = fungsi eksplisit atas ledger triple RDF (Pers. 6). LLM tidak pernah menentukan skor.")
