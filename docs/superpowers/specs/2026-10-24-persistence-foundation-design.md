@@ -129,8 +129,9 @@ CLI: `python -m autograde db init` (create empty stores) and `python -m autograd
 | `ledger.recompute_sparql(ledger_graph, gold_graph, lam)` | file paths | rdflib graphs |
 | `cli recompute` | run folder | `kg.get_graph` + `db.result` |
 | `cli override --run R [--file overrides.yaml]` | `overrides.yaml` | optional `--file` adds rows with `db.add_overrides`; applies `db.overrides()` and writes `ledger_corrected` graph + `db.save_corrected` |
-| `cli audit-template` | writes `data/human/evidence_audit.csv` | writes the blank template to `outputs/evidence_audit_template.csv` |
-| `evaluate` | run folder, CSVs, `evidence_audit.csv` | `db` + `kg`; saves the report with `db.save_evaluation` and prints it |
+| `cli audit-template` | writes `data/human/evidence_audit.csv` | writes the blank template to `outputs/reports/<run_id>/evidence_audit_template.csv`; the filled CSV comes back with the new `cli audit-import --file` |
+| `evaluate` | run folder, CSVs, `evidence_audit.csv` | `db` + `kg`; saves the report with `db.save_evaluation` and prints it; metrics CSVs and figures go to `outputs/reports/<run_id>/` |
+| `cli run` | always a new run | new `--run-id` option names or resumes a run |
 | `calibrate` | CSVs | `db`; still writes `config/frozen.yaml` |
 | `app/explorer.load_answer(run_id, answer_id)` | answer folder | `db.result` + `kg.get_graph` |
 | `app/rdfviz` path helpers | file paths | graph names; `merged_graph` takes names and calls `kg.get_graph` |
