@@ -94,3 +94,10 @@ Agent Rule 2: formula changes need a human decision recorded here. Newest last.
 - The SPARQL recompute now reads the ledger and gold graphs back from the store, so it audits what was persisted.
 - Oxigraph stores decimals canonically (`"2.0"` comes back as `"2"`); scores are unaffected because SPARQL compares numeric values.
 - Runs are resumable: re-running a run id skips answers that already have a result row. Evaluation figures go to `outputs/reports/<run>/`; the report text is stored with the run.
+
+## 2026-10-24 — Course workflow in the app (sub-projects 2–4)
+
+- Courses, assessments, questions (upload or Editor Soal), LMS answer import, class grading, review and export happen in the app. Specs: `docs/superpowers/specs/2026-10-24-{courses-and-import,question-authoring,grading-review-export}-design.md`.
+- The database now holds data that exists nowhere else, so schema changes are upgraded in place (`db.UPGRADES`, schema version 2) instead of asking for `db import --replace`.
+- One grading run per assessment (`assessment-<id>`, mode `auto`: gold extraction for hand-annotated answers, LLM otherwise). Lecturer corrections are re-applied after a re-grade when their reference triple still exists. Corrected scores still never feed `evaluate`.
+- Corrected answers get template feedback rebuilt from the corrected ledger in the export, because the stored feedback quotes the original score.
