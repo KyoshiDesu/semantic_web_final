@@ -229,9 +229,10 @@ def build(ctx, answers, params, human=None, predicates=None):
     return {"nodes": list(nodes.values()), "edges": edges, "details": details}
 
 
-def html(graph, height=720):
+def html(graph, height=720, node_types=None, edge_types=None):
     """Self-contained page: vis-network inlined, data as JSON, details rendered with textContent (no HTML injection)."""
-    data = json.dumps({"graph": graph, "nodeTypes": NODE_TYPES, "edgeTypes": EDGE_TYPES}, ensure_ascii=False)
+    data = json.dumps({"graph": graph, "nodeTypes": node_types or NODE_TYPES, "edgeTypes": edge_types or EDGE_TYPES},
+                      ensure_ascii=False)
     data = data.replace("</", "<\\/")  # keep student text from closing the <script> tag
     return TEMPLATE.replace("__VIS__", VIS_JS.read_text(encoding="utf-8")).replace("__DATA__", data) \
                    .replace("__HEIGHT__", str(height))

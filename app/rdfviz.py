@@ -321,3 +321,75 @@ WHERE { ?e ag:status ag:Hilang ; ag:reference ?r . ?r ag:criterion ?criterion . 
 GROUP BY ?criterion
 ORDER BY DESC(?missingEntries)""",
 }
+
+
+# ---------- knowledge graph page (Oxigraph, all named graphs) ----------
+
+KG_QUERIES = {
+    "Jumlah triple per named graph": PREFIXES + """
+SELECT ?graph (COUNT(*) AS ?triples)
+WHERE { GRAPH ?graph { ?s ?p ?o } }
+GROUP BY ?graph
+ORDER BY ?graph""",
+    "Hitung ulang skor tiap jawaban (Pers. 6) dari graf tersimpan": PREFIXES + """
+# One row per stored ledger graph: credits from the answer's ledger graph, weights from the question's gold graph.
+SELECT ?ledgerGraph ?answer ((100 * SUM(?w * ?c)) / SUM(?w) AS ?score)
+WHERE {
+  GRAPH ?ledgerGraph { ?e a ag:LedgerEntry ; ag:answer ?answer ; ag:reference ?r ; ag:credit ?c . }
+  GRAPH ?goldGraph { ?r ag:weight ?w . }
+  FILTER (STRENDS(STR(?ledgerGraph), ":ledger"))
+}
+GROUP BY ?ledgerGraph ?answer
+ORDER BY ?ledgerGraph""",
+    "Semua entri Kontradiksi untuk satu soal": PREFIXES + """
+SELECT ?ledgerGraph ?answer ?reference ?studentTriple
+WHERE {
+  GRAPH ?ledgerGraph { ?e ag:status ag:Kontradiksi ; ag:answer ?answer ; ag:reference ?reference ;
+                          ag:contradictedBy ?studentTriple . }
+  FILTER (STRSTARTS(STR(?reference), "http://example.org/autograde/key/Q1_"))   # change Q1 to another question
+}
+ORDER BY ?answer""",
+    "Triple jawaban dari satu kalimat (PROV-O)": PREFIXES + """
+SELECT ?answerGraph ?sentence ?text ?studentTriple
+WHERE {
+  GRAPH ?answerGraph { ?studentTriple prov:wasDerivedFrom ?sentence . ?sentence rdfs:label ?text . }
+  FILTER (STRENDS(STR(?sentence), "Q1_A07_s1"))   # change to another sentence id
+}""",
+    "Hierarki konsep satu soal (skos:broader+)": PREFIXES + """
+SELECT ?concept ?broader
+WHERE { GRAPH <urn:ag:gold:Q1> { ?concept skos:broader+ ?broader . } }
+ORDER BY ?concept ?broader""",
+}
+
+VIS_NODE_TYPES = {  # key: (legend label, colour, vis shape, shown by default)
+    "ag": ("ag: (skema/ontologi)", "#eab308", "diamond", True),
+    "key": ("key: (data dosen)", "#3b82f6", "dot", True),
+    "ans": ("ans: (data mahasiswa)", "#6366f1", "dot", True),
+    "other": ("IRI lain (rdf, owl, skos, prov)", "#64748b", "dot", True),
+    "literal": ("Literal", "#9ca3af", "box", True),
+}
+VIS_EDGE_TYPES = {"triple": ("Triple RDF (label = predikat)", "#94a3b8", False, 1, True)}
+
+
+def vis_graph(g, limit=400):
+    """Any RDF graph for the Semantic Explorer view: IRIs and literals are nodes, each triple an edge.
+
+    shortcut: shows the first `limit` triples (sorted); upgrade to paging if graphs grow past a few thousand."""
+    namespaces = (("ag", str(io.AG)), ("key", str(io.KEY)), ("ans", str(io.ANS)))
+
+    def kind(term):
+        return next((k for k, ns in namespaces if str(term).startswith(ns)), "other")
+
+    nodes, edges = {}, []
+    triples = sorted(g)
+    for i, (s, p, o) in enumerate(triples[:limit]):
+        nodes.setdefault(str(s), {"id": str(s), "kind": kind(s), "label": short(s), "title": str(s)})
+        if isinstance(o, Literal):
+            oid = f"literal:{i}"
+            text = str(short(o))
+            nodes[oid] = {"id": oid, "kind": "literal", "label": text[:40], "title": text}
+        else:
+            oid = str(o)
+            nodes.setdefault(oid, {"id": oid, "kind": kind(o), "label": short(o), "title": oid})
+        edges.append({"from": str(s), "to": oid, "kind": "triple", "label": short(p), "title": str(p)})
+    return {"nodes": list(nodes.values()), "edges": edges, "details": {}, "truncated": len(triples) > limit}

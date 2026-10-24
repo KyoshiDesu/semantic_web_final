@@ -80,6 +80,7 @@ def page_ontology():
     st.header("Ontologi OWL `ag:`")
     st.caption("Skema (TBox) yang dimuat Pellet untuk setiap jawaban. Dibuat oleh `ontology/build_ontology.py`, "
                "dapat dibuka dan diperiksa di Protégé.")
+    st.caption(f"Named graph: `{kg.ONTOLOGY}`")
     g = io.ontology_graph()
     SWRL = Namespace("http://www.w3.org/2003/11/swrl#")
     c = st.columns(5)
@@ -137,6 +138,7 @@ def page_question():
                                 "Kriteria": r.criterion, "Bobot": r.weight} for r in ctx.refs]),
                  hide_index=True, use_container_width=True)
     view = st.radio("Tampilan graf", ["Graf konsep", "RDF terreifikasi"], horizontal=True)
+    st.caption(f"Named graph: `{kg.gold_graph_name(qid)}`")
     if view == "Graf konsep":
         st.graphviz_chart(rdfviz.gold_concept_dot(ctx.refs, ctx.gold_raw["concepts"]))
         st.caption("Garis putus abu-abu: subjek alternatif yang juga diterima. Garis putus hijau-biru: hierarki konsep "
@@ -225,7 +227,8 @@ def show_result(qid, answer_id, res):
         st.graphviz_chart(rdfviz.alignment_dot(ctx.refs, res["students"], entries, res["trace"]))
         st.caption("Kiri: triple hasil ekstraksi ([konsep] dari tabel alias, [?] = tidak dikenal → embedding). "
                    "Kanan: triple acuan berwarna sesuai status. Panah tebal: bukti di ledger; "
-                   "merah: `ag:contradicts` dari SWRL; titik-titik: selaras tetapi predikat lain.")
+                   "merah: `ag:contradicts` dari SWRL; titik-titik: selaras tetapi predikat lain. "
+                   f"Dibaca dari `{kg.answer_graph_name(res['run_id'], answer_id, 'answer')}`.")
     with tabs[3]:
         show_reasoning(ctx, res)
     names = rdfviz.answer_graph_names(qid, res["run_id"], answer_id)
@@ -362,6 +365,7 @@ def page_explorer():
     human = answers_table().set_index("answer_id").human.dropna().to_dict()
     graph = explorer.build(ctx, [explorer.load_answer(run_id, a) for a in chosen], params, human)
     st.caption(f"{len(graph['nodes'])} node · {len(graph['edges'])} relasi")
+    st.caption(f"Named graph: `{kg.gold_graph_name(qid)}` + graf answer/ledger tiap jawaban terpilih.")
     components.html(explorer.html(graph, height=640), height=740, scrolling=False)
 
 
@@ -378,8 +382,58 @@ def page_evaluation():
             col.image(str(out / name))
 
 
+def page_kg():
+    st.header("Graf Pengetahuan (triple store Oxigraph)")
+    st.caption("Semua graf RDF tersimpan sebagai named graph dalam satu triple store: ontologi, kunci tiap soal, "
+               "dan graf jawaban/ledger tiap jawaban yang dinilai. Hanya baca.")
+    graphs = pd.DataFrame(kg.graphs())
+    if graphs.empty:
+        st.info("Triple store kosong. Jalankan `python -m autograde db import`.")
+        return
+    question_of = answers_table().set_index("answer_id").question_id
+    graphs["question"] = graphs.question.fillna(graphs.answer.map(question_of))
+    c = st.columns(3)
+    c[0].metric("Named graph", len(graphs))
+    c[1].metric("Triple (total)", int(graphs.triples.sum()))
+    c[2].metric("Run", graphs.run.nunique())
+    st.dataframe(graphs, hide_index=True, use_container_width=True)
+    name = st.selectbox("Lihat satu graf", list(graphs.name))
+    g = kg.get_graph(name)
+    tabs = st.tabs(["Turtle", "Graf interaktif", "Tabel triple", "SPARQL (seluruh dataset)"])
+    with tabs[0]:
+        ttl = g.serialize(format="turtle")
+        st.download_button("Unduh Turtle", ttl, file_name=rdfviz.turtle_file_name(name), key="kg_dl")
+        st.code(ttl, language="turtle")
+    with tabs[1]:
+        vis = rdfviz.vis_graph(g)
+        if vis["truncated"]:
+            st.caption(f"Menampilkan 400 dari {len(g)} triple.")
+        components.html(explorer.html(vis, height=600, node_types=rdfviz.VIS_NODE_TYPES,
+                                      edge_types=rdfviz.VIS_EDGE_TYPES), height=700, scrolling=False)
+    with tabs[2]:
+        st.dataframe(pd.DataFrame([[rdfviz.short(s), rdfviz.short(p), rdfviz.short(o)] for s, p, o in sorted(g)],
+                                  columns=["subjek", "predikat", "objek"]), hide_index=True, use_container_width=True)
+    with tabs[3]:
+        st.caption("Graf bawaan = gabungan semua named graph; pakai `GRAPH ?g { … }` untuk melihat asal triple.")
+        preset = st.selectbox("Kueri contoh", list(rdfviz.KG_QUERIES), key="kg_preset")
+        query = st.text_area("SPARQL", rdfviz.KG_QUERIES[preset], height=260, key=f"kg_q_{preset}")
+        if st.button("Jalankan kueri", key="kg_run"):
+            try:
+                result = kg.query(query)
+            except Exception as e:
+                st.error(f"Kueri gagal: {e}")
+                return
+            if isinstance(result, str):
+                st.code(result or "# (graf kosong)", language="turtle")
+            else:
+                st.dataframe(result.map(lambda v: rdfviz.short(v) if isinstance(v, str) else v),
+                             hide_index=True, use_container_width=True)
+                st.caption(f"{len(result)} baris")
+
+
 PAGES = {"Ontologi": page_ontology, "Soal & Kunci": page_question, "Penjelajah Graf": page_explorer,
-         "Nilai Jawaban": page_grade, "Konsol SPARQL": page_sparql, "Evaluasi": page_evaluation}
+         "Nilai Jawaban": page_grade, "Konsol SPARQL": page_sparql, "Evaluasi": page_evaluation,
+         "Graf Pengetahuan": page_kg}
 st.sidebar.title("AutoGrade-RDF")
 page = st.sidebar.radio("Halaman", list(PAGES), index=3)
 st.sidebar.caption("Skor = fungsi eksplisit atas ledger triple RDF (Pers. 6). LLM tidak pernah menentukan skor.")
