@@ -107,9 +107,22 @@ def add_question(qid, assessment_id, prompt, reference_answer, rubric, gold):
                   "VALUES (?, ?, ?, ?, ?, ?)", (qid, assessment_id, prompt, reference_answer, _dumps(rubric), _dumps(gold)))
 
 
-def questions():
+def courses():
     with tx() as c:
-        return [r[0] for r in c.execute("SELECT id FROM question ORDER BY id")]
+        return [dict(r) for r in c.execute("SELECT * FROM course ORDER BY code")]
+
+
+def assessments(course_id):
+    with tx() as c:
+        return [dict(r) for r in c.execute("SELECT * FROM assessment WHERE course_id = ? ORDER BY name", (course_id,))]
+
+
+def questions(assessment_id=None):
+    sql, args = "SELECT id FROM question", []
+    if assessment_id is not None:
+        sql, args = sql + " WHERE assessment_id = ?", [assessment_id]
+    with tx() as c:
+        return [r[0] for r in c.execute(sql + " ORDER BY id", args)]
 
 
 def question(qid):
@@ -130,6 +143,33 @@ def add_answers(rows):
                         None if r.get("annotation") is None else _dumps(r["annotation"])) for r in rows])
 
 
+def answer_ids(question_ids):
+    question_ids = list(question_ids)
+    with tx() as c:
+        return {r[0] for r in c.execute(f"SELECT id FROM answer WHERE question_id IN ({', '.join('?' * len(question_ids))})",
+                                        question_ids)}
+
+
+def students(course_id):
+    with tx() as c:
+        rows = [tuple(r) for r in c.execute(
+            "SELECT s.external_id, s.name, COUNT(a.id) FROM student s LEFT JOIN answer a ON a.student_id = s.id "
+            "WHERE s.course_id = ? GROUP BY s.id ORDER BY s.external_id", (course_id,))]
+    return pd.DataFrame(rows, columns=["external_id", "name", "answers"])
+
+
+def import_course_answers(course_id, rows):
+    """Students are created on first sight; a later import fills a missing name but never overwrites one."""
+    with tx() as c:
+        c.executemany("INSERT INTO student (course_id, external_id, name) VALUES (?, ?, ?) "
+                      "ON CONFLICT (course_id, external_id) DO UPDATE SET name = COALESCE(student.name, excluded.name)",
+                      [(course_id, r["external_id"], r.get("name") or None) for r in rows])
+        ids = dict(c.execute("SELECT external_id, id FROM student WHERE course_id = ?", (course_id,)).fetchall())
+        c.executemany("INSERT INTO answer (id, question_id, student_id, text, split, source) VALUES (?, ?, ?, ?, ?, ?)",
+                      [(r["answer_id"], r["question_id"], ids[r["external_id"]], r["text"], r["split"], r["source"])
+                       for r in rows])
+
+
 def answers(include_synthetic=False):
     """Real answers always; synthetic ones on request (Agent Rule 4)."""
     sql = "SELECT id, question_id, text, split, source, annotation IS NOT NULL FROM answer"
@@ -148,9 +188,10 @@ def annotation(answer_id):
     return None if row is None or row[0] is None else json.loads(row[0])
 
 
-def add_human_scores(df):
+def add_human_scores(df, replace=False):
     with tx() as c:
-        c.executemany("INSERT INTO human_score (answer_id, rater_id, criterion, score_0_100) VALUES (?, ?, ?, ?)",
+        c.executemany(f"INSERT {'OR REPLACE ' if replace else ''}INTO human_score "
+                      "(answer_id, rater_id, criterion, score_0_100) VALUES (?, ?, ?, ?)",
                       [(r.answer_id, r.rater_id, r.criterion, float(r.score_0_100)) for r in df.itertuples()])
 
 

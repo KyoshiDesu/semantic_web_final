@@ -104,3 +104,29 @@ def test_overrides_meta_and_audit(demo):
     audit = db.evidence_audit()
     assert list(audit.columns) == db.AUDIT_COLUMNS
     assert audit.loc[0, "claim_index"] == "1" and audit.loc[0, "status"] == ""
+
+
+def test_courses_students_and_course_answers(demo):
+    course = db.courses()[0]
+    assert course["code"] == "C1" and [a["name"] for a in db.assessments(course["id"])] == ["Midterm"]
+    assert db.questions(demo) == ["Q9"] and db.questions(demo + 1) == []
+    row = {"question_id": "Q9", "text": "t", "split": "test", "source": "real"}
+    db.import_course_answers(course["id"], [{**row, "answer_id": "Q9_1", "external_id": "1", "name": None},
+                                            {**row, "answer_id": "Q9_2", "external_id": "2", "name": "Ani"}])
+    db.add_question("Q8", demo, "P", "R", {"question_id": "Q8", "criteria": []}, {"question_id": "Q8", "triples": []})
+    db.import_course_answers(course["id"], [{**row, "question_id": "Q8", "answer_id": "Q8_1", "external_id": "1",
+                                             "name": "Budi"},
+                                            {**row, "question_id": "Q8", "answer_id": "Q8_2", "external_id": "2",
+                                             "name": "Other"}])
+    st = db.students(course["id"])
+    assert st.values.tolist() == [["1", "Budi", 2], ["2", "Ani", 2]]  # missing name filled, existing kept
+    assert db.answer_ids(["Q9"]) == {"Q9_A1", "Q9_S1", "Q9_1", "Q9_2"}
+
+
+def test_human_scores_replace(demo):
+    df = pd.DataFrame([["Q9_A1", "D1", "_total", 40.0]], columns=db.SCORE_COLUMNS)
+    db.add_human_scores(df)
+    with pytest.raises(sqlite3.IntegrityError):
+        db.add_human_scores(df)
+    db.add_human_scores(df.assign(score_0_100=70.0), replace=True)
+    assert db.human_scores().score_0_100.tolist() == [70.0]
