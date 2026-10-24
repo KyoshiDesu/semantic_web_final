@@ -196,7 +196,7 @@ def fmt(x, nd=3):
 def render(run, metrics, per_criterion, icc, recon, audit, b2_note, n):
     lines = [f"# Evaluation — run {run['run_id']}", ""]
     if run["include_synthetic"]:
-        lines += ["> **SYNTHETIC DATA — not real results.** This run includes data/synthetic answers.", ""]
+        lines += ["> **SYNTHETIC DATA — not real results.** This run includes synthetic answers.", ""]
     if not run["params_frozen"]:
         lines += ["> Parameters were not frozen when this run was made (allowed only for synthetic demos).", ""]
     p = run["params"]

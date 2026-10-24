@@ -23,7 +23,7 @@ def criterion_iri(qid, criterion):
 
 
 def broader_links(concepts):
-    """{concept: [broader concepts]} from gold.yaml's optional `broader:` lists."""
+    """{concept: [broader concepts]} from the gold key's optional `broader:` lists."""
     return {c: list((spec or {}).get("broader") or []) for c, spec in concepts.items()}
 
 
@@ -57,7 +57,7 @@ def check_predicates(predicates, relations):
 
 def validate(gold, rubric, relations):
     if gold.get("question_id") != rubric.get("question_id"):
-        raise GoldError("gold.yaml and rubric.yaml disagree on question_id")
+        raise GoldError("gold key and rubric disagree on question_id")
     criteria = {c["id"] for c in rubric["criteria"]}
     concepts = set(gold.get("concepts") or {})
     refs, errors = [], []

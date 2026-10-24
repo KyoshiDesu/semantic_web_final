@@ -87,3 +87,10 @@ Agent Rule 2: formula changes need a human decision recorded here. Newest last.
 - The SAF subset (data, AI-drafted keys and annotations, import script, tests) is removed; a better dataset will replace it. The only bundled data is Q1 with its synthetic answers.
 - Kept because they are generic: holistic `_total` human scores, `language: en` rubrics, English extraction prompts, `lang: en` predicates and the English ontology relations.
 - The two open questions about SAF (pronoun subjects, SAF in the article) no longer apply.
+
+## 2026-10-24 — Database storage (sub-project 1 of 4)
+
+- Records (courses, questions with rubric and gold key as JSON, answers, human scores, runs, results, overrides, evidence audit) live in SQLite; every RDF graph lives in an embedded Oxigraph store as a named graph (`urn:ag:ontology`, `urn:ag:gold:<qid>`, `urn:ag:run:<run>:<answer>:{answer|ledger|ledger_corrected}`). Spec: `docs/superpowers/specs/2026-10-24-persistence-foundation-design.md`.
+- The SPARQL recompute now reads the ledger and gold graphs back from the store, so it audits what was persisted.
+- Oxigraph stores decimals canonically (`"2.0"` comes back as `"2"`); scores are unaffected because SPARQL compares numeric values.
+- Runs are resumable: re-running a run id skips answers that already have a result row. Evaluation figures go to `outputs/reports/<run>/`; the report text is stored with the run.

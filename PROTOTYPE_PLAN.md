@@ -49,6 +49,8 @@
 
 ## 2. Repository layout
 
+> **Storage changed on 2026-10-24.** Records and RDF graphs now live in a database (SQLite + Oxigraph), not in `data/` and `outputs/runs/`. See `docs/superpowers/specs/2026-10-24-persistence-foundation-design.md`. The layout below is the original prototype's.
+
 ```
 autograde-rdf/
 ├── PROTOTYPE_PLAN.md            # this file
