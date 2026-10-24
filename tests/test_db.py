@@ -141,3 +141,36 @@ def test_update_question_and_result_count(demo):
     db.create_run("r1", "gold", "all", "Q9", {}, False, "pellet", True)
     db.save_result("r1", "Q9", "Q9_A1", fake_res())
     assert db.result_count("Q9") == 1
+
+
+def test_version_1_database_is_upgraded_in_place(demo):
+    con = sqlite3.connect(db.db_path())
+    for table, column in [("run", "assessment_id"), ("question", "updated"), ("result", "graded"),
+                          ("result", "reviewed"), ("result", "reviewed_by")]:
+        con.execute(f"ALTER TABLE {table} DROP COLUMN {column}")
+    con.execute("PRAGMA user_version = 1")
+    con.commit()
+    con.close()
+    assert db.questions() == ["Q9"]  # data kept
+    con = db.connect()
+    assert con.execute("PRAGMA user_version").fetchone()[0] == db.SCHEMA_VERSION
+    assert "reviewed_by" in [r[1] for r in con.execute("PRAGMA table_info(result)")]
+    con.close()
+    assert db.question_updated(["Q9"]) == {"Q9": None}
+
+
+def test_timestamps_review_marks_and_assessment_answers(demo):
+    before = db.question_updated(["Q9"])["Q9"]
+    db.create_run("a", "auto", "all", "all", {}, False, "pellet", True, assessment_id=demo)
+    assert db.run("a")["assessment_id"] == demo
+    db.save_result("a", "Q9", "Q9_A1", fake_res())
+    r = db.results("a")["Q9_A1"]
+    assert r["graded"] > before and r["reviewed"] is None and r["score"]["score"] == 50.0
+    db.mark_reviewed("a", ["Q9_A1"], "DS")
+    assert db.results("a")["Q9_A1"]["reviewed_by"] == "DS"
+    db.update_question("Q9", "P", "R", {"question_id": "Q9", "criteria": []}, {"question_id": "Q9"})
+    assert db.question_updated(["Q9"])["Q9"] > r["graded"]
+    db.save_result("a", "Q9", "Q9_A1", fake_res())  # re-grade clears the review
+    assert db.results("a")["Q9_A1"]["reviewed"] is None
+    df = db.assessment_answers(demo)
+    assert df.external_id.tolist() == ["Q9_A1", "Q9_S1"] and df.annotated.tolist() == [True, False]

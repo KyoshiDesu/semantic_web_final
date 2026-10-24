@@ -14,7 +14,13 @@ import pandas as pd
 
 from autograde import io
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
+# In-place upgrades: the database holds courses entered in the app, which `db import --replace` would destroy.
+UPGRADES = {1: ["ALTER TABLE run ADD COLUMN assessment_id INTEGER REFERENCES assessment(id)",
+                "ALTER TABLE question ADD COLUMN updated TEXT",
+                "ALTER TABLE result ADD COLUMN graded TEXT",
+                "ALTER TABLE result ADD COLUMN reviewed TEXT",
+                "ALTER TABLE result ADD COLUMN reviewed_by TEXT"]}
 SCHEMA = Path(__file__).with_name("schema.sql")
 ANSWER_COLUMNS = ["answer_id", "question_id", "text", "split", "source", "synthetic", "annotated"]
 SCORE_COLUMNS = ["answer_id", "rater_id", "criterion", "score_0_100"]
@@ -56,6 +62,12 @@ def connect(create=False):
         con.executescript(SCHEMA.read_text(encoding="utf-8"))
         con.execute(f"PRAGMA user_version = {SCHEMA_VERSION}")
     version = con.execute("PRAGMA user_version").fetchone()[0]
+    while version in UPGRADES:
+        with con:  # one transaction per step: a failed upgrade leaves the file at the old version
+            for sql in UPGRADES[version]:
+                con.execute(sql)
+            version += 1
+            con.execute(f"PRAGMA user_version = {version}")
     if version != SCHEMA_VERSION:
         con.close()
         raise SchemaVersionError(f"database schema is version {version}, code expects {SCHEMA_VERSION}; "
@@ -101,10 +113,15 @@ def add_assessment(course_id, name):
         return c.execute("INSERT INTO assessment (course_id, name) VALUES (?, ?)", (course_id, name)).lastrowid
 
 
+def _now():
+    return datetime.now().isoformat(timespec="microseconds")
+
+
 def add_question(qid, assessment_id, prompt, reference_answer, rubric, gold):
     with tx() as c:
-        c.execute("INSERT INTO question (id, assessment_id, prompt, reference_answer, rubric, gold) "
-                  "VALUES (?, ?, ?, ?, ?, ?)", (qid, assessment_id, prompt, reference_answer, _dumps(rubric), _dumps(gold)))
+        c.execute("INSERT INTO question (id, assessment_id, prompt, reference_answer, rubric, gold, updated) "
+                  "VALUES (?, ?, ?, ?, ?, ?, ?)",
+                  (qid, assessment_id, prompt, reference_answer, _dumps(rubric), _dumps(gold), _now()))
 
 
 def courses():
@@ -119,8 +136,8 @@ def assessments(course_id):
 
 def update_question(qid, prompt, reference_answer, rubric, gold):
     with tx() as c:
-        n = c.execute("UPDATE question SET prompt = ?, reference_answer = ?, rubric = ?, gold = ? WHERE id = ?",
-                      (prompt, reference_answer, _dumps(rubric), _dumps(gold), qid)).rowcount
+        n = c.execute("UPDATE question SET prompt = ?, reference_answer = ?, rubric = ?, gold = ?, updated = ? "
+                      "WHERE id = ?", (prompt, reference_answer, _dumps(rubric), _dumps(gold), _now(), qid)).rowcount
     if n == 0:
         raise KeyError(f"unknown question {qid!r}")
 
@@ -224,13 +241,13 @@ def _run(row):
     return r
 
 
-def create_run(run_id, mode, split, question, params, params_frozen, reasoner, include_synthetic):
+def create_run(run_id, mode, split, question, params, params_frozen, reasoner, include_synthetic, assessment_id=None):
     """Create the run, or check that the existing run with this id has the same selection (resuming it)."""
     with tx() as c:
         c.execute("INSERT OR IGNORE INTO run (id, mode, split, question, params, params_frozen, reasoner, "
-                  "include_synthetic, created) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                  "include_synthetic, created, assessment_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                   (run_id, mode, split, question, _dumps(params), int(params_frozen), reasoner,
-                   int(include_synthetic), datetime.now().isoformat(timespec="seconds")))
+                   int(include_synthetic), datetime.now().isoformat(timespec="seconds"), assessment_id))
         run_row = _run(c.execute("SELECT * FROM run WHERE id = ?", (run_id,)).fetchone())
     if (run_row["mode"], run_row["split"], run_row["question"]) != (mode, split, question):
         raise ValueError(f"run {run_id} exists for mode={run_row['mode']} split={run_row['split']} "
@@ -269,11 +286,11 @@ def save_result(run_id, question_id, answer_id, res):
                   "contradictions": [list(p) for p in trace["contradictions"]]}
     with tx() as c:
         c.execute("INSERT OR REPLACE INTO result (run_id, answer_id, question_id, score, sentences, students, ledger, "
-                  "feedback, trace, extraction_log) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                  "feedback, trace, extraction_log, graded) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                   (run_id, answer_id, question_id, _dumps(res["score"].model_dump()),
                    _dumps([list(s) for s in res["sentences"]]), _dumps([t.model_dump() for t in res["students"]]),
                    _dumps([e.model_dump() for e in res["entries"]]), _dumps(res["feedback"].model_dump()),
-                   _dumps(trace_json), _dumps(res["log"])))
+                   _dumps(trace_json), _dumps(res["log"]), _now()))
 
 
 def result(run_id, answer_id):
@@ -299,6 +316,43 @@ def result_ids(run_id, question_id=None):
         sql, args = sql + " AND question_id = ?", args + [question_id]
     with tx() as c:
         return [r[0] for r in c.execute(sql + " ORDER BY answer_id", args)]
+
+
+def results(run_id):
+    """Every result of a run in one query: {answer_id: result dict} (JSON columns decoded)."""
+    with tx() as c:
+        rows = c.execute("SELECT * FROM result WHERE run_id = ?", (run_id,)).fetchall()
+    out = {}
+    for row in rows:
+        r = dict(row)
+        for k in RESULT_JSON:
+            r[k] = None if r[k] is None else json.loads(r[k])
+        out[r["answer_id"]] = r
+    return out
+
+
+def mark_reviewed(run_id, answer_ids, by):
+    with tx() as c:
+        c.executemany("UPDATE result SET reviewed = ?, reviewed_by = ? WHERE run_id = ? AND answer_id = ?",
+                      [(_now(), by, run_id, a) for a in answer_ids])
+
+
+def question_updated(qids):
+    qids = list(qids)
+    with tx() as c:
+        return dict(c.execute(f"SELECT id, updated FROM question WHERE id IN ({', '.join('?' * len(qids))})", qids))
+
+
+def assessment_answers(assessment_id):
+    """Every answer to the assessment's questions; answers without a student (demo data) use the answer id."""
+    with tx() as c:
+        rows = [tuple(r) for r in c.execute(
+            "SELECT a.id, a.question_id, COALESCE(s.external_id, a.id), s.name, a.text, a.source, "
+            "a.annotation IS NOT NULL FROM answer a JOIN question q ON q.id = a.question_id "
+            "LEFT JOIN student s ON s.id = a.student_id WHERE q.assessment_id = ? ORDER BY a.id", (assessment_id,))]
+    df = pd.DataFrame(rows, columns=["answer_id", "question_id", "external_id", "name", "text", "source", "annotated"])
+    df["annotated"] = df.annotated.astype(bool)
+    return df
 
 
 def run_scores(run_id):
