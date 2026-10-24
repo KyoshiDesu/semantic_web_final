@@ -8,7 +8,6 @@ import re
 
 import pandas as pd
 import streamlit as st
-import streamlit.components.v1 as components
 from rdflib import OWL, RDF, Namespace
 
 import explorer
@@ -94,7 +93,7 @@ def page_ontology():
         st.graphviz_chart(rdfviz.ontology_classes_dot(g))
         st.caption("Garis putus merah: `owl:AllDisjointClasses` — tidak ada individu yang sekaligus triple acuan dan triple jawaban.")
     with tabs[1]:
-        st.dataframe(rdfviz.properties_table(g), hide_index=True, use_container_width=True)
+        st.dataframe(rdfviz.properties_table(g), hide_index=True, width="stretch")
     with tabs[2]:
         lang = st.radio("Bahasa", ["Semua", "Indonesia", "Inggris"], horizontal=True)
         preds = io.load_predicates()["predicates"]
@@ -104,7 +103,7 @@ def page_ontology():
                    "Merah: `ag:incompatibleWith` (simetris) → bahan aturan kontradiksi SWRL.")
         st.dataframe(pd.DataFrame([{"Predikat": p["id"], "Bahasa": p.get("lang"), "Alias (normalisasi teks)": ", ".join(p.get("aliases", [])),
                                     "Deskripsi": p["description"]} for p in preds
-                                   if only is None or p["id"] in only]), hide_index=True, use_container_width=True)
+                                   if only is None or p["id"] in only]), hide_index=True, width="stretch")
     with tabs[3]:
         st.markdown("Python menegaskan `alignedSubject`/`alignedObject` hanya untuk pasangan dengan σ ≥ τ<sub>h</sub> "
                     "(SWRL tidak bisa menghitung embedding). Pellet lalu menyimpulkan `ag:contradicts`.", unsafe_allow_html=True)
@@ -133,10 +132,10 @@ def page_question():
     st.subheader("Rubrik dan triple acuan")
     w = criterion_weights(ctx.refs)
     st.dataframe(pd.DataFrame([{"Kriteria": c["id"], "Deskripsi": c["description"], "Bobot total": w[c["id"]]}
-                               for c in ctx.rubric["criteria"]]), hide_index=True, use_container_width=True)
+                               for c in ctx.rubric["criteria"]]), hide_index=True, width="stretch")
     st.dataframe(pd.DataFrame([{"ID": r.id, "Subjek (diterima)": " / ".join(r.s), "Predikat": r.p, "Objek": r.o,
                                 "Kriteria": r.criterion, "Bobot": r.weight} for r in ctx.refs]),
-                 hide_index=True, use_container_width=True)
+                 hide_index=True, width="stretch")
     view = st.radio("Tampilan graf", ["Graf konsep", "RDF terreifikasi"], horizontal=True)
     st.caption(f"Named graph: `{kg.gold_graph_name(qid)}`")
     if view == "Graf konsep":
@@ -150,7 +149,7 @@ def page_question():
     with st.expander("Konsep dan alias (normalisasi sebelum embedding)"):
         st.dataframe(pd.DataFrame([{"Konsep": f"key:{c}", "Alias": ", ".join((v or {}).get("aliases", [])),
                                     "Lebih umum (skos:broader)": ", ".join((v or {}).get("broader") or [])}
-                                   for c, v in ctx.gold_raw["concepts"].items()]), hide_index=True, use_container_width=True)
+                                   for c, v in ctx.gold_raw["concepts"].items()]), hide_index=True, width="stretch")
     gold_name = kg.gold_graph_name(qid)
     with st.expander(f"Turtle — named graph `{gold_name}`"):
         st.code(kg.get_graph(gold_name).serialize(format="turtle"), language="turtle")
@@ -229,8 +228,8 @@ def show_result(qid, answer_id, res):
         show_ledger(ctx, answer_id, res)
     with tabs[1]:
         human = answers_table().set_index("answer_id").human.dropna().to_dict()
-        components.html(explorer.html(explorer.build(ctx, [explorer.load_answer(res["run_id"], answer_id)], ctx.params,
-                                                     human), height=600), height=700, scrolling=False)
+        st.iframe(explorer.html(explorer.build(ctx, [explorer.load_answer(res["run_id"], answer_id)], ctx.params,
+                                               human), height=600), height=700)
     with tabs[2]:
         st.graphviz_chart(rdfviz.alignment_dot(ctx.refs, res["students"], entries, res["trace"]))
         st.caption("Kiri: triple hasil ekstraksi ([konsep] dari tabel alias, [?] = tidak dikenal → embedding). "
@@ -289,12 +288,12 @@ def show_reasoning(ctx, answer_id, res):
     st.dataframe(pd.DataFrame([{"Triple": t.id.rsplit("_", 1)[1], "Subjek": t.s_text, "→ konsep": t.s_concept or "? (embedding)",
                                 "Predikat": t.p, "Negasi": t.negated, "Objek": t.o_text,
                                 "→ konsep ": t.o_concept or "? (embedding)", "Kalimat": ", ".join(t.sentence_ids)}
-                               for t in res["students"]]), hide_index=True, use_container_width=True)
+                               for t in res["students"]]), hide_index=True, width="stretch")
     if res["students"]:
         st.markdown("**2 · σ = min(sim subjek, sim objek)** untuk setiap pasangan (baris: triple jawaban, kolom: triple acuan).")
         table = rdfviz.sigma_table(ctx.refs, res["students"], res["trace"]["sigmas"])
         st.dataframe(table.style.format("{:.2f}").background_gradient(cmap="Greens", vmin=0, vmax=1),
-                     use_container_width=True)
+                     width="stretch")
     aligned = res["trace"]["aligned"]
     st.markdown(f"**3 · Fakta yang ditegaskan Python ke Pellet** (σ ≥ τ<sub>h</sub>): {len(aligned)} pasangan",
                 unsafe_allow_html=True)
@@ -338,7 +337,7 @@ def sparql_console(g, presets, key):
         if isinstance(result, str):
             st.code(result or "# (graf kosong)", language="turtle")
         else:
-            st.dataframe(result, hide_index=True, use_container_width=True)
+            st.dataframe(result, hide_index=True, width="stretch")
             st.caption(f"{len(result)} baris")
 
 
@@ -388,7 +387,7 @@ def page_explorer():
     graph = explorer.build(ctx, [explorer.load_answer(run_id, a) for a in chosen], params, human)
     st.caption(f"{len(graph['nodes'])} node · {len(graph['edges'])} relasi")
     st.caption(f"Named graph: `{kg.gold_graph_name(qid)}` + graf answer/ledger tiap jawaban terpilih.")
-    components.html(explorer.html(graph, height=640), height=740, scrolling=False)
+    st.iframe(explorer.html(graph, height=640), height=740)
 
 
 def page_evaluation():
@@ -418,7 +417,7 @@ def page_kg():
     c[0].metric("Named graph", len(graphs))
     c[1].metric("Triple (total)", int(graphs.triples.sum()))
     c[2].metric("Run", graphs.run.nunique())
-    st.dataframe(graphs, hide_index=True, use_container_width=True)
+    st.dataframe(graphs, hide_index=True, width="stretch")
     name = st.selectbox("Lihat satu graf", list(graphs.name))
     g = kg.get_graph(name)
     tabs = st.tabs(["Turtle", "Graf interaktif", "Tabel triple", "SPARQL (seluruh dataset)"])
@@ -430,11 +429,11 @@ def page_kg():
         vis = rdfviz.vis_graph(g)
         if vis["truncated"]:
             st.caption(f"Menampilkan 400 dari {len(g)} triple.")
-        components.html(explorer.html(vis, height=600, node_types=rdfviz.VIS_NODE_TYPES,
-                                      edge_types=rdfviz.VIS_EDGE_TYPES), height=700, scrolling=False)
+        st.iframe(explorer.html(vis, height=600, node_types=rdfviz.VIS_NODE_TYPES,
+                                edge_types=rdfviz.VIS_EDGE_TYPES), height=700)
     with tabs[2]:
-        st.dataframe(pd.DataFrame([[rdfviz.short(s), rdfviz.short(p), rdfviz.short(o)] for s, p, o in sorted(g)],
-                                  columns=["subjek", "predikat", "objek"]), hide_index=True, use_container_width=True)
+        st.dataframe(pd.DataFrame([[rdfviz.short(s), rdfviz.short(p), str(rdfviz.short(o))] for s, p, o in sorted(g)],
+                                  columns=["subjek", "predikat", "objek"]), hide_index=True, width="stretch")
     with tabs[3]:
         st.caption("Graf bawaan = gabungan semua named graph; pakai `GRAPH ?g { … }` untuk melihat asal triple.")
         preset = st.selectbox("Kueri contoh", list(rdfviz.KG_QUERIES), key="kg_preset")
@@ -449,7 +448,7 @@ def page_kg():
                 st.code(result or "# (graf kosong)", language="turtle")
             else:
                 st.dataframe(result.map(lambda v: rdfviz.short(v) if isinstance(v, str) else v),
-                             hide_index=True, use_container_width=True)
+                             hide_index=True, width="stretch")
                 st.caption(f"{len(result)} baris")
 
 

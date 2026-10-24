@@ -186,7 +186,7 @@ In the ledger view: "Python score = X · SPARQL score from the store = X ✓", w
 
 ### Acceptance
 
-1. `.venv/bin/pytest` passes offline.
+1. `conda run -n semantic_web pytest` passes offline.
 2. `python -m autograde db import` succeeds on a fresh checkout.
 3. `python -m autograde run --question Q1 --mode gold --split all --synthetic --template-feedback`, then `evaluate --run <id>`, `recompute`, and `override` all work against the DB.
 4. `streamlit run app/streamlit_app.py` shows every existing page plus the Knowledge Graph page, the Pellet before/after view and the parity check, with no reads from `data/`.

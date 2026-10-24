@@ -427,7 +427,7 @@ Each phase lists **tasks** and **acceptance checks**. The phases follow the four
 ### Phase 0 — Environment
 
 Tasks:
-- Python 3.11+, with a venv in VS Code.
+- Python 3.11+, in the `semantic_web` conda env.
 - Install `rdflib owlready2 pydantic pyyaml pandas numpy scipy sentence-transformers streamlit pytest python-dotenv`, plus the chosen LLM SDK.
 - Pin the exact versions that were installed in `requirements.txt`.
 - Check that Java is present (`java -version`). Owlready2 needs it to run Pellet.

@@ -20,7 +20,7 @@
 - Never keep a `pyoxigraph.Store` (or a query result) beyond one function call: RocksDB holds a process lock until every reference is gone.
 - Keep Indonesian in UI text and data, English in code, identifiers and comments (Agent Rule 9).
 - Synthetic rows keep `source = 'synthetic'`; reports that include them stay stamped "SYNTHETIC DATA" (Agent Rule 4).
-- Run the suite with `.venv/bin/pytest` (offline). The baseline before Task 1 is 147 passed.
+- Run the suite with `conda run -n semantic_web pytest` (offline). The baseline before Task 1 is 147 passed.
 - Commit messages end with `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`. Work on branch `persistence-foundation`.
 
 ## Review Focus
@@ -236,7 +236,7 @@ Expected: no output.
 
 - [ ] **Step 8: Run the full suite**
 
-Run: `.venv/bin/pytest -q`
+Run: `conda run -n semantic_web pytest -q`
 Expected: all pass. The count is 147 minus the deleted `test_saf.py` tests, plus the 2 moved tests.
 
 - [ ] **Step 9: Commit**
@@ -405,7 +405,7 @@ def test_overrides_meta_and_audit(demo):
 
 - [ ] **Step 3: Run the tests to confirm they fail**
 
-Run: `.venv/bin/pytest tests/test_db.py -q`
+Run: `conda run -n semantic_web pytest tests/test_db.py -q`
 Expected: collection error `ImportError: cannot import name 'db' from 'autograde'`.
 
 - [ ] **Step 4: Write the schema**
@@ -771,8 +771,8 @@ def set_meta(key, value):
 
 - [ ] **Step 6: Run the tests**
 
-Run: `.venv/bin/pytest tests/test_db.py -q`
-Expected: 6 passed. Then `.venv/bin/pytest -q`: everything still passes.
+Run: `conda run -n semantic_web pytest tests/test_db.py -q`
+Expected: 6 passed. Then `conda run -n semantic_web pytest -q`: everything still passes.
 
 - [ ] **Step 7: Commit**
 
@@ -802,7 +802,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 - [ ] **Step 1: Install and pin pyoxigraph**
 
 ```bash
-uv pip install --python .venv/bin/python pyoxigraph==0.5.13
+conda run -n semantic_web pip install pyoxigraph==0.5.13
 ```
 
 In `requirements.txt`, add the line `pyoxigraph==0.5.13` between `pygments==...` and `pyparsing==...`.
@@ -897,7 +897,7 @@ def test_calls_do_not_leak_the_store(store):
 
 - [ ] **Step 3: Run the tests to confirm they fail**
 
-Run: `.venv/bin/pytest tests/test_kg.py -q`
+Run: `conda run -n semantic_web pytest tests/test_kg.py -q`
 Expected: collection error `ImportError: cannot import name 'kg' from 'autograde'`.
 
 - [ ] **Step 4: Write `kg.py`**
@@ -1046,8 +1046,8 @@ def remove():
 
 - [ ] **Step 5: Run the tests**
 
-Run: `.venv/bin/pytest tests/test_kg.py -q`
-Expected: 6 passed. Then `.venv/bin/pytest -q`: everything passes.
+Run: `conda run -n semantic_web pytest tests/test_kg.py -q`
+Expected: 6 passed. Then `conda run -n semantic_web pytest -q`: everything passes.
 
 - [ ] **Step 6: Commit**
 
@@ -1186,7 +1186,7 @@ and change the `worked` fixture's signature to `def worked(imported_db):`.
 
 - [ ] **Step 2: Run the tests to confirm they fail**
 
-Run: `.venv/bin/pytest tests/test_importer.py tests/test_cli.py -q`
+Run: `conda run -n semantic_web pytest tests/test_importer.py tests/test_cli.py -q`
 Expected: errors on `ModuleNotFoundError: No module named 'autograde.importer'`.
 
 - [ ] **Step 3: Write `importer.py`**
@@ -1340,12 +1340,12 @@ and replace the last line `args.func(args)` with:
 
 - [ ] **Step 5: Run the tests**
 
-Run: `.venv/bin/pytest tests/test_importer.py tests/test_cli.py -q`
-Expected: 7 passed. Then `.venv/bin/pytest -q`: everything passes (other modules still read files, which is fine for now).
+Run: `conda run -n semantic_web pytest tests/test_importer.py tests/test_cli.py -q`
+Expected: 7 passed. Then `conda run -n semantic_web pytest -q`: everything passes (other modules still read files, which is fine for now).
 
 - [ ] **Step 6: Try it by hand**
 
-Run: `.venv/bin/python -m autograde db import && .venv/bin/python -m autograde db import`
+Run: `conda run -n semantic_web python -m autograde db import && conda run -n semantic_web python -m autograde db import`
 Expected: the first call prints `imported {'questions': 1, 'answers': 7, ...} -> .../db`; the second fails with `ImportDataError: the database is not empty; use ... --replace`.
 
 - [ ] **Step 7: Commit**
@@ -1419,7 +1419,7 @@ def test_io_reads_the_database():
 
 - [ ] **Step 2: Run them to confirm they fail**
 
-Run: `.venv/bin/pytest tests/test_gold.py tests/test_extract.py tests/test_importer.py -q`
+Run: `conda run -n semantic_web pytest tests/test_gold.py tests/test_extract.py tests/test_importer.py -q`
 Expected: failures on `AttributeError: module 'autograde.gold' has no attribute 'store_graph'` and `TypeError: extract_gold() got an unexpected keyword argument 'annotation'`.
 
 - [ ] **Step 3: Switch `io.py` to the database**
@@ -1584,7 +1584,7 @@ except (db.NoDatabaseError, db.SchemaVersionError, kg.KGBusyError) as e:
 
 - [ ] **Step 8: Run the suite**
 
-Run: `.venv/bin/pytest -q`
+Run: `conda run -n semantic_web pytest -q`
 Expected: all pass.
 
 - [ ] **Step 9: Commit**
@@ -1752,7 +1752,7 @@ def test_override_and_recompute_via_cli(tmp_path, monkeypatch, capsys):
 
 - [ ] **Step 2: Run them to confirm they fail**
 
-Run: `.venv/bin/pytest tests/test_pipeline.py tests/test_ledger.py tests/test_explorer.py tests/test_cli.py -q`
+Run: `conda run -n semantic_web pytest tests/test_pipeline.py tests/test_ledger.py tests/test_explorer.py tests/test_cli.py -q`
 Expected: failures such as `AttributeError: module 'autograde.pipeline' has no attribute 'ui_run'` and `TypeError` in `recompute_sparql`.
 
 - [ ] **Step 3: `ledger.py`: graphs in, no files out**
@@ -2050,16 +2050,16 @@ def page_evaluation():
 
 - [ ] **Step 11: Run the suite**
 
-Run: `.venv/bin/pytest -q`
+Run: `conda run -n semantic_web pytest -q`
 Expected: all pass except the 3 skipped evaluate tests.
 
 - [ ] **Step 12: Try it by hand**
 
 ```bash
-.venv/bin/python -m autograde db import --replace
-.venv/bin/python -m autograde run --question Q1 --mode gold --split all --synthetic --template-feedback --run-id demo
-.venv/bin/python -m autograde run --question Q1 --mode gold --split all --synthetic --template-feedback --run-id demo
-.venv/bin/python -m autograde recompute --run demo --answer Q1_A08
+conda run -n semantic_web python -m autograde db import --replace
+conda run -n semantic_web python -m autograde run --question Q1 --mode gold --split all --synthetic --template-feedback --run-id demo
+conda run -n semantic_web python -m autograde run --question Q1 --mode gold --split all --synthetic --template-feedback --run-id demo
+conda run -n semantic_web python -m autograde recompute --run demo --answer Q1_A08
 ```
 
 Expected: the first run prints one score per answer (7 lines; Q1_A08 is 50.0 because its contradiction is found by rules, not embeddings). The second prints `Q1_...: already graded, skipped` 7 times. `recompute` prints `Q1_A08: SPARQL 50.0000 | stored 50.0000 | OK`.
@@ -2140,7 +2140,7 @@ def test_audit_template_and_metrics(synthetic_run):
 
 - [ ] **Step 2: Run them to confirm they fail**
 
-Run: `.venv/bin/pytest tests/test_evaluate.py -q`
+Run: `conda run -n semantic_web pytest tests/test_evaluate.py -q`
 Expected: failures on `AttributeError: module 'autograde.evaluate' has no attribute 'report_dir'`.
 
 - [ ] **Step 3: Rewrite the run access in `evaluate.py`**
@@ -2284,7 +2284,7 @@ def page_evaluation():
 
 - [ ] **Step 6: Run the suite**
 
-Run: `.venv/bin/pytest -q`
+Run: `conda run -n semantic_web pytest -q`
 Expected: all pass, none skipped.
 
 - [ ] **Step 7: Commit**
@@ -2365,7 +2365,7 @@ In `tests/test_app.py`, add `"Graf Pengetahuan"` to the list in `test_static_pag
 
 - [ ] **Step 2: Run them to confirm they fail**
 
-Run: `.venv/bin/pytest tests/test_rdfviz.py -q`
+Run: `conda run -n semantic_web pytest tests/test_rdfviz.py -q`
 Expected: failures on `AttributeError: module 'rdfviz' has no attribute 'KG_QUERIES'`.
 
 - [ ] **Step 3: Let `explorer.html` take legend types**
@@ -2520,7 +2520,7 @@ Named-graph captions on the existing graph views:
 
 - [ ] **Step 6: Run the suite**
 
-Run: `.venv/bin/pytest -q`
+Run: `conda run -n semantic_web pytest -q`
 Expected: all pass.
 
 - [ ] **Step 7: Commit**
@@ -2573,7 +2573,7 @@ def test_pellet_before_after(answer_id, triple, ref, rule):
 
 - [ ] **Step 2: Run them to confirm they fail**
 
-Run: `.venv/bin/pytest tests/test_rdfviz.py -q`
+Run: `conda run -n semantic_web pytest tests/test_rdfviz.py -q`
 Expected: failures on `AttributeError: module 'rdfviz' has no attribute 'swrl_rule'`.
 
 - [ ] **Step 3: Write the DOT builders in `rdfviz.py`**
@@ -2670,7 +2670,7 @@ In `app/streamlit_app.py`:
 
 - [ ] **Step 5: Run the suite**
 
-Run: `.venv/bin/pytest -q`
+Run: `conda run -n semantic_web pytest -q`
 Expected: all pass.
 
 - [ ] **Step 6: Commit**
@@ -2719,7 +2719,7 @@ def test_no_module_reads_the_old_files():
 
 - [ ] **Step 2: Run it and fix every hit**
 
-Run: `.venv/bin/pytest tests/test_no_file_reads.py -q`
+Run: `conda run -n semantic_web pytest tests/test_no_file_reads.py -q`
 Expected: PASS. If it fails, each hit names a file and line: replace that read with the matching `db`/`kg` call from Tasks 5–7 (do not weaken the regex).
 
 Then check the prose for stale file names: `grep -n "\.ttl\|run\.json\|scores\.csv\|overrides\.yaml" src/autograde/*.py app/*.py`. Only `importer.py` and the Turtle download file names (`turtle_file_name`) may remain. Reword any docstring, comment or UI caption that still describes files (for example a `gold.ttl` mention) to the named graph (`urn:ag:gold:<qid>`).
@@ -2729,7 +2729,7 @@ Then check the prose for stale file names: `grep -n "\.ttl\|run\.json\|scores\.c
 In `README.md`, replace the "Run" section's code block with:
 
 ```bash
-.venv/bin/pytest                                   # all tests, offline (they build their own temp database)
+conda run -n semantic_web pytest                                   # all tests, offline (they build their own temp database)
 python -m autograde db import                      # once: data/ -> db/autograde.sqlite + db/kg/ (Oxigraph)
 python -m autograde gold --question Q1             # re-validate a key -> named graph urn:ag:gold:Q1 + docs/gold_Q1_review.md
 python -m autograde run --question Q1 --mode gold --split all --synthetic --template-feedback   # offline demo
@@ -2768,9 +2768,9 @@ Append to `docs/DECISIONS.md`:
 
 Run each and check the expected result:
 
-1. `.venv/bin/pytest -q`: all pass.
-2. `mv db db.bak 2>/dev/null; .venv/bin/python -m autograde db import`: prints the import counts (1 question, 7 answers).
-3. `.venv/bin/python -m autograde run --question Q1 --mode gold --split all --synthetic --template-feedback --run-id accept`, then `evaluate --run accept`, `recompute --run accept --answer Q1_A07`, and `override --run accept` (with no overrides it prints nothing and exits 0): all succeed. The report starts with `SYNTHETIC DATA`.
+1. `conda run -n semantic_web pytest -q`: all pass.
+2. `mv db db.bak 2>/dev/null; conda run -n semantic_web python -m autograde db import`: prints the import counts (1 question, 7 answers).
+3. `conda run -n semantic_web python -m autograde run --question Q1 --mode gold --split all --synthetic --template-feedback --run-id accept`, then `evaluate --run accept`, `recompute --run accept --answer Q1_A07`, and `override --run accept` (with no overrides it prints nothing and exits 0): all succeed. The report starts with `SYNTHETIC DATA`.
 4. `streamlit run app/streamlit_app.py`: open every page. On *Nilai Jawaban*, grade Q1_A08 and check the parity expander and the Pellet before/after graphs (Aturan 1). On *Graf Pengetahuan*, see the `accept` run's graphs, open one as Turtle, as an interactive graph and as a table, and run every preset. Confirm that `data/` is not read: `mv data data.off`, reload the app, use it, then `mv data.off data`.
 5. Restore your old database if step 2 moved one: `rm -rf db && mv db.bak db` (skip if there was none).
 
