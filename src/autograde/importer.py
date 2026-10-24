@@ -64,12 +64,26 @@ def add_question(assessment_id, files):
         except yaml.YAMLError as e:
             raise ImportDataError(f"{f}: {e}") from e
     rubric, gold_raw = parsed["rubric.yaml"], parsed["gold.yaml"]
-    prompt, ref = files["question.md"].strip(), files["reference_answer.md"].strip()
-    refs = validate_question(prompt, ref, rubric, gold_raw, _relations())
-    qid = rubric["question_id"]
-    if qid in db.questions():
+    qid = rubric.get("question_id") if isinstance(rubric, dict) else None
+    return save_question(qid, files["question.md"].strip(), files["reference_answer.md"].strip(), rubric, gold_raw,
+                         assessment_id)
+
+
+def save_question(qid, prompt, reference_answer, rubric, gold_raw, assessment_id=None):
+    """Create a question in assessment_id, or (without one) update an existing question. Validates before writing;
+    the gold graph urn:ag:gold:<qid> is replaced either way."""
+    refs = validate_question(prompt, reference_answer, rubric, gold_raw, _relations())
+    if rubric["question_id"] != qid:
+        raise ImportDataError(f"rubric.yaml says question_id {rubric['question_id']!r}, expected {qid!r}")
+    exists = qid in db.questions()
+    if assessment_id is not None and exists:
         raise ImportDataError(f"question {qid} already exists; change question_id in rubric.yaml and gold.yaml")
-    db.add_question(qid, assessment_id, prompt, ref, rubric, gold_raw)
+    if assessment_id is None and not exists:
+        raise ImportDataError(f"unknown question {qid}")
+    if exists:
+        db.update_question(qid, prompt, reference_answer, rubric, gold_raw)
+    else:
+        db.add_question(qid, assessment_id, prompt, reference_answer, rubric, gold_raw)
     kg.put_graph(kg.gold_graph_name(qid), gold.to_graph(qid, refs, rubric, gold_raw.get("concepts")))
     return qid
 

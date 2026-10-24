@@ -150,3 +150,22 @@ def test_scores_from_table(course):
         importer.scores_from_table(pd.DataFrame({"ID": ["999"], "N": ["1"]}), "ID", "Q1", {"_total": "N"}, "D1")
     with pytest.raises(importer.ImportDataError, match="unknown criteria"):
         importer.scores_from_table(table, "ID", "Q1", {"K9": "K1"}, "D1")
+
+
+def test_save_question_creates_then_updates(course):
+    q = db.question("Q1")
+    rubric, gold_raw = {**q["rubric"], "question_id": "Q1C"}, {**q["gold"], "question_id": "Q1C"}
+    importer.save_question("Q1C", "P", "R", rubric, gold_raw, assessment_id=course[1])
+    before = len(kg.get_graph(kg.gold_graph_name("Q1C")))
+    gold_raw = {**gold_raw, "triples": gold_raw["triples"][:-1]}
+    importer.save_question("Q1C", "P2", "R", rubric, gold_raw)
+    assert db.question("Q1C")["prompt"] == "P2" and len(db.question("Q1C")["gold"]["triples"]) == 4
+    assert len(kg.get_graph(kg.gold_graph_name("Q1C"))) < before
+    with pytest.raises(importer.ImportDataError, match="already exists"):
+        importer.save_question("Q1C", "P", "R", rubric, gold_raw, assessment_id=course[1])
+    with pytest.raises(importer.ImportDataError, match="unknown question Q1D"):
+        importer.save_question("Q1D", "P", "R", {**rubric, "question_id": "Q1D"}, {**gold_raw, "question_id": "Q1D"})
+    bad = {**gold_raw, "triples": [{**gold_raw["triples"][0], "o": "Bulan"}]}
+    with pytest.raises(gold.GoldError, match="undeclared concept"):
+        importer.save_question("Q1C", "P3", "R", rubric, bad)
+    assert db.question("Q1C")["prompt"] == "P2"

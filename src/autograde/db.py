@@ -117,6 +117,14 @@ def assessments(course_id):
         return [dict(r) for r in c.execute("SELECT * FROM assessment WHERE course_id = ? ORDER BY name", (course_id,))]
 
 
+def update_question(qid, prompt, reference_answer, rubric, gold):
+    with tx() as c:
+        n = c.execute("UPDATE question SET prompt = ?, reference_answer = ?, rubric = ?, gold = ? WHERE id = ?",
+                      (prompt, reference_answer, _dumps(rubric), _dumps(gold), qid)).rowcount
+    if n == 0:
+        raise KeyError(f"unknown question {qid!r}")
+
+
 def questions(assessment_id=None):
     sql, args = "SELECT id FROM question", []
     if assessment_id is not None:
@@ -277,6 +285,12 @@ def result(run_id, answer_id):
     for k in RESULT_JSON:
         out[k] = None if out[k] is None else json.loads(out[k])
     return out
+
+
+def result_count(question_id):
+    """Graded results over all runs that used this question's key."""
+    with tx() as c:
+        return c.execute("SELECT COUNT(*) FROM result WHERE question_id = ?", (question_id,)).fetchone()[0]
 
 
 def result_ids(run_id, question_id=None):

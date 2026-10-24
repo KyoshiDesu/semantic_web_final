@@ -130,3 +130,14 @@ def test_human_scores_replace(demo):
         db.add_human_scores(df)
     db.add_human_scores(df.assign(score_0_100=70.0), replace=True)
     assert db.human_scores().score_0_100.tolist() == [70.0]
+
+
+def test_update_question_and_result_count(demo):
+    db.update_question("Q9", "New?", "Ref2", {"question_id": "Q9", "criteria": []}, {"question_id": "Q9"})
+    assert db.question("Q9")["prompt"] == "New?" and db.question("Q9")["gold"] == {"question_id": "Q9"}
+    with pytest.raises(KeyError):
+        db.update_question("Q0", "p", "r", {}, {})
+    assert db.result_count("Q9") == 0
+    db.create_run("r1", "gold", "all", "Q9", {}, False, "pellet", True)
+    db.save_result("r1", "Q9", "Q9_A1", fake_res())
+    assert db.result_count("Q9") == 1
