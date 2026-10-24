@@ -41,3 +41,10 @@ def worked():
     return {"fx": fx, "refs": refs, "rubric": rubric, "sim": sim, "rel": Relations.from_ontology(),
             "params": fx["params"], "students": _students(fx["answer_id"], fx["triples"], index),
             "variant": _students(fx["answer_id"], variant_raws, index), "index": index}
+
+
+@pytest.fixture
+def fresh_db(tmp_path, monkeypatch):
+    """An empty, separate database directory for tests that build their own data."""
+    monkeypatch.setenv("AUTOGRADE_DB_DIR", str(tmp_path / "db"))
+    return tmp_path / "db"
