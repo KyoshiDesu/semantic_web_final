@@ -39,7 +39,16 @@ def cmd_calibrate(args):
 
 def cmd_evaluate(args):
     from autograde import evaluate
-    print(f"report -> {evaluate.evaluate(args.run, gold_run_id=args.gold_run)}")
+    print(evaluate.evaluate(args.run, gold_run_id=args.gold_run))
+    print(f"metrics and figures -> {evaluate.report_dir(args.run)}")
+
+
+def cmd_audit_import(args):
+    import pandas as pd
+    from autograde import db
+    df = pd.read_csv(args.file, dtype=str).fillna("")
+    db.add_evidence_audit(df)
+    print(f"{len(df)} evidence audit rows imported")
 
 
 def _run_or_exit(run_id):
@@ -141,9 +150,12 @@ def main(argv=None):
     s.add_argument("--run", required=True)
     s.add_argument("--file", help="YAML list of overrides to add first (answer_id, reference_id, status, by, date, reason)")
     s.set_defaults(func=cmd_override)
-    s = sub.add_parser("audit-template", help="blank evidence_audit.csv for the lecturer")
+    s = sub.add_parser("audit-template", help="blank evidence audit CSV for the lecturer (outputs/reports/<run>/)")
     s.add_argument("--run", required=True)
     s.set_defaults(func=cmd_audit_template)
+    s = sub.add_parser("audit-import", help="import the lecturer's filled evidence audit CSV")
+    s.add_argument("--file", required=True)
+    s.set_defaults(func=cmd_audit_import)
     s = sub.add_parser("db", help="create the database, or import data/ into it")
     s.add_argument("action", choices=["init", "import"])
     s.add_argument("--replace", action="store_true", help="rebuild a non-empty database from data/")

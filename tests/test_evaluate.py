@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from autograde import evaluate, io, pipeline
+from autograde import db, evaluate, io, pipeline
 from test_pipeline import STUB
 
 
@@ -24,47 +24,40 @@ def test_icc_perfect_and_known_value():
 
 @pytest.fixture
 def synthetic_run(tmp_path, monkeypatch):
-    monkeypatch.setattr(pipeline, "runs_dir", lambda: tmp_path)
+    monkeypatch.setattr(evaluate, "report_dir", lambda run_id: tmp_path / run_id)
     orig = pipeline.Context.load.__func__
     monkeypatch.setattr(pipeline.Context, "load",
                         classmethod(lambda cls, q, **k: orig(cls, q, reasoner="sparql", cosine=STUB)))
-    run_dir = pipeline.run_split("Q1", "gold", "all", include_synthetic=True, use_llm_feedback=False, run_id="t")
-    return run_dir
+    return pipeline.run_split("Q1", "gold", "all", include_synthetic=True, use_llm_feedback=False, run_id="eval_t")
 
 
-@pytest.mark.skip(reason="moved to the database in Task 7")
 def test_evaluate_synthetic_and_deterministic(synthetic_run):
     fail_b2 = lambda *a: (_ for _ in ()).throw(evaluate.llm.LLMUnavailable("no key"))
-    report = evaluate.evaluate("t", b2_backend=fail_b2)
-    first = (synthetic_run / "metrics.csv").read_bytes()
-    evaluate.evaluate("t", b2_backend=fail_b2)
-    assert (synthetic_run / "metrics.csv").read_bytes() == first
-    text = report.read_text()
-    assert "SYNTHETIC DATA" in text and "B2 LLM-only not computed" in text
-    metrics = pd.read_csv(synthetic_run / "metrics.csv")
+    report = evaluate.evaluate(synthetic_run, b2_backend=fail_b2)
+    metrics_path = evaluate.report_dir(synthetic_run) / "metrics.csv"
+    first = metrics_path.read_bytes()
+    evaluate.evaluate(synthetic_run, b2_backend=fail_b2)
+    assert metrics_path.read_bytes() == first
+    assert "SYNTHETIC DATA" in report and "B2 LLM-only not computed" in report
+    assert db.run(synthetic_run)["evaluation_md"] == report
+    metrics = pd.read_csv(metrics_path)
     assert set(metrics.system) == {"System (gold mode)", "System (gold mode), λ = 0.5", "B1 keyword"}
 
 
-@pytest.mark.skip(reason="moved to the database in Task 7")
-def test_unfrozen_real_run_refused(synthetic_run):
-    run = io.load_json(synthetic_run / "run.json")
-    io.save_json({**run, "include_synthetic": False, "params_frozen": False}, synthetic_run / "run.json")
+def test_unfrozen_real_run_refused():
+    db.create_run("unfrozen", "gold", "test", "Q1", io.load_params(), False, "sparql", False)
     with pytest.raises(evaluate.NotFrozenError):
-        evaluate.evaluate("t")
+        evaluate.evaluate("unfrozen")
 
 
-@pytest.mark.skip(reason="moved to the database in Task 7")
-def test_audit_template_and_metrics(synthetic_run, monkeypatch, tmp_path):
-    template = pd.read_csv(evaluate.audit_template("t"), dtype=str).fillna("")
+def test_audit_template_and_metrics(synthetic_run):
+    template = pd.read_csv(evaluate.audit_template(synthetic_run), dtype=str).fillna("")
     led = template.row_type == "ledger"
     template.loc[led, "present_in_answer"] = "yes"
     template.loc[led & template.status.isin(["MATCHED", "PARTIAL"]), "evidence_correct"] = "yes"
     template.loc[template.row_type == "claim", "supported"] = "no"
-    human = tmp_path / "root" / "data" / "human"
-    human.mkdir(parents=True)
-    template.to_csv(human / "evidence_audit.csv", index=False)
-    monkeypatch.setattr(io, "ROOT", tmp_path / "root")
-    m = evaluate.audit_metrics("t")
+    db.add_evidence_audit(template)
+    m = evaluate.audit_metrics(synthetic_run)
     hits = (led & template.status.isin(["MATCHED", "PARTIAL"])).sum()
     assert m["EP"] == (1.0, hits)
     assert m["ER"][0] == pytest.approx(hits / led.sum())

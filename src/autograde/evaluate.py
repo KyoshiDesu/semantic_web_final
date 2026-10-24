@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 from scipy import stats
 
-from autograde import baselines, gold, io, llm
+from autograde import baselines, db, gold, io, llm
 from autograde.models import LedgerEntry
 from autograde.score import score
 
@@ -57,8 +57,14 @@ def agreement(system, human):
     return row
 
 
-def load_ledger(run_dir, answer_id, suffix=""):
-    return [LedgerEntry(**e) for e in io.load_json(run_dir / answer_id / f"ledger{suffix}.json")]
+def report_dir(run_id):
+    """Metrics CSVs and figures; the report text itself is stored with the run in the database."""
+    return io.ROOT / "outputs" / "reports" / run_id
+
+
+def load_ledger(run_id, answer_id, corrected=False):
+    r = db.result(run_id, answer_id)
+    return [LedgerEntry(**e) for e in (r["ledger_corrected"] if corrected else r["ledger"])]
 
 
 def criterion_scores(entries):
@@ -70,11 +76,10 @@ def criterion_scores(entries):
 
 
 def audit_metrics(run_id):
-    path = io.ROOT / "data" / "human" / "evidence_audit.csv"
-    if not path.exists():
-        return {}
-    df = pd.read_csv(path, dtype=str).fillna("")
+    df = db.evidence_audit()
     df = df[df.run_id == run_id]
+    if df.empty:
+        return {}
     answer = {c: df[c].str.strip().str.lower() for c in ("evidence_correct", "present_in_answer", "supported")}
     ledger_row, detected = df.row_type == "ledger", df.status.isin(["MATCHED", "PARTIAL"])
     out = {}
@@ -91,15 +96,15 @@ def audit_metrics(run_id):
 
 
 def evaluate(run_id, gold_run_id=None, b2_backend=None):
-    from autograde import pipeline
-    run_dir = pipeline.runs_dir() / run_id
-    run = io.load_json(run_dir / "run.json")
+    run = db.run(run_id)
+    if run is None:
+        raise LookupError(f"no run {run_id}")
     synthetic = run["include_synthetic"]
     if not run["params_frozen"] and not synthetic:
         raise NotFrozenError("this run used unfrozen parameters; run `calibrate` and re-run the test split")
     if run["split"] not in ("test", "all"):
         raise ValueError("evaluate needs a run that covers the test split")
-    runs = pd.read_csv(run_dir / "scores.csv", dtype={"answer_id": str, "question_id": str})
+    runs = db.run_scores(run_id)
     runs = runs[runs.split == "test"].sort_values("answer_id").reset_index(drop=True)
     question_of = dict(zip(runs.answer_id, runs.question_id))
     ctx = {q: gold.load(q) for q in sorted(set(runs.question_id))}
@@ -112,10 +117,10 @@ def evaluate(run_id, gold_run_id=None, b2_backend=None):
 
     texts = io.load_answers(synthetic).set_index("answer_id").text
     systems = {f"System ({run['mode']} mode)": runs.score.to_numpy()}
-    lam05 = [score(a, load_ledger(run_dir, a), {"lambda": 0.5}).score for a in runs.answer_id]
+    lam05 = [score(a, load_ledger(run_id, a), {"lambda": 0.5}).score for a in runs.answer_id]
     systems[f"System ({run['mode']} mode), λ = 0.5"] = np.array(lam05)
     if gold_run_id:
-        g = pd.read_csv(pipeline.runs_dir() / gold_run_id / "scores.csv", dtype={"answer_id": str}).set_index("answer_id")
+        g = db.run_scores(gold_run_id).set_index("answer_id")
         systems["System (gold mode)"] = g.loc[runs.answer_id, "score"].to_numpy()
     systems["B1 keyword"] = np.array([baselines.b1_keyword(texts[a], ctx[question_of[a]][2],
                                                             ctx[question_of[a]][0]["concepts"]) for a in runs.answer_id])
@@ -135,7 +140,7 @@ def evaluate(run_id, gold_run_id=None, b2_backend=None):
     human_crit = human_criterion_scores(scores)
     crit_rows = []
     for a in runs.answer_id:
-        for c, s in criterion_scores(load_ledger(run_dir, a)).items():
+        for c, s in criterion_scores(load_ledger(run_id, a)).items():
             if (a, c) not in human_crit.index:  # holistic human score only
                 continue
             crit_rows.append({"answer_id": a, "criterion": c, "system": s, "human": human_crit.loc[(a, c)]})
@@ -152,13 +157,15 @@ def evaluate(run_id, gold_run_id=None, b2_backend=None):
     recon = float((abs(runs.score - runs.sparql_score) < 1e-9).mean())
     audit = audit_metrics(run_id)
 
-    metrics.round(6).to_csv(run_dir / "metrics.csv", index=False)
-    per_question.round(6).to_csv(run_dir / "metrics_per_question.csv", index=False)
-    per_criterion.round(6).to_csv(run_dir / "per_criterion_mae.csv")
-    figures(run_dir, runs.score.to_numpy(), h, per_criterion)
+    out = report_dir(run_id)
+    out.mkdir(parents=True, exist_ok=True)
+    metrics.round(6).to_csv(out / "metrics.csv", index=False)
+    per_question.round(6).to_csv(out / "metrics_per_question.csv", index=False)
+    per_criterion.round(6).to_csv(out / "per_criterion_mae.csv")
+    figures(out, runs.score.to_numpy(), h, per_criterion)
     report = render(run, metrics, per_criterion, icc, recon, audit, b2_note, len(runs))
-    (run_dir / "evaluation.md").write_text(report, encoding="utf-8")
-    return run_dir / "evaluation.md"
+    db.save_evaluation(run_id, report)
+    return report
 
 
 def figures(run_dir, system, human, per_criterion):
@@ -202,7 +209,7 @@ def render(run, metrics, per_criterion, icc, recon, audit, b2_note, n):
                      f"{fmt(m.spearman_rho)} ({fmt(m.spearman_p)}) | {fmt(m.MAE, 2)} | {fmt(m.RMSE, 2)} |")
     if b2_note:
         lines += ["", f"_{b2_note}_"]
-    lines += ["", "Per-question rows: `metrics_per_question.csv`.", "",
+    lines += ["", f"Per-question rows: `outputs/reports/{run['run_id']}/metrics_per_question.csv`.", "",
               "## Per-criterion error (system ledger vs lecturer criterion score)", "",
               "| Criterion | MAE |", "|---|---|"]
     lines += [f"| {c} | {v:.2f} |" for c, v in per_criterion.items()] or \
@@ -212,31 +219,27 @@ def render(run, metrics, per_criterion, icc, recon, audit, b2_note, n):
               "", "## Audit metrics", ""]
     for key, label in (("EP", "Evidence precision"), ("ER", "Evidence recall"), ("FF", "Feedback faithfulness")):
         lines.append(f"- {label} ({key}): {fmt(audit[key][0])} (n = {audit[key][1]})" if key in audit
-                     else f"- {label} ({key}): pending — lecturer has not filled data/human/evidence_audit.csv for this run")
+                     else f"- {label} ({key}): pending — no evidence audit imported for this run (`audit-template`, then `audit-import`)")
     lines += ["", "## Sanity check", "",
               f"Reconstruction rate (SPARQL score = Python score): {recon:.0%}. This holds by design and is not a finding.",
-              "", "Figures: `scatter.png`, `per_criterion.png`."]
+              "", f"Figures: `outputs/reports/{run['run_id']}/scatter.png`, `per_criterion.png`."]
     return "\n".join(lines) + "\n"
 
 
 def audit_template(run_id):
-    from autograde import pipeline
-    run_dir = pipeline.runs_dir() / run_id
-    runs = pd.read_csv(run_dir / "scores.csv", dtype={"answer_id": str}).sort_values("answer_id")
     rows = []
-    for a in runs.answer_id:
-        sentences = dict(io.load_json(run_dir / a / "sentences.json"))
-        for e in load_ledger(run_dir, a):
+    for a in db.run_scores(run_id).answer_id:
+        r = db.result(run_id, a)
+        sentences = {sid: text for sid, text in r["sentences"]}
+        for e in (LedgerEntry(**x) for x in r["ledger"]):
             rows.append({"row_type": "ledger", "run_id": run_id, "answer_id": a, "entry_id": e.entry_id,
                          "reference_id": e.reference_id, "status": e.status,
                          "quoted_sentences": " ".join(sentences.get(s, "") for s in e.sentence_ids),
                          "present_in_answer": "", "evidence_correct": ""})
-        fb = io.load_json(run_dir / a / "feedback.json")
-        for i, c in enumerate(fb["claims"], 1):
+        for i, c in enumerate(r["feedback"]["claims"], 1):
             rows.append({"row_type": "claim", "run_id": run_id, "answer_id": a, "claim_index": i, "text": c["text"],
                          "ledger_entry_ids": " ".join(c["ledger_entry_ids"]), "supported": ""})
-    cols = ["row_type", "run_id", "answer_id", "entry_id", "reference_id", "status", "quoted_sentences",
-            "present_in_answer", "evidence_correct", "claim_index", "text", "ledger_entry_ids", "supported"]
-    out = run_dir / "evidence_audit_template.csv"
-    pd.DataFrame(rows, columns=cols).to_csv(out, index=False)
+    out = report_dir(run_id) / "evidence_audit_template.csv"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    pd.DataFrame(rows, columns=db.AUDIT_COLUMNS).to_csv(out, index=False)
     return out

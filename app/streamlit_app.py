@@ -13,7 +13,7 @@ from rdflib import OWL, RDF, Namespace
 
 import explorer
 import rdfviz
-from autograde import baselines, db, io, kg, pipeline
+from autograde import baselines, db, evaluate, io, kg, pipeline
 from autograde import feedback as fb_mod
 from autograde import ledger as ledger_mod
 from autograde.evaluate import human_totals
@@ -366,7 +366,16 @@ def page_explorer():
 
 
 def page_evaluation():
-    st.info("Belum ada hasil evaluasi. Jalankan `python -m autograde evaluate --run <run_id>`.")
+    runs = [r for r in pipeline.completed_runs() if r["evaluation_md"]]
+    if not runs:
+        st.info("Belum ada hasil evaluasi. Jalankan `python -m autograde evaluate --run <run_id>`.")
+        return
+    run = st.selectbox("Run", runs, format_func=lambda r: r["run_id"])
+    st.markdown(run["evaluation_md"])
+    out = evaluate.report_dir(run["run_id"])
+    for col, name in zip(st.columns(2), ["scatter.png", "per_criterion.png"]):
+        if (out / name).exists():
+            col.image(str(out / name))
 
 
 PAGES = {"Ontologi": page_ontology, "Soal & Kunci": page_question, "Penjelajah Graf": page_explorer,
