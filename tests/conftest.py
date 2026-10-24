@@ -12,6 +12,17 @@ def pytest_collection_modifyitems(config, items):
             item.add_marker(skip)
 
 
+@pytest.fixture(scope="session", autouse=True)
+def imported_db(tmp_path_factory):
+    """Every test runs against real SQLite + Oxigraph stores imported from the repo's data/."""
+    from autograde import importer
+    mp = pytest.MonkeyPatch()
+    mp.setenv("AUTOGRADE_DB_DIR", str(tmp_path_factory.mktemp("db")))
+    importer.import_files()
+    yield
+    mp.undo()
+
+
 from pathlib import Path  # noqa: E402
 
 from autograde import gold, io as agio  # noqa: E402
@@ -30,7 +41,7 @@ def _students(answer_id, raws, index):
 
 
 @pytest.fixture(scope="session")
-def worked():
+def worked(imported_db):
     """Deck example A07 with the stubbed embedding, plus its contradiction variant."""
     fx = agio.load_yaml(FIXTURE)
     gold_raw, rubric, refs = gold.load("Q1")

@@ -91,6 +91,16 @@ def cmd_audit_template(args):
     print(f"audit template -> {evaluate.audit_template(args.run)}")
 
 
+def cmd_db(args):
+    from autograde import db, importer, kg
+    if args.action == "init":
+        db.connect(create=True).close()
+        kg.sync_ontology()
+        print(f"empty database -> {db.db_dir()}")
+    else:
+        print(f"imported {importer.import_files(replace=args.replace)} -> {db.db_dir()}")
+
+
 def main(argv=None):
     p = argparse.ArgumentParser(prog="python -m autograde")
     sub = p.add_subparsers(dest="command", required=True)
@@ -128,5 +138,16 @@ def main(argv=None):
     s = sub.add_parser("audit-template", help="blank evidence_audit.csv for the lecturer")
     s.add_argument("--run", required=True)
     s.set_defaults(func=cmd_audit_template)
+    s = sub.add_parser("db", help="create the database, or import data/ into it")
+    s.add_argument("action", choices=["init", "import"])
+    s.add_argument("--replace", action="store_true", help="rebuild a non-empty database from data/")
+    s.set_defaults(func=cmd_db)
     args = p.parse_args(argv)
+    if args.command != "db":
+        from autograde import db
+        try:
+            if db.is_empty():
+                sys.exit("no questions in the database; run `python -m autograde db import`")
+        except (db.NoDatabaseError, db.SchemaVersionError) as e:
+            sys.exit(str(e))
     args.func(args)
