@@ -11,6 +11,7 @@ import streamlit as st
 from rdflib import OWL, RDF, Namespace
 
 import explorer
+import manage
 import rdfviz
 from autograde import baselines, db, evaluate, io, kg, pipeline
 from autograde import feedback as fb_mod
@@ -455,7 +456,10 @@ def page_kg():
 PAGES = {"Ontologi": page_ontology, "Soal & Kunci": page_question, "Penjelajah Graf": page_explorer,
          "Nilai Jawaban": page_grade, "Konsol SPARQL": page_sparql, "Evaluasi": page_evaluation,
          "Graf Pengetahuan": page_kg}
-st.sidebar.title("AutoGrade-RDF")
-page = st.sidebar.radio("Halaman", list(PAGES), index=3)
+nav = st.navigation({
+    "Data": [st.Page(manage.page_courses, title="Mata Kuliah", url_path="mata-kuliah"),
+             st.Page(manage.page_import, title="Impor Jawaban", url_path="impor")],
+    "Penilaian & Semantic Web": [st.Page(fn, title=title, url_path=fn.__name__.removeprefix("page_"),
+                                         default=title == "Nilai Jawaban") for title, fn in PAGES.items()]})
 st.sidebar.caption("Skor = fungsi eksplisit atas ledger triple RDF (Pers. 6). LLM tidak pernah menentukan skor.")
-PAGES[page]()
+nav.run()
