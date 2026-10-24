@@ -5,10 +5,9 @@ Auditable short-answer scoring for Indonesian answers. The score is a published 
 ## Setup
 
 ```bash
-# The project folder is synced by iCloud, which hides files inside a venv and breaks imports,
-# so the venv lives outside ~/Documents and .venv is a symlink to it.
-uv venv --python 3.12 ~/.venvs/semantic_web_final && ln -sfn ~/.venvs/semantic_web_final .venv
-uv pip install --python .venv/bin/python -r requirements.txt -e .
+# conda keeps the env outside ~/Documents, so iCloud sync can't hide files inside it.
+conda create -n semantic_web python=3.12 pip && conda activate semantic_web
+pip install -r requirements.txt -e .
 cp .env.example .env          # add ANTHROPIC_API_KEY for LLM extraction, feedback and baseline B2
 ```
 
@@ -17,7 +16,7 @@ Pellet needs **Java 25+** (Owlready2 0.51). It is looked up in `JAVA_EXE`, `JAVA
 ## Run
 
 ```bash
-.venv/bin/pytest                                   # all tests, offline (they build their own temp database)
+pytest                                             # all tests, offline (they build their own temp database)
 python -m autograde db import                      # once: data/ -> db/autograde.sqlite + db/kg/ (Oxigraph)
 python -m autograde gold --question Q1             # re-validate a key -> named graph urn:ag:gold:Q1 + docs/gold_Q1_review.md
 python -m autograde run --question Q1 --mode gold --split all --synthetic --template-feedback   # offline demo
