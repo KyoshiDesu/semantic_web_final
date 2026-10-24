@@ -4,7 +4,7 @@ from typing import Literal
 from pydantic import BaseModel, Field, field_validator
 
 Status = Literal["MATCHED", "PARTIAL", "MISSING", "CONTRADICTED"]
-# Ledger status -> ag:Status individual used in ledger.ttl (deck slide 3.2)
+# Ledger status -> ag:Status individual used in the ledger graph (deck slide 3.2)
 STATUS_IRI_NAME = {"MATCHED": "Cocok", "PARTIAL": "Parsial", "MISSING": "Hilang", "CONTRADICTED": "Kontradiksi"}
 
 

@@ -4,7 +4,7 @@ import re
 import pandas as pd
 from rdflib import OWL, RDF, RDFS, Graph, Literal
 
-from autograde import io
+from autograde import db, io, kg
 from autograde.io import AG
 
 STATUS_COLOR = {"MATCHED": "#2e7d32", "PARTIAL": "#b26a00", "MISSING": "#757575", "CONTRADICTED": "#c62828"}
@@ -168,25 +168,32 @@ def sigma_table(refs, students, sigmas):
 
 # ---------- RDF graphs and SPARQL ----------
 
-def merged_graph(paths):
+def merged_graph(names):
+    """Ontology plus named graphs from the store, as one rdflib graph for the SPARQL console."""
     g = io.bind_namespaces(Graph())
     for triple in io.ontology_graph():
         g.add(triple)
-    for p in paths:
-        if p.exists():
-            g.parse(p)
+    for triple in kg.get_graph(*names):
+        g.add(triple)
     return g
 
 
-def answer_graph_paths(qid, out_dir):
-    return [io.question_dir(qid) / "gold.ttl", out_dir / "answer.ttl", out_dir / "ledger.ttl"]
+def answer_graph_names(qid, run_id, answer_id):
+    return [kg.gold_graph_name(qid), kg.answer_graph_name(run_id, answer_id, "answer"),
+            kg.answer_graph_name(run_id, answer_id, "ledger")]
 
 
-def run_graph_paths(run_dir, question_ids):
-    paths = [io.question_dir(q) / "gold.ttl" for q in sorted(question_ids)]
-    for d in sorted(p for p in run_dir.iterdir() if p.is_dir()):
-        paths += [d / "answer.ttl", d / "ledger.ttl"]
-    return paths
+def run_graph_names(run_id):
+    scores = db.run_scores(run_id)
+    names = [kg.gold_graph_name(q) for q in sorted(set(scores.question_id))]
+    for a in scores.answer_id:
+        names += [kg.answer_graph_name(run_id, a, "answer"), kg.answer_graph_name(run_id, a, "ledger")]
+    return names
+
+
+def turtle_file_name(name):
+    """urn:ag:gold:Q1 -> gold_Q1.ttl"""
+    return name.split(":", 2)[2].replace(":", "_") + ".ttl"
 
 
 def run_query(g, query):

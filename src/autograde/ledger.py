@@ -1,12 +1,11 @@
-"""One LedgerEntry per reference triple; JSON/CSV/TTL output; SPARQL score recompute; lecturer overrides."""
-import csv
+"""One LedgerEntry per reference triple; RDF graph; SPARQL score recompute; lecturer overrides."""
 from decimal import Decimal
 
 from rdflib import RDF, RDFS, XSD, Graph, Literal
 
 from autograde.gold import ref_iri
 from autograde import io
-from autograde.io import AG, ANS, KEY, PROV, save_json
+from autograde.io import AG, ANS, KEY, PROV
 from autograde.match import order_key
 from autograde.models import STATUS_IRI_NAME, LedgerEntry
 
@@ -65,7 +64,7 @@ def to_graph(qid, entries):
 
 
 def answer_graph(answer_id, students, sentences, qid=None, trace=None):
-    """Student triples with provenance (the deck's jawaban.ttl), plus the reasoner's input and output when
+    """Student triples with provenance (the deck's answer graph), plus the reasoner's input and output when
     a trace is given: the alignedSubject/alignedObject pairs Python asserted and the inferred ag:contradicts."""
     g = io.bind_namespaces(Graph())
     g.add((ANS[answer_id], RDF.type, AG.Answer))
@@ -95,26 +94,16 @@ def answer_graph(answer_id, students, sentences, qid=None, trace=None):
     return g
 
 
-def write(out_dir, qid, entries, suffix=""):
-    out_dir.mkdir(parents=True, exist_ok=True)
-    rows = [e.model_dump() for e in entries]
-    save_json(rows, out_dir / f"ledger{suffix}.json")
-    with open(out_dir / f"ledger{suffix}.csv", "w", newline="", encoding="utf-8") as f:
-        w = csv.DictWriter(f, fieldnames=list(rows[0]))
-        w.writeheader()
-        for row in rows:
-            w.writerow({**row, "sentence_ids": " ".join(row["sentence_ids"]), "override": row["override"] or ""})
-    to_graph(qid, entries).serialize(out_dir / f"ledger{suffix}.ttl", format="turtle")
+def recompute_rows(ledger_graph, gold_graph, lam):
+    """The recompute query's rows over a ledger graph and its question's gold graph."""
+    return list((ledger_graph + gold_graph).query(RECOMPUTE_QUERY, initBindings={"lambda": _dec(lam)}))
 
 
-def recompute_sparql(ledger_ttl, gold_ttl, lam):
-    """Score from the RDF files alone, clamped at 0 like Eq. 6."""
-    g = Graph()
-    g.parse(ledger_ttl)
-    g.parse(gold_ttl)
-    rows = list(g.query(RECOMPUTE_QUERY, initBindings={"lambda": _dec(lam)}))
+def recompute_sparql(ledger_graph, gold_graph, lam):
+    """Score from the RDF graphs alone (as read back from the store), clamped at 0 like Eq. 6."""
+    rows = recompute_rows(ledger_graph, gold_graph, lam)
     if len(rows) != 1:
-        raise ValueError(f"expected one answer in {ledger_ttl}, got {len(rows)}")
+        raise ValueError(f"expected one answer in the ledger graph, got {len(rows)}")
     return max(0.0, float(rows[0].raw.toPython()))
 
 

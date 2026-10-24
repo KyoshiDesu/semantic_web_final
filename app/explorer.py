@@ -1,13 +1,12 @@
 """Interactive knowledge-graph explorer ("Semantic Explorer") for the demo app.
 
-Node ids are the RDF names (ag: schema, key: lecturer's data, ans: student data) and edge labels are the RDF/OWL property names, so the picture is the same
-graph stored in gold.ttl, answer.ttl, ledger.ttl and the ontology. Drawn with vis-network 9.1.9, vendored in
+Node ids are the RDF names (ag: schema, key: lecturer's data, ans: student data) and edge labels are the RDF/OWL property names, so the picture is the same graph stored in the knowledge graph (gold, answer and ledger named graphs plus the ontology). Drawn with vis-network 9.1.9, vendored in
 app/static/ so the demo works offline.
 """
 import json
 from pathlib import Path
 
-from autograde import gold, io
+from autograde import db, gold, io
 from autograde.match import mu
 from autograde.models import STATUS_IRI_NAME, LedgerEntry, StudentTriple
 
@@ -36,20 +35,22 @@ def short_answer(qid, answer_id):
     return answer_id[len(qid) + 1:] if answer_id.startswith(qid + "_") else answer_id
 
 
-def load_answer(answer_dir):
-    """Saved outputs of one graded answer (written by pipeline.run_answer)."""
-    trace = io.load_json(answer_dir / "trace.json")
-    return {"answer_id": answer_dir.name,
-            "students": [StudentTriple(**t) for t in io.load_json(answer_dir / "student_triples.json")],
-            "entries": [LedgerEntry(**e) for e in io.load_json(answer_dir / "ledger.json")],
-            "sentences": [tuple(s) for s in io.load_json(answer_dir / "sentences.json")],
-            "score": io.load_json(answer_dir / "score.json"),
-            "sigmas": {(t, r): s for t, r, s in trace["sigmas"]},
-            "aligned": {tuple(x) for x in trace["aligned"]},
-            "contradictions": {tuple(x) for x in trace["contradictions"]}}
+def load_answer(run_id, answer_id):
+    """One graded answer as stored by pipeline.run_answer."""
+    r = db.result(run_id, answer_id)
+    if r is None:
+        raise LookupError(f"{answer_id} is not in run {run_id}")
+    return {"answer_id": answer_id,
+            "students": [StudentTriple(**t) for t in r["students"]],
+            "entries": [LedgerEntry(**e) for e in r["ledger"]],
+            "sentences": [tuple(s) for s in r["sentences"]],
+            "score": r["score"],
+            "sigmas": {(t, ref): s for t, ref, s in r["trace"]["sigmas"]},
+            "aligned": {tuple(x) for x in r["trace"]["aligned"]},
+            "contradictions": {tuple(x) for x in r["trace"]["contradictions"]}}
 
 
-def build(ctx, answer_dirs, params, human=None, predicates=None):
+def build(ctx, answers, params, human=None, predicates=None):
     """{nodes, edges, details} for one question and any number of graded answers."""
     qid, human = ctx.qid, human or {}
     preds = {p["id"]: p for p in (predicates or io.load_predicates())["predicates"]}
@@ -62,7 +63,7 @@ def build(ctx, answer_dirs, params, human=None, predicates=None):
     def edge(src, dst, kind, label, title=None):
         edges.append({"from": src, "to": dst, "kind": kind, "label": label, "title": title or label})
 
-    # --- the lecturer's key (gold.ttl) ---
+    # --- the lecturer's key (gold graph) ---
     ref_status = {r.id: [] for r in ctx.refs}
     for r in ctx.refs:
         rid = f"key:{qid}_{r.id}"
@@ -86,8 +87,7 @@ def build(ctx, answer_dirs, params, human=None, predicates=None):
                 return f"{stud_c} lebih khusus dari {key_c} (skos:broader) → dihitung sama"
         return None
 
-    # --- the graded answers (answer.ttl + ledger.ttl) ---
-    answers = [load_answer(d) for d in answer_dirs]
+    # --- the graded answers (answer + ledger graphs) ---
     used_preds = {r.p for r in ctx.refs}
     by_triple = {}
     for a in answers:

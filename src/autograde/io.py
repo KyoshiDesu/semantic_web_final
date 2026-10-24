@@ -75,10 +75,6 @@ def load_predicates():
     return load_yaml(ROOT / "config" / "predicates.yaml")
 
 
-def question_dir(qid):
-    return ROOT / "data" / "questions" / qid
-
-
 def question_ids():
     from autograde import db
     return db.questions()

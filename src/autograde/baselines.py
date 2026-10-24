@@ -1,7 +1,7 @@
 """B1 keyword matching (style of [11]) and B2 LLM-only scoring (style of [6]); comparison only."""
 import re
 
-from autograde import io, llm
+from autograde import db, llm
 from autograde.normalize import norm_text
 
 
@@ -26,11 +26,11 @@ B2_SCHEMA = {"type": "object", "properties": {"score": {"type": "number"}}, "req
 def b2_llm(qid, text, refs, rubric, backend=None):
     """LLM-only score (the Rule 1 exception: reported as a baseline, never used by the system)."""
     from autograde.gold import criterion_weights
-    d = io.question_dir(qid)
+    q = db.question(qid)
     weights = criterion_weights(refs)
     crit = "\n".join(f"- {c['description']} (bobot {weights[c['id']]:g})" for c in rubric["criteria"])
-    read = lambda name: re.sub(r"<!--.*?-->", "", (d / name).read_text(encoding="utf-8"), flags=re.S).strip()
-    user = (f"Soal:\n{read('question.md')}\n\nJawaban acuan:\n{read('reference_answer.md')}\n\n"
+    read = lambda key: re.sub(r"<!--.*?-->", "", q[key], flags=re.S).strip()
+    user = (f"Soal:\n{read('prompt')}\n\nJawaban acuan:\n{read('reference_answer')}\n\n"
             f"Rubrik:\n{crit}\n\nJawaban mahasiswa:\n{text}")
     score = float(llm.complete_json(B2_SYSTEM, user, B2_SCHEMA, backend=backend)["score"])
     return min(100.0, max(0.0, score))

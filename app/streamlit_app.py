@@ -193,7 +193,7 @@ def page_grade():
             return
         try:
             with st.spinner("Ekstraksi → pencocokan → Pellet/SWRL → ledger → SPARQL…"):
-                res = pipeline.run_answer(ctx, answer_id, text, mode, io.ROOT / "outputs" / "ui" / answer_id, use_llm_fb)
+                res = pipeline.run_answer(ctx, answer_id, text, mode, pipeline.ui_run(), use_llm_fb)
         except Exception as e:  # e.g. no API key for LLM extraction
             st.error(f"Gagal menilai: {e}")
             return
@@ -219,8 +219,8 @@ def show_result(qid, answer_id, res):
         show_ledger(ctx, answer_id, res)
     with tabs[1]:
         human = answers_table().set_index("answer_id").human.dropna().to_dict()
-        components.html(explorer.html(explorer.build(ctx, [res["out_dir"]], ctx.params, human), height=600),
-                        height=700, scrolling=False)
+        components.html(explorer.html(explorer.build(ctx, [explorer.load_answer(res["run_id"], answer_id)], ctx.params,
+                                                     human), height=600), height=700, scrolling=False)
     with tabs[2]:
         st.graphviz_chart(rdfviz.alignment_dot(ctx.refs, res["students"], entries, res["trace"]))
         st.caption("Kiri: triple hasil ekstraksi ([konsep] dari tabel alias, [?] = tidak dikenal → embedding). "
@@ -228,18 +228,18 @@ def show_result(qid, answer_id, res):
                    "merah: `ag:contradicts` dari SWRL; titik-titik: selaras tetapi predikat lain.")
     with tabs[3]:
         show_reasoning(ctx, res)
+    names = rdfviz.answer_graph_names(qid, res["run_id"], answer_id)
     with tabs[4]:
-        out = res["out_dir"]
-        for name, caption in (("answer.ttl", "Triple jawaban + provenance PROV-O + masukan/keluaran penalaran"),
-                              ("ledger.ttl", "Ledger: satu ag:LedgerEntry per triple acuan"),
-                              ("gold.ttl", "Graf acuan")):
-            path = io.question_dir(qid) / name if name == "gold.ttl" else out / name
-            with st.expander(f"{name} — {caption}", expanded=name == "ledger.ttl"):
-                st.code(path.read_text(encoding="utf-8"), language="turtle")
-                st.download_button(f"Unduh {name}", path.read_text(encoding="utf-8"), file_name=name, key=f"dl_{name}")
+        captions = ["Graf acuan (kunci dosen)", "Triple jawaban + provenance PROV-O + masukan/keluaran penalaran",
+                    "Ledger: satu ag:LedgerEntry per triple acuan"]
+        for name, caption in zip(names, captions):
+            ttl = kg.get_graph(name).serialize(format="turtle")
+            with st.expander(f"{caption} — `{name}`", expanded=name.endswith(":ledger")):
+                st.code(ttl, language="turtle")
+                st.download_button("Unduh Turtle", ttl, file_name=rdfviz.turtle_file_name(name), key=f"dl_{name}")
     with tabs[5]:
-        g = rdfviz.merged_graph(rdfviz.answer_graph_paths(qid, res["out_dir"]))
-        st.caption(f"Graf gabungan: ontologi + gold.ttl + answer.ttl + ledger.ttl ({len(g)} triple). Hanya baca.")
+        g = rdfviz.merged_graph(names)
+        st.caption(f"Graf gabungan: ontologi + {', '.join(f'`{n}`' for n in names)} ({len(g)} triple). Hanya baca.")
         sparql_console(g, rdfviz.ANSWER_QUERIES, "ans")
 
 
@@ -255,8 +255,7 @@ def show_ledger(ctx, answer_id, res):
     st.markdown("<table><tr><th>Ref</th><th>Triple acuan</th><th>Kriteria</th><th>w</th><th>Status</th><th>m</th>"
                 f"<th>σ</th><th>Kalimat bukti</th></tr>{rows}</table>", unsafe_allow_html=True)
     st.caption("⚑ = parsial, perlu ditinjau dosen. Setiap baris ditelusuri ke triple acuan, kriteria, bobot, dan kalimat.")
-    ov_path = io.ROOT / "data" / "human" / "overrides.yaml"
-    overrides = [o for o in (io.load_yaml(ov_path) or []) if o["answer_id"] == answer_id] if ov_path.exists() else []
+    overrides = db.overrides(answer_id)
     if overrides:
         fixed = ledger_mod.apply_overrides(entries, overrides, ctx.params)
         st.subheader("Ledger setelah koreksi dosen")
@@ -323,20 +322,18 @@ def page_sparql():
     st.caption("Kueri berjalan pada graf RDF lokal (rdflib), hanya baca. Kueri federasi (SERVICE) dinonaktifkan.")
     graded = st.session_state.get("graded")
     runs = pipeline.completed_runs()
-    options = (["Jawaban terakhir yang dinilai"] if graded else []) + [f"Run: {r.name}" for r in runs]
+    options = (["Jawaban terakhir yang dinilai"] if graded else []) + [f"Run: {r['run_id']}" for r in runs]
     if not options:
         st.info("Nilai sebuah jawaban dulu, atau buat run: `python -m autograde run …`.")
         return
     choice = st.selectbox("Graf", options)
     if choice.startswith("Jawaban"):
-        g = rdfviz.merged_graph(rdfviz.answer_graph_paths(graded["qid"], graded["res"]["out_dir"]))
+        g = rdfviz.merged_graph(rdfviz.answer_graph_names(graded["qid"], graded["res"]["run_id"], graded["answer_id"]))
         presets = rdfviz.ANSWER_QUERIES
     else:
-        run_dir = runs[[f"Run: {r.name}" for r in runs].index(choice)]
-        qids = set(pd.read_csv(run_dir / "scores.csv", dtype=str).question_id)
-        g = rdfviz.merged_graph(rdfviz.run_graph_paths(run_dir, qids))
+        g = rdfviz.merged_graph(rdfviz.run_graph_names(choice.removeprefix("Run: ")))
         presets = {**rdfviz.RUN_QUERIES, **rdfviz.ANSWER_QUERIES}
-    st.caption(f"{len(g)} triple RDF dimuat.")
+    st.caption(f"{len(g)} triple RDF dimuat dari triple store.")
     sparql_console(g, presets, "global")
 
 
@@ -349,38 +346,27 @@ def page_explorer():
     ctx = context(qid)
     sources = {}
     for run in pipeline.completed_runs():
-        dirs = sorted(d for d in run.iterdir() if d.is_dir() and d.name.startswith(qid + "_") and (d / "trace.json").exists())
-        if dirs:
-            sources[f"Run {run.name} · {len(dirs)} jawaban"] = (dirs, io.load_json(run / "run.json")["params"])
-    ui = io.ROOT / "outputs" / "ui"
-    dirs = sorted(d for d in ui.glob(qid + "_*") if (d / "trace.json").exists()) if ui.exists() else []
-    if dirs:
-        sources[f"Dinilai di aplikasi · {len(dirs)} jawaban"] = (dirs, ctx.params)
+        ids = db.result_ids(run["run_id"], qid)
+        if ids:
+            sources[f"Run {run['run_id']} · {len(ids)} jawaban"] = (run["run_id"], ids, run["params"])
+    ui_ids = db.result_ids(pipeline.UI_RUN, qid)
+    if ui_ids:
+        sources[f"Dinilai di aplikasi · {len(ui_ids)} jawaban"] = (pipeline.UI_RUN, ui_ids, ctx.params)
     if not sources:
         st.info("Belum ada jawaban yang dinilai untuk soal ini. Nilai jawaban di halaman *Nilai Jawaban*, atau buat run "
                 "dengan `python -m autograde run …`. Graf kunci tetap ditampilkan di bawah.")
-        dirs, params = [], ctx.params
+        run_id, ids, params = None, [], ctx.params
     else:
-        dirs, params = sources[st.selectbox("Sumber jawaban", list(sources))]
-    names = [d.name for d in dirs]
-    chosen = st.multiselect("Jawaban yang ditampilkan", names, default=names[:12]) if names else []
+        run_id, ids, params = sources[st.selectbox("Sumber jawaban", list(sources))]
+    chosen = st.multiselect("Jawaban yang ditampilkan", ids, default=ids[:12]) if ids else []
     human = answers_table().set_index("answer_id").human.dropna().to_dict()
-    graph = explorer.build(ctx, [d for d in dirs if d.name in chosen], params, human)
+    graph = explorer.build(ctx, [explorer.load_answer(run_id, a) for a in chosen], params, human)
     st.caption(f"{len(graph['nodes'])} node · {len(graph['edges'])} relasi")
     components.html(explorer.html(graph, height=640), height=740, scrolling=False)
 
 
 def page_evaluation():
-    runs = [p for p in pipeline.completed_runs() if (p / "evaluation.md").exists()]
-    if not runs:
-        st.info("Belum ada hasil evaluasi. Jalankan `python -m autograde evaluate --run <run_id>`.")
-        return
-    run = st.selectbox("Run", runs, format_func=lambda p: p.name)
-    st.markdown(run.joinpath("evaluation.md").read_text(encoding="utf-8"))
-    cols = st.columns(2)
-    for col, name in zip(cols, ["scatter.png", "per_criterion.png"]):
-        if (run / name).exists():
-            col.image(str(run / name))
+    st.info("Belum ada hasil evaluasi. Jalankan `python -m autograde evaluate --run <run_id>`.")
 
 
 PAGES = {"Ontologi": page_ontology, "Soal & Kunci": page_question, "Penjelajah Graf": page_explorer,

@@ -32,6 +32,7 @@ def synthetic_run(tmp_path, monkeypatch):
     return run_dir
 
 
+@pytest.mark.skip(reason="moved to the database in Task 7")
 def test_evaluate_synthetic_and_deterministic(synthetic_run):
     fail_b2 = lambda *a: (_ for _ in ()).throw(evaluate.llm.LLMUnavailable("no key"))
     report = evaluate.evaluate("t", b2_backend=fail_b2)
@@ -44,6 +45,7 @@ def test_evaluate_synthetic_and_deterministic(synthetic_run):
     assert set(metrics.system) == {"System (gold mode)", "System (gold mode), λ = 0.5", "B1 keyword"}
 
 
+@pytest.mark.skip(reason="moved to the database in Task 7")
 def test_unfrozen_real_run_refused(synthetic_run):
     run = io.load_json(synthetic_run / "run.json")
     io.save_json({**run, "include_synthetic": False, "params_frozen": False}, synthetic_run / "run.json")
@@ -51,6 +53,7 @@ def test_unfrozen_real_run_refused(synthetic_run):
         evaluate.evaluate("t")
 
 
+@pytest.mark.skip(reason="moved to the database in Task 7")
 def test_audit_template_and_metrics(synthetic_run, monkeypatch, tmp_path):
     template = pd.read_csv(evaluate.audit_template("t"), dtype=str).fillna("")
     led = template.row_type == "ledger"

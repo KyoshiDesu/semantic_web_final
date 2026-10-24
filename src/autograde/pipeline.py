@@ -1,11 +1,8 @@
-"""Orchestrates one answer, one question, or a whole split; writes outputs/runs/<run_id>/<answer_id>/."""
-import json
+"""Orchestrates one answer, one question, or a whole split; stores results in the database and the knowledge graph."""
 from dataclasses import dataclass
 from datetime import datetime
 
-import pandas as pd
-
-from autograde import extract, feedback, gold, io, kg, ledger, reason, segment
+from autograde import db, extract, feedback, gold, io, kg, ledger, reason, segment
 from autograde.match import Relations, match
 from autograde.normalize import ConceptIndex, Embedder, fill_concepts, make_sim
 from autograde.score import score
@@ -65,41 +62,43 @@ def extract_triples(ctx, answer_id, sentences, mode):
     raise ValueError(f"unknown mode {mode!r}")
 
 
-def run_answer(ctx, answer_id, text, mode, out_dir, use_llm_feedback=True):
+UI_RUN = "ui"
+
+
+def ui_run():
+    """The app's run for single answers graded on the Grade page: never finished, never evaluated."""
+    db.create_run(UI_RUN, "ui", "all", "all", io.load_params(), io.frozen_path().exists(),
+                  io.load_config()["reasoner"], True)
+    return UI_RUN
+
+
+def run_answer(ctx, answer_id, text, mode, run_id, use_llm_feedback=True):
     sentences = segment.split(answer_id, text)
     students, log = extract_triples(ctx, answer_id, sentences, mode)
     students, entries, sc, trace = grade(ctx, answer_id, students)
-    ledger.write(out_dir, ctx.qid, entries)
-    ledger.answer_graph(answer_id, students, sentences, ctx.qid, trace).serialize(out_dir / "answer.ttl", format="turtle")
-    sc.sparql_score = ledger.recompute_sparql(out_dir / "ledger.ttl", io.question_dir(ctx.qid) / "gold.ttl",
+    answer_name = kg.answer_graph_name(run_id, answer_id, "answer")
+    ledger_name = kg.answer_graph_name(run_id, answer_id, "ledger")
+    kg.put_graph(answer_name, ledger.answer_graph(answer_id, students, sentences, ctx.qid, trace))
+    kg.put_graph(ledger_name, ledger.to_graph(ctx.qid, entries))
+    # the audit reads the graphs back from the store: it checks what was persisted, not what is in memory
+    sc.sparql_score = ledger.recompute_sparql(kg.get_graph(ledger_name), kg.get_graph(kg.gold_graph_name(ctx.qid)),
                                               ctx.params["lambda"])
     if abs(sc.score - sc.sparql_score) >= 1e-9:
         raise ParityError(f"{answer_id}: Python score {sc.score} != SPARQL score {sc.sparql_score}")
     fb = feedback.generate(answer_id, entries, ctx.refs, ctx.rubric, sentences, sc.score, use_llm=use_llm_feedback)
-    io.save_json(sentences, out_dir / "sentences.json")
-    io.save_json([t.model_dump() for t in students], out_dir / "student_triples.json")
-    io.save_json(sc.model_dump(), out_dir / "score.json")
-    io.save_json(fb.model_dump(), out_dir / "feedback.json")
-    with open(out_dir / "extraction_log.jsonl", "w", encoding="utf-8") as f:
-        f.writelines(json.dumps(row, ensure_ascii=False) + "\n" for row in log)
-    io.save_json({"sigmas": [[t, r, s] for (t, r), s in sorted(trace["sigmas"].items())],
-                  "aligned": trace["aligned"], "contradictions": trace["contradictions"]}, out_dir / "trace.json")
-    return {"sentences": sentences, "students": students, "entries": entries, "score": sc, "feedback": fb, "log": log,
-            "trace": trace, "out_dir": out_dir}
-
-
-def runs_dir():
-    return io.ROOT / "outputs" / "runs"
+    res = {"sentences": sentences, "students": students, "entries": entries, "score": sc, "feedback": fb,
+           "log": log, "trace": trace, "run_id": run_id}
+    db.save_result(run_id, ctx.qid, answer_id, res)  # last: the row marks the answer as done
+    return res
 
 
 def completed_runs():
-    """Finished runs, newest first; skips stray files (e.g. macOS .DS_Store) and runs that stopped half-way."""
-    if not runs_dir().exists():
-        return []
-    return sorted((p for p in runs_dir().iterdir() if p.is_dir() and (p / "run.json").exists()), reverse=True)
+    """Finished runs, newest first (dicts from the run table)."""
+    return db.runs(finished_only=True)
 
 
 def run_split(question, mode, split, include_synthetic=False, use_llm_feedback=True, answer_ids=None, run_id=None):
+    """Grade a selection of answers. Re-running the same run_id resumes it: graded answers are skipped."""
     answers = io.load_answers(include_synthetic)
     if question != "all":
         answers = answers[answers.question_id == question]
@@ -108,20 +107,17 @@ def run_split(question, mode, split, include_synthetic=False, use_llm_feedback=T
     if answer_ids:
         answers = answers[answers.answer_id.isin(answer_ids)]
     if answers.empty:
-        raise ValueError("no answers selected (real answers live in data/answers/answers.csv; use --synthetic for demo data)")
+        raise ValueError("no answers selected (import real answers with `db import`; use --synthetic for demo data)")
     run_id = run_id or f"{datetime.now():%Y%m%d-%H%M%S}_{mode}_{split}"
-    run_dir = runs_dir() / run_id
-    contexts, rows = {}, []
+    db.create_run(run_id, mode, split, question, io.load_params(), io.frozen_path().exists(),
+                  io.load_config()["reasoner"], include_synthetic)
+    done, contexts = set(db.result_ids(run_id)), {}
     for a in answers.itertuples():
+        if a.answer_id in done:
+            print(f"{a.answer_id}: already graded, skipped")
+            continue
         ctx = contexts.setdefault(a.question_id, Context.load(a.question_id))
-        res = run_answer(ctx, a.answer_id, a.text, mode, run_dir / a.answer_id, use_llm_feedback)
-        rows.append({"answer_id": a.answer_id, "question_id": a.question_id, "split": a.split,
-                     "source": a.source, "synthetic": bool(a.synthetic), "score": res["score"].score,
-                     "sparql_score": res["score"].sparql_score})
+        res = run_answer(ctx, a.answer_id, a.text, mode, run_id, use_llm_feedback)
         print(f"{a.answer_id}: {res['score'].score:.1f}")
-    pd.DataFrame(rows).to_csv(run_dir / "scores.csv", index=False)
-    io.save_json({"run_id": run_id, "mode": mode, "split": split, "question": question,
-                  "params": io.load_params(), "params_frozen": io.frozen_path().exists(),
-                  "reasoner": io.load_config()["reasoner"], "include_synthetic": include_synthetic,
-                  "created": datetime.now().isoformat(timespec="seconds")}, run_dir / "run.json")
-    return run_dir
+    db.finish_run(run_id)
+    return run_id
