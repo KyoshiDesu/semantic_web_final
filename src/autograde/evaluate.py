@@ -24,7 +24,7 @@ def human_totals(scores, weights_by_question, question_of):
     for answer_id in sorted(per_crit.index.get_level_values(0).unique()):
         weights = weights_by_question[question_of[answer_id]]
         crit = per_crit.loc[answer_id]
-        if io.TOTAL in crit.index:  # holistic score (SAF): no per-criterion breakdown
+        if io.TOTAL in crit.index:  # holistic score: no per-criterion breakdown
             totals[answer_id] = crit[io.TOTAL]
             continue
         missing = set(weights) - set(crit.index)
@@ -94,8 +94,8 @@ def evaluate(run_id, gold_run_id=None, b2_backend=None):
     from autograde import pipeline
     run_dir = pipeline.runs_dir() / run_id
     run = io.load_json(run_dir / "run.json")
-    synthetic, saf = run["include_synthetic"], run.get("include_saf", False)
-    if not run["params_frozen"] and not (synthetic or saf):
+    synthetic = run["include_synthetic"]
+    if not run["params_frozen"] and not synthetic:
         raise NotFrozenError("this run used unfrozen parameters; run `calibrate` and re-run the test split")
     if run["split"] not in ("test", "all"):
         raise ValueError("evaluate needs a run that covers the test split")
@@ -104,13 +104,13 @@ def evaluate(run_id, gold_run_id=None, b2_backend=None):
     question_of = dict(zip(runs.answer_id, runs.question_id))
     ctx = {q: gold.load(q) for q in sorted(set(runs.question_id))}
     weights = {q: gold.criterion_weights(refs) for q, (_, _, refs) in ctx.items()}
-    scores = io.load_human_scores(synthetic, saf)
+    scores = io.load_human_scores(synthetic)
     scores = scores[scores.answer_id.isin(runs.answer_id)]
     human = human_totals(scores, weights, question_of)
     runs = runs[runs.answer_id.isin(human.index)]
     h = human[runs.answer_id].to_numpy()
 
-    texts = io.load_answers(synthetic, saf).set_index("answer_id").text
+    texts = io.load_answers(synthetic).set_index("answer_id").text
     systems = {f"System ({run['mode']} mode)": runs.score.to_numpy()}
     lam05 = [score(a, load_ledger(run_dir, a), {"lambda": 0.5}).score for a in runs.answer_id]
     systems[f"System ({run['mode']} mode), λ = 0.5"] = np.array(lam05)
@@ -172,7 +172,7 @@ def figures(run_dir, system, human, per_criterion):
     fig.tight_layout()
     fig.savefig(run_dir / "scatter.png", metadata={"Software": None})
     plt.close(fig)
-    if per_criterion.empty:  # holistic human scores only (SAF)
+    if per_criterion.empty:  # holistic human scores only
         return
     fig, ax = plt.subplots(figsize=(5, 3), dpi=300)
     ax.bar(per_criterion.index, per_criterion.values, color="#2a6f97")
@@ -190,12 +190,8 @@ def render(run, metrics, per_criterion, icc, recon, audit, b2_note, n):
     lines = [f"# Evaluation — run {run['run_id']}", ""]
     if run["include_synthetic"]:
         lines += ["> **SYNTHETIC DATA — not real results.** This run includes data/synthetic answers.", ""]
-    if run.get("include_saf"):
-        lines += ["> **SAF subset** (Filighera et al., CC-BY-4.0): real English answers, but the gold triples were "
-                  "drafted by an AI and are not lecturer-validated; SAF scores are holistic, so it has no "
-                  "per-criterion errors.", ""]
     if not run["params_frozen"]:
-        lines += ["> Parameters were not frozen when this run was made (allowed only for synthetic or SAF demos).", ""]
+        lines += ["> Parameters were not frozen when this run was made (allowed only for synthetic demos).", ""]
     p = run["params"]
     lines += [f"Mode: {run['mode']} · reasoner: {run['reasoner']} · test answers: {n} · "
               f"τh = {p['tau_h']}, τl = {p['tau_l']}, δ = {p['delta']}, λ = {p['lambda']}", "",

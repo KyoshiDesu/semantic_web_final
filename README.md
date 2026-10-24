@@ -24,10 +24,4 @@ python -m autograde evaluate --run <run_id>
 streamlit run app/streamlit_app.py
 ```
 
-SAF subset (real English answers, AI-drafted gold triples; see `data/external/saf/README.md`):
-
-```bash
-python -m autograde run --question all --mode gold --split all --saf --annotated-only --template-feedback
-```
-
 Full command list: plan Section 8. Real data goes in `data/answers/answers.csv`, `data/human/scores.csv` (per criterion), `data/annotations/` (gold mode) and `data/human/evidence_audit.csv` / `overrides.yaml`. `data/synthetic/` is demo data only.

@@ -68,3 +68,18 @@ def test_gold_mode(tmp_path):
     path.write_text("triples:\n  - {s: tumbuhan, p: memakai, o: cahaya, sentences: [3]}\n")
     [st] = extract.extract_gold("Q1_A07", path=path, predicates=PREDS)
     assert (st.p, st.sentence_ids, st.negated) == ("menggunakan", ["Q1_A07_s3"], False)
+
+
+def test_english_extraction_prompt(monkeypatch, tmp_path):
+    monkeypatch.setattr(llm, "cache_dir", lambda: tmp_path)
+    seen = {}
+
+    def backend(system, user, schema, cfg):
+        seen.update(system=system, user=user, enum=schema["properties"]["triples"]["items"]["properties"]["predicate"]["enum"])
+        return json.dumps({"triples": [{"sentence_ids": ["S1"], "subject": "diameter", "predicate": "shrinks",
+                                        "object": "factor of 10", "negated": False}]})
+    kept, _ = extract.extract_llm("X_A1", [("X_A1_s1", "The diameter shrinks by a factor of 10.")],
+                                  backend=backend, language="en")
+    assert "written in English" in seen["system"] and "UDP is a transport protocol" in seen["user"]
+    assert "lacks" in seen["enum"] and "menggunakan" not in seen["enum"] and "other" in seen["enum"]
+    assert kept[0].p == "decreases"

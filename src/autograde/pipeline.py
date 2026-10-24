@@ -99,11 +99,8 @@ def completed_runs():
     return sorted((p for p in runs_dir().iterdir() if p.is_dir() and (p / "run.json").exists()), reverse=True)
 
 
-def run_split(question, mode, split, include_synthetic=False, use_llm_feedback=True, answer_ids=None, run_id=None,
-              include_saf=False, annotated_only=False):
-    answers = io.load_answers(include_synthetic, include_saf)
-    if annotated_only:
-        answers = answers[answers.answer_id.map(lambda a: io.annotation_path(a) is not None)]
+def run_split(question, mode, split, include_synthetic=False, use_llm_feedback=True, answer_ids=None, run_id=None):
+    answers = io.load_answers(include_synthetic)
     if question != "all":
         answers = answers[answers.question_id == question]
     if split != "all":
@@ -126,6 +123,5 @@ def run_split(question, mode, split, include_synthetic=False, use_llm_feedback=T
     io.save_json({"run_id": run_id, "mode": mode, "split": split, "question": question,
                   "params": io.load_params(), "params_frozen": io.frozen_path().exists(),
                   "reasoner": io.load_config()["reasoner"], "include_synthetic": include_synthetic,
-                  "include_saf": include_saf,
                   "created": datetime.now().isoformat(timespec="seconds")}, run_dir / "run.json")
     return run_dir

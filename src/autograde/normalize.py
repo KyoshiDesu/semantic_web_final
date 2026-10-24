@@ -9,7 +9,7 @@ from autograde import io
 STOPWORDS = {"yang", "dan", "di", "ke", "dari", "itu", "ini", "untuk", "dengan", "oleh", "pada", "adalah",
              "sebagai", "juga", "akan", "atau", "para", "serta", "lalu", "kemudian", "sang", "si", "nya",
              "tersebut", "dalam", "secara", "bisa", "dapat", "maka", "karena", "agar", "supaya",
-             # English (SAF subset)
+             # English
              "the", "a", "an", "of", "to", "is", "are", "and", "or", "in", "on", "for", "with", "by", "it",
              "its", "this", "that", "be", "as", "at", "from", "which", "each", "every"}
 

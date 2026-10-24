@@ -33,8 +33,8 @@ def context(qid):
 
 @st.cache_data
 def answers_table():
-    df = io.load_answers(include_synthetic=True, include_saf=True)
-    human = io.load_human_scores(include_synthetic=True, include_saf=True)
+    df = io.load_answers(include_synthetic=True)
+    human = io.load_human_scores(include_synthetic=True)
     totals = {}
     for qid in df.question_id.unique():
         ctx = context(qid)
@@ -48,10 +48,8 @@ def answers_table():
 
 
 def question_label(qid):
-    ctx = context(qid)
-    lang = {"id": "ID", "en": "EN"}[ctx.rubric.get("language", "id")]
-    origin = "SAF, kunci draf AI" if qid.startswith("SAF_") else "contoh dek"
-    return f"{qid} · {lang} · {origin}"
+    lang = {"id": "ID", "en": "EN"}[context(qid).rubric.get("language", "id")]
+    return f"{qid} · {lang}"
 
 
 def gold_notice(ctx):
@@ -91,7 +89,7 @@ def page_ontology():
     with tabs[1]:
         st.dataframe(rdfviz.properties_table(g), hide_index=True, use_container_width=True)
     with tabs[2]:
-        lang = st.radio("Bahasa", ["Semua", "Indonesia (Q1)", "Inggris (SAF)"], horizontal=True)
+        lang = st.radio("Bahasa", ["Semua", "Indonesia", "Inggris"], horizontal=True)
         preds = io.load_predicates()["predicates"]
         only = None if lang == "Semua" else {p["id"] for p in preds if p.get("lang") == ("id" if lang.startswith("Indo") else "en")}
         st.graphviz_chart(rdfviz.relations_dot(g, only))
@@ -125,8 +123,6 @@ def page_question():
     c1.markdown(read_md(d / "question.md"))
     c2.subheader("Jawaban acuan")
     c2.markdown(read_md(d / "reference_answer.md"))
-    if qid.startswith("SAF_"):
-        st.caption("Sumber: SAF (Filighera dkk., 2022), CC-BY-4.0.")
     st.subheader("Rubrik dan triple acuan")
     w = criterion_weights(ctx.refs)
     st.dataframe(pd.DataFrame([{"Kriteria": c["id"], "Deskripsi": c["description"], "Bobot total": w[c["id"]]}
@@ -172,7 +168,7 @@ def page_grade():
         st.markdown(f"> {html.escape(text)}".replace("\n", "<br>"), unsafe_allow_html=True)
         c = st.columns(3)
         if pd.notna(a.human):
-            c[0].metric("Nilai manusia" + (" (SAF)" if a.source == "saf" else " (sintetis)" if a.synthetic else ""), f"{a.human:.1f}")
+            c[0].metric("Nilai manusia" + (" (sintetis)" if a.synthetic else ""), f"{a.human:.1f}")
         c[1].metric("Baseline B1 (kata kunci)", f"{baselines.b1_keyword(text, ctx.refs, ctx.gold_raw['concepts']):.1f}")
         annotation = io.annotation_path(answer_id)
         if annotation is not None:

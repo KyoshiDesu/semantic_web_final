@@ -66,3 +66,8 @@ def test_audit_template_and_metrics(synthetic_run, monkeypatch, tmp_path):
     assert m["EP"] == (1.0, hits)
     assert m["ER"][0] == pytest.approx(hits / led.sum())
     assert m["FF"][0] == 0.0
+
+
+def test_holistic_total_used_directly():
+    scores = pd.DataFrame({"answer_id": ["A"], "rater_id": ["R"], "criterion": [io.TOTAL], "score_0_100": [75.0]})
+    assert evaluate.human_totals(scores, {"Q": {"K1": 1}}, {"A": "Q"})["A"] == 75.0

@@ -42,7 +42,7 @@ def test_grade_q1_and_sparql(at):
         float(m.value) for m in at.metric if m.label == "Skor sistem"))
 
 
-def test_grade_saf_contradiction(at):
-    grade(at, "SAF_CSMA", "SAF_CSMA_V002")
-    assert next(m.value for m in at.metric if m.label == "Skor sistem") == "0.0"
+def test_grade_contradiction(at):
+    grade(at, "Q1", "Q1_A08")
+    assert next(m.value for m in at.metric if m.label == "Skor sistem") == "50.0"
     assert any("ag:contradicts" in c.value for c in at.code)

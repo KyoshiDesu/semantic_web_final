@@ -83,20 +83,17 @@ def question_ids():
     return sorted(p.name for p in (ROOT / "data" / "questions").iterdir() if (p / "gold.yaml").exists())
 
 
-SAF_DIR = ROOT / "data" / "external" / "saf"
-TOTAL = "_total"  # criterion name for a holistic score (SAF gives one score per answer)
+TOTAL = "_total"  # criterion name for a holistic score (one score per answer, no criteria)
 
 
-def load_answers(include_synthetic=False, include_saf=False):
-    """answer_id, question_id, text, split, source, synthetic. Real lecturer data always; others on request.
+def load_answers(include_synthetic=False):
+    """answer_id, question_id, text, split, source, synthetic. Real lecturer data always; synthetic on request.
 
-    Synthetic rows are invented (Agent Rule 4); SAF rows are real third-party answers (CC-BY-4.0).
+    Synthetic rows are invented (Agent Rule 4).
     """
     sources = [(ROOT / "data" / "answers" / "answers.csv", "real")]
     if include_synthetic:
         sources.append((ROOT / "data" / "synthetic" / "answers.csv", "synthetic"))
-    if include_saf:
-        sources.append((SAF_DIR / "answers.csv", "saf"))
     frames = [pd.read_csv(path, dtype=str).assign(source=src) for path, src in sources if path.exists()]
     if not frames:
         return pd.DataFrame(columns=["answer_id", "question_id", "text", "split", "source", "synthetic"])
@@ -108,12 +105,10 @@ def load_answers(include_synthetic=False, include_saf=False):
     return df
 
 
-def load_human_scores(include_synthetic=False, include_saf=False):
+def load_human_scores(include_synthetic=False):
     paths = [ROOT / "data" / "human" / "scores.csv"]
     if include_synthetic:
         paths.append(ROOT / "data" / "synthetic" / "scores.csv")
-    if include_saf:
-        paths.append(SAF_DIR / "scores.csv")
     return pd.concat([load_scores(p) for p in paths], ignore_index=True)
 
 
@@ -128,7 +123,7 @@ def load_scores(path=None):
 
 
 def annotation_path(answer_id):
-    for base in (ROOT / "data" / "annotations", ROOT / "data" / "synthetic" / "annotations", SAF_DIR / "annotations"):
+    for base in (ROOT / "data" / "annotations", ROOT / "data" / "synthetic" / "annotations"):
         if (base / f"{answer_id}.yaml").exists():
             return base / f"{answer_id}.yaml"
     return None

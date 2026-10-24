@@ -1,6 +1,6 @@
 # Controlled predicate vocabulary. Aliases only normalize raw LLM wording into ids;
 # equivalence and incompatibility live in the ontology (plan Section 5.1).
-# lang: id = Indonesian questions, en = English (SAF subset), any = offered for every language.
+# lang: id = Indonesian questions, en = English questions, any = offered for every language.
 predicates:
   # --- Indonesian (Q1) ---
   - id: menggunakan
@@ -20,7 +20,7 @@ predicates:
     description: subjek membuat atau mengeluarkan sesuatu sebagai hasil
     aliases: [memproduksi, membentuk, melepaskan]
 
-  # --- English (SAF subset; AI-drafted, not lecturer-validated) ---
+  # --- English ---
   - id: is_a
     lang: en
     description: the subject is a kind of the object

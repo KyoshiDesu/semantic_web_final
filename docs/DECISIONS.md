@@ -79,8 +79,11 @@ Agent Rule 2: formula changes need a human decision recorded here. Newest last.
 
 ## Open — needs a human decision
 
-- **Pronoun subjects.** Many SAF answers start "It is used to…". In LLM mode the grounding check keeps "it" as the subject, which doesn't match "DHCP". Options: resolve pronouns to the question's topic concept, or accept the miss. (The AI-drafted annotations keep the student's explicit subjects.)
-- **SAF in the article.** The deck lists SAF as an optional comparison, pending the lecturer's approval. If it's used, the gold triples need a human review first.
-
 - ~~The deck's partial-credit example does not hold with the chosen embedding model~~: resolved by the concept hierarchy (see the namespaces and hierarchy entry above).
 - **Unknown concept vs gold concept** compares against the concept's id label only ("glukosa"), not its aliases ("gula", cos 0.541). Taking the max over id and aliases is a candidate change to `sim`.
+
+## 2026-10-24 — SAF dataset dropped
+
+- The SAF subset (data, AI-drafted keys and annotations, import script, tests) is removed; a better dataset will replace it. The only bundled data is Q1 with its synthetic answers.
+- Kept because they are generic: holistic `_total` human scores, `language: en` rubrics, English extraction prompts, `lang: en` predicates and the English ontology relations.
+- The two open questions about SAF (pronoun subjects, SAF in the article) no longer apply.

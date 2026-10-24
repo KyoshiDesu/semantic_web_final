@@ -13,13 +13,13 @@ def graded(tmp_path, qid, answer_id, text):
 
 
 def test_contradiction_edge_and_reasoning(tmp_path):
-    text = io.load_answers(include_saf=True).set_index("answer_id").text["SAF_CSMA_V002"]
-    ctx, d = graded(tmp_path, "SAF_CSMA", "SAF_CSMA_V002", text)
+    text = io.load_answers(include_synthetic=True).set_index("answer_id").text["Q1_A08"]
+    ctx, d = graded(tmp_path, "Q1", "Q1_A08", text)
     g = explorer.build(ctx, [d], ctx.params)
     kinds = {(e["from"], e["to"], e["kind"]) for e in g["edges"]}
-    assert ("ans:SAF_CSMA_V002_t1", "key:SAF_CSMA_R1", "inferred") in kinds
-    assert ("ag:decreases", "ag:increases", "ontology") in kinds
-    reasoning = g["details"]["ans:SAF_CSMA_V002_t1"]["sections"][1]["items"][0]
+    assert ("ans:Q1_A08_t4", "key:Q1_R2", "inferred") in kinds  # menghasilkan CO2 vs the key's mengonsumsi CO2
+    assert ("ag:menghasilkan", "ag:mengonsumsi", "ontology") in kinds
+    reasoning = g["details"]["ans:Q1_A08_t4"]["sections"][1]["items"][0]
     assert "Aturan 1" in reasoning and "incompatibleWith" in reasoning
     assert {e["from"] for e in g["edges"]} | {e["to"] for e in g["edges"]} <= {n["id"] for n in g["nodes"]}
 
