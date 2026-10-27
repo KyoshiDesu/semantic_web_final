@@ -4,6 +4,7 @@ import json
 import os
 import re
 import shutil
+import threading
 from functools import lru_cache
 from pathlib import Path
 
@@ -46,9 +47,16 @@ def save_yaml(obj, path):
 
 
 def save_json(obj, path):
+    """Atomic: another thread or the CLI reads the old file or the new one, never half of one."""
     text = json.dumps(obj, ensure_ascii=False, indent=2)
-    Path(path).parent.mkdir(parents=True, exist_ok=True)
-    Path(path).write_text(text, encoding="utf-8")
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_name(f".{path.name}.{os.getpid()}.{threading.get_ident()}.tmp")
+    try:
+        tmp.write_text(text, encoding="utf-8")
+        os.replace(tmp, path)
+    finally:
+        tmp.unlink(missing_ok=True)
 
 
 def load_json(path):

@@ -30,3 +30,35 @@ def test_concept_hierarchy_similarity():
     assert sim("Makanan", "makanan", "Glukosa", "glukosa") == 1.0   # student more specific than the key
     assert sim("Glukosa", "glukosa", "Makanan", "makanan") == 0.70  # student more general: partial
     assert sim("Oksigen", "oksigen", "CO2", "co2") == 0.0           # siblings under Gas: different
+
+
+def test_embedder_is_safe_from_several_threads(tmp_path):
+    import json
+    import threading
+
+    import numpy as np
+
+    from autograde.normalize import Embedder
+
+    class Model:
+        def encode(self, text, normalize_embeddings=True):
+            return np.ones(3) / np.sqrt(3)
+
+    e = Embedder("stub-model")
+    e.path, e.cache, e._model = tmp_path / "emb.json", {}, Model()
+    texts, errors = [f"kata {i}" for i in range(300)], []
+
+    def work(chunk):
+        try:
+            for t in chunk:
+                e.vector(t)
+        except Exception as exc:  # collected: an exception in a thread does not fail the test by itself
+            errors.append(exc)
+
+    threads = [threading.Thread(target=work, args=(texts[i::4],)) for i in range(4)]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+    assert errors == []
+    assert set(json.loads(e.path.read_text(encoding="utf-8"))) == set(texts)

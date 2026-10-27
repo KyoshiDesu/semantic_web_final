@@ -1,5 +1,6 @@
 """Text normalization, alias lookup into concept ids, and concept similarity (plan Section 4, sim)."""
 import re
+import threading
 import unicodedata
 
 import numpy as np
@@ -50,15 +51,17 @@ class Embedder:
         self.path = io.ROOT / "outputs" / "cache" / "embeddings" / (self.model_name.replace("/", "__") + ".json")
         self.cache = io.load_json(self.path) if self.path.exists() else {}
         self._model = None
+        self._lock = threading.Lock()  # the API shares one Embedder between request threads and the grading job
 
     def vector(self, text):
-        if text not in self.cache:
-            if self._model is None:
-                from sentence_transformers import SentenceTransformer
-                self._model = SentenceTransformer(self.model_name)
-            self.cache[text] = self._model.encode(text, normalize_embeddings=True).tolist()
-            io.save_json(self.cache, self.path)
-        return np.asarray(self.cache[text])
+        with self._lock:
+            if text not in self.cache:
+                if self._model is None:
+                    from sentence_transformers import SentenceTransformer
+                    self._model = SentenceTransformer(self.model_name)
+                self.cache[text] = self._model.encode(text, normalize_embeddings=True).tolist()
+                io.save_json(self.cache, self.path)
+            return np.asarray(self.cache[text])
 
     def cosine(self, a, b):
         if a == b:
