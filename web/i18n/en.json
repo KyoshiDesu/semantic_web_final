@@ -416,5 +416,26 @@
     "unknown": "There is no named graph {name}.",
     "tab_view": "Interactive graph",
     "tab_triples": "Triple table"
+  },
+  "jelajah": {
+    "title": "Graph explorer (Semantic Explorer)",
+    "intro": "One question's knowledge graph. Nodes are RDF resources from three namespaces: ag: (schema), key: (lecturer's data), ans: (student data). Edges are RDF, OWL, SKOS and PROV properties.",
+    "no_questions": "No questions yet.",
+    "question": "Question",
+    "run": "Answers from",
+    "key_only": "The key only",
+    "source": "Run {run} · {n} answers",
+    "answers": "Answers shown",
+    "show": "Show",
+    "none_graded": "No answers to this question are graded yet; the key's graph is shown."
+  },
+  "sparql_page": {
+    "title": "SPARQL console",
+    "intro": "Read-only queries. Without a graph choice they run over the whole triple store; with named graphs chosen, over the ontology and those graphs only.",
+    "scope": "Named graphs queried",
+    "pick_run": "Choose one run's graphs",
+    "none": "—",
+    "use_graphs": "Use the chosen graphs",
+    "whole_store": "The whole triple store"
   }
 }
