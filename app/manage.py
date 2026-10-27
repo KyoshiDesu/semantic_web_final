@@ -8,8 +8,7 @@ from io import BytesIO
 import pandas as pd
 import streamlit as st
 
-import rdfviz
-from autograde import authoring, db, extract, gold, importer, io
+from autograde import authoring, db, extract, gold, importer, io, rdfviz
 from autograde.io import TOTAL
 
 NONE = "—"

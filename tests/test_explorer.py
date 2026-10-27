@@ -1,8 +1,7 @@
 """Semantic Explorer graph: built from a graded answer as stored in the database; the page escapes student text."""
 import json
 
-import explorer
-from autograde import io, pipeline
+from autograde import explorer, io, pipeline
 from test_pipeline import STUB
 
 

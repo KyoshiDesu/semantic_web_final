@@ -1,16 +1,15 @@
 """Interactive knowledge-graph explorer ("Semantic Explorer") for the demo app.
 
 Node ids are the RDF names (ag: schema, key: lecturer's data, ans: student data) and edge labels are the RDF/OWL property names, so the picture is the same graph stored in the knowledge graph (gold, answer and ledger named graphs plus the ontology). Drawn with vis-network 9.1.9, vendored in
-app/static/ so the demo works offline.
+app/static/ so the demo works offline (the API serves the same graph as JSON).
 """
 import json
-from pathlib import Path
 
 from autograde import db, gold, io
 from autograde.match import mu
 from autograde.models import STATUS_IRI_NAME, LedgerEntry, StudentTriple
 
-VIS_JS = Path(__file__).parent / "static" / "vis-network.min.js"
+VIS_JS = io.ROOT / "app" / "static" / "vis-network.min.js"
 
 NODE_TYPES = {  # key: (legend label, colour, vis shape, shown by default)
     "answer": ("Jawaban", "#f97316", "ellipse", True),

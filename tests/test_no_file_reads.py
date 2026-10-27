@@ -8,7 +8,7 @@ BANNED = re.compile(r'question_dir|annotation_path|runs_dir|"data" /|"outputs" /
 
 
 def test_no_module_reads_the_old_files():
-    files = [p for p in (io.ROOT / "src" / "autograde").glob("*.py") if p.name != "importer.py"]
+    files = [p for p in (io.ROOT / "src" / "autograde").rglob("*.py") if p.name != "importer.py"]
     files += list((io.ROOT / "app").glob("*.py"))
     hits = [f"{p.relative_to(io.ROOT)}:{i}: {line.strip()}"
             for p in files for i, line in enumerate(p.read_text(encoding="utf-8").splitlines(), 1)

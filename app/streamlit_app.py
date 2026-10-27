@@ -10,11 +10,9 @@ import pandas as pd
 import streamlit as st
 from rdflib import OWL, RDF, Namespace
 
-import explorer
 import grading
 import manage
-import rdfviz
-from autograde import baselines, db, evaluate, io, kg, pipeline
+from autograde import baselines, db, evaluate, explorer, io, kg, pipeline, rdfviz
 from autograde import feedback as fb_mod
 from autograde import ledger as ledger_mod
 from autograde.evaluate import human_totals

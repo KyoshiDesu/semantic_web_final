@@ -2,9 +2,7 @@
 import pytest
 from rdflib import Graph, Literal
 
-import explorer
-import rdfviz
-from autograde import io, kg, pipeline
+from autograde import explorer, io, kg, pipeline, rdfviz
 from autograde.io import AG, ANS, KEY
 from test_pipeline import STUB
 
