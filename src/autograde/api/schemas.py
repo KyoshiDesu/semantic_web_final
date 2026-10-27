@@ -134,3 +134,8 @@ class Correction(BaseModel):
 class CorrectionsIn(BaseModel):
     by: Name
     corrections: list[Correction] = Field(min_length=1)
+
+
+class SparqlIn(BaseModel):
+    query: str = Field(min_length=1)
+    graphs: list[str] | None = None  # named graphs (plus the ontology) queried with rdflib; None: the whole store
