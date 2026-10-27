@@ -437,5 +437,11 @@
     "none": "—",
     "use_graphs": "Use the chosen graphs",
     "whole_store": "The whole triple store"
+  },
+  "evaluasi": {
+    "title": "Evaluation",
+    "intro": "Research runs are made with the CLI (python -m autograde run …, then evaluate --run <id>). This page only shows them.",
+    "params": "Parameters",
+    "no_report": "This run has no evaluation yet. Run python -m autograde evaluate --run {run}."
   }
 }

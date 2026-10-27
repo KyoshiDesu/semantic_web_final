@@ -437,5 +437,11 @@
     "none": "—",
     "use_graphs": "Pakai graf terpilih",
     "whole_store": "Seluruh triple store"
+  },
+  "evaluasi": {
+    "title": "Evaluasi",
+    "intro": "Run penelitian dibuat dengan CLI (python -m autograde run …, lalu evaluate --run <id>). Halaman ini hanya menampilkannya.",
+    "params": "Parameter",
+    "no_report": "Run ini belum dievaluasi. Jalankan python -m autograde evaluate --run {run}."
   }
 }
