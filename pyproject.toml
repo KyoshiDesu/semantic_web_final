@@ -13,4 +13,5 @@ where = ["src"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["src", "tests", "app"]
-markers = ["pellet: needs Java + Pellet", "embeddings: needs the sentence-transformers model"]
+markers = ["pellet: needs Java + Pellet", "embeddings: needs the sentence-transformers model",
+           "browser: needs Playwright's Chromium (playwright install chromium)"]
