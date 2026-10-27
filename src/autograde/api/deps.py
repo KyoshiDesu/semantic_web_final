@@ -46,3 +46,9 @@ def read_upload(file):
     if len(data) > MAX_UPLOAD:
         raise HTTPException(413, f"{file.filename} is larger than 10 MB")
     return data
+
+
+def is_stale(result):
+    """Graded before its question's key was last edited (grades.status_table's 'usang')."""
+    updated = db.question_updated([result["question_id"]]).get(result["question_id"])
+    return bool(updated and result["graded"] and result["graded"] < updated)

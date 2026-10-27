@@ -67,12 +67,14 @@ def client(fresh_db, monkeypatch):
     from fastapi.testclient import TestClient
 
     from autograde import importer, llm, pipeline
+    from autograde.api import jobs
     from autograde.api.app import create_app
     from test_pipeline import STUB
     importer.import_files()
     orig = pipeline.Context.load.__func__
     monkeypatch.setattr(pipeline.Context, "load",
                         classmethod(lambda cls, q, **k: orig(cls, q, reasoner="sparql", cosine=STUB)))
+    monkeypatch.setattr(jobs, "_contexts", {})  # contexts built with the stub must not leak into other tests
     monkeypatch.setattr(llm, "load_dotenv", lambda *a, **k: None)  # a real key in .env must never reach a test
     monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
     monkeypatch.delenv("ANTHROPIC_AUTH_TOKEN", raising=False)

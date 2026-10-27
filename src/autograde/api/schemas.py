@@ -6,6 +6,7 @@ import pandas as pd
 from pydantic import BaseModel, Field, StringConstraints, model_validator
 
 from autograde import authoring
+from autograde.models import Status
 
 Name = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
 
@@ -113,3 +114,23 @@ class ScoreMapping(BaseModel):
     question_id: str
     columns: dict[str, str] = Field(min_length=1)  # criterion id, or "_total" for a holistic score -> column
     rater_id: Name = "D1"
+
+
+class GradingRequest(BaseModel):
+    which: Literal["new", "stale"] = "new"
+    llm_feedback: bool = False
+
+
+class ReviewerIn(BaseModel):
+    by: Name
+
+
+class Correction(BaseModel):
+    reference_id: str
+    status: Status
+    reason: Name
+
+
+class CorrectionsIn(BaseModel):
+    by: Name
+    corrections: list[Correction] = Field(min_length=1)
