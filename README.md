@@ -31,6 +31,19 @@ A real course is set up in the app (sidebar section **Data**). On **Mata Kuliah*
 
 Grading a class happens on **Penilaian** (sidebar section **Penilaian Kelas**): pick the assessment and grade every answer with a progress bar. Grading is resumable, and answers with a hand annotation use it while the rest go through the LLM. Then review. One button approves every answer with no ⚑ and no contradiction. Flagged answers are opened one by one, where a ledger status can be corrected with a reason; the score is recomputed and checked with SPARQL. Finally, export. The final grades CSV (one row per student, a column per question and the mean) and the feedback CSV unlock only when every answer is reviewed; drafts are always available. Editing a question's key marks its graded answers *usang* until they are re-graded.
 
+## API
+
+`python -m autograde serve` runs everything on `http://127.0.0.1:8000`: the JSON API under `/api` (try it at `/docs`) and the web pages from `web/`. It only listens on this machine and has no login. Writes from other web origins are refused. Grading an assessment runs in the background, one job at a time; closing the browser doesn't stop it, and a job cut off by a server restart is marked *interrupted* and carries on where it stopped when started again.
+
+| Area | Endpoints |
+|---|---|
+| Courses | `GET/POST /courses`, `GET/POST /courses/{id}/assessments`, `GET /courses/{id}/students` |
+| Questions | `GET /questions`, `GET /assessments/{id}/questions`, `GET /questions/{qid}`, `POST /questions`, `PUT /questions/{qid}`, `POST /questions/preview`, `POST /assessments/{id}/questions/upload`, `GET /questions/{qid}/files.zip`, `GET /predicates` |
+| Imports | `POST /imports/preview`, `POST /courses/{id}/answers`, `POST /courses/{id}/scores` (CSV + a JSON column mapping, `?dry_run=true` to check first) |
+| Grading | `GET /assessments/{id}/status`, `POST /assessments/{id}/grading`, `GET /jobs/{id}`, `POST /jobs/{id}/cancel`, `POST /assessments/{id}/review/bulk`, `POST /results/{run}/{answer}/review`, `POST /results/{run}/{answer}/corrections`, `GET /assessments/{id}/exports/{grades,feedback}.csv` |
+| Semantic Web | `GET /ontology`, `GET /graphs`, `GET /graphs/turtle?name=`, `GET /graphs/view?name=`, `POST /sparql`, `GET /sparql/templates`, `GET /questions/{qid}/gold`, `GET /questions/{qid}/answers`, `POST /questions/{qid}/try`, `GET /results/{run}/{answer}`, `GET /results/{run}/{answer}/views/{graph,alignment,reasoning}`, `GET /questions/{qid}/explorer`, `GET /export/owl` |
+| Research (read-only) | `GET /runs`, `GET /runs/{id}`, `GET /runs/{id}/figures/{name}` |
+
 ## Open in Protégé
 
 The API exports one graded answer or a whole run as an OWL file: `GET /api/export/owl?run=<run>[&answer=<answer>]`. An assessment's run is `assessment-<id>`. The file holds the ontology and its SWRL rules, each question's key, every answer's student triples with their sentences (`prov:wasDerivedFrom`) and the reasoner's input (`alignedSubject`/`alignedObject`), and the ledger (the corrected one when you made corrections). The app's own `ag:contradicts` inferences are left out, so the reasoner derives them again.

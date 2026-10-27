@@ -16,14 +16,14 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from autograde import db, gold, importer, io, kg, llm
-from autograde.api.routes import courses, grading, imports, questions, semantic
+from autograde.api.routes import courses, grading, imports, questions, research, semantic
 
 WEB = io.ROOT / "web"
 HOSTS = ["localhost", "127.0.0.1"]
 SAFE_METHODS = {"GET", "HEAD", "OPTIONS"}
 CODES = {400: "bad_request", 403: "forbidden", 404: "not_found", 405: "method_not_allowed", 409: "conflict",
          413: "too_large", 422: "invalid", 503: "busy"}
-ROUTERS = [courses.router, questions.router, imports.router, grading.router, semantic.router]
+ROUTERS = [courses.router, questions.router, imports.router, grading.router, semantic.router, research.router]
 log = logging.getLogger("uvicorn.error")
 
 
