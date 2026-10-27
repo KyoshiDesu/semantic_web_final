@@ -382,5 +382,39 @@
     "to_grading": "belum dinilai → penilaian",
     "none": "Tidak ada jawaban yang cocok.",
     "count": "{n} jawaban ditampilkan (paling banyak 30)."
+  },
+  "ontologi": {
+    "title": "Ontologi OWL ag:",
+    "intro": "Skema (TBox) yang dimuat Pellet untuk setiap jawaban, dibuat oleh ontology/build_ontology.py; bisa dibuka di Protégé. Named graph:",
+    "count_classes": "Kelas",
+    "count_object_properties": "Object property",
+    "count_data_properties": "Data property",
+    "count_relations": "Predikat (ag:Relation)",
+    "count_swrl_rules": "Aturan SWRL",
+    "tab_classes": "Hierarki kelas",
+    "tab_properties": "Properti",
+    "tab_relations": "Predikat & relasinya",
+    "tab_rules": "Aturan SWRL",
+    "tab_owl": "Berkas OWL",
+    "classes_help": "Garis putus merah: owl:AllDisjointClasses, tidak ada individu yang sekaligus triple acuan dan triple jawaban.",
+    "lang_filter": "Bahasa predikat",
+    "lang_all": "Semua",
+    "lang_id": "Indonesia",
+    "lang_en": "Inggris",
+    "relations_help": "Biru: ag:equivalentPredicate (simetris dan transitif), dihitung cocok. Merah: ag:incompatibleWith (simetris), bahan aturan kontradiksi SWRL.",
+    "rules_intro": "Python menegaskan alignedSubject/alignedObject hanya untuk pasangan dengan σ ≥ τh (SWRL tidak bisa menghitung embedding). Pellet lalu menyimpulkan ag:contradicts.",
+    "rules_legend": "1 = predikat inkompatibel dan tidak dinegasi · 2 = predikat sama dinegasi · 3 = predikat setara dinegasi. Asumsi dunia terbuka: triple yang tidak ada tidak pernah menjadi kontradiksi.",
+    "download": "Unduh autograde.owl (RDF/XML)"
+  },
+  "graf": {
+    "title": "Graf Pengetahuan (triple store Oxigraph)",
+    "intro": "Semua graf RDF tersimpan sebagai named graph dalam satu triple store: ontologi, kunci tiap soal, dan graf jawaban/ledger tiap jawaban yang dinilai. Hanya baca.",
+    "named_graphs": "Named graph",
+    "triples": "Triple (total)",
+    "runs": "Run",
+    "query_all": "SPARQL atas seluruh dataset →",
+    "unknown": "Tidak ada named graph {name}.",
+    "tab_view": "Graf interaktif",
+    "tab_triples": "Tabel triple"
   }
 }

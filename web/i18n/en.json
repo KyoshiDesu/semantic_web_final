@@ -382,5 +382,39 @@
     "to_grading": "not graded → assessment",
     "none": "No matching answers.",
     "count": "{n} answers shown (30 at most)."
+  },
+  "ontologi": {
+    "title": "The ag: OWL ontology",
+    "intro": "The schema (TBox) Pellet loads for every answer, built by ontology/build_ontology.py; it opens in Protégé. Named graph:",
+    "count_classes": "Classes",
+    "count_object_properties": "Object properties",
+    "count_data_properties": "Data properties",
+    "count_relations": "Predicates (ag:Relation)",
+    "count_swrl_rules": "SWRL rules",
+    "tab_classes": "Class hierarchy",
+    "tab_properties": "Properties",
+    "tab_relations": "Predicates & relations",
+    "tab_rules": "SWRL rules",
+    "tab_owl": "OWL file",
+    "classes_help": "Red dashed line: owl:AllDisjointClasses, no individual is both a reference triple and a student triple.",
+    "lang_filter": "Predicate language",
+    "lang_all": "All",
+    "lang_id": "Indonesian",
+    "lang_en": "English",
+    "relations_help": "Blue: ag:equivalentPredicate (symmetric and transitive), counts as a match. Red: ag:incompatibleWith (symmetric), input to the SWRL contradiction rules.",
+    "rules_intro": "Python asserts alignedSubject/alignedObject only for pairs with σ ≥ τh (SWRL cannot compute embeddings). Pellet then infers ag:contradicts.",
+    "rules_legend": "1 = incompatible predicate, not negated · 2 = same predicate, negated · 3 = equivalent predicate, negated. Open world: a triple that is absent never becomes a contradiction.",
+    "download": "Download autograde.owl (RDF/XML)"
+  },
+  "graf": {
+    "title": "Knowledge graph (Oxigraph triple store)",
+    "intro": "Every RDF graph is a named graph in one triple store: the ontology, each question's key, and the answer and ledger graphs of every graded answer. Read-only.",
+    "named_graphs": "Named graphs",
+    "triples": "Triples (total)",
+    "runs": "Runs",
+    "query_all": "SPARQL over the whole dataset →",
+    "unknown": "There is no named graph {name}.",
+    "tab_view": "Interactive graph",
+    "tab_triples": "Triple table"
   }
 }
