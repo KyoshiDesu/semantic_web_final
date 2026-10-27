@@ -30,4 +30,13 @@ A real course is set up in the app (sidebar section **Data**). On **Mata Kuliah*
 
 Grading a class happens on **Penilaian** (sidebar section **Penilaian Kelas**): pick the assessment and grade every answer with a progress bar. Grading is resumable, and answers with a hand annotation use it while the rest go through the LLM. Then review. One button approves every answer with no ⚑ and no contradiction. Flagged answers are opened one by one, where a ledger status can be corrected with a reason; the score is recomputed and checked with SPARQL. Finally, export. The final grades CSV (one row per student, a column per question and the mean) and the feedback CSV unlock only when every answer is reviewed; drafts are always available. Editing a question's key marks its graded answers *usang* until they are re-graded.
 
+## Open in Protégé
+
+The API exports one graded answer or a whole run as an OWL file: `GET /api/export/owl?run=<run>[&answer=<answer>]`. An assessment's run is `assessment-<id>`. The file holds the ontology and its SWRL rules, each question's key, every answer's student triples with their sentences (`prov:wasDerivedFrom`) and the reasoner's input (`alignedSubject`/`alignedObject`), and the ledger (the corrected one when you made corrections). The app's own `ag:contradicts` inferences are left out, so the reasoner derives them again.
+
+1. *File → Open* the `.owl` file.
+2. *Reasoner → HermiT*, then *Reasoner → Start reasoner*.
+3. Under *Individuals*, pick a student triple of an answer with a contradiction: the inferred `contradicts` link shows in yellow.
+4. *DL Query* tab: `LedgerEntry and status value Hilang` lists every missing reference triple; `ReferenceTriple and criterion value Q1_K1_Bahan` lists the triples of one criterion.
+
 Full command list: plan Section 8. Before import, real data goes in `data/answers/answers.csv`, `data/human/scores.csv` (per criterion), `data/annotations/` (gold mode) and `data/human/evidence_audit.csv` / `overrides.yaml`. `data/synthetic/` is demo data only.
