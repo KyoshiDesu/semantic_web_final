@@ -22,6 +22,7 @@ python -m autograde gold --question Q1             # re-validate a key -> named 
 python -m autograde run --question Q1 --mode gold --split all --synthetic --template-feedback   # offline demo
 python -m autograde evaluate --run <run_id>        # report saved with the run; figures in outputs/reports/<run_id>/
 streamlit run app/streamlit_app.py
+python -m autograde serve                          # local API + web app on http://127.0.0.1:8000 (API docs at /docs)
 ```
 
 Storage: everything lives in `db/` (SQLite for records, an Oxigraph triple store with one named graph per document). Set `AUTOGRADE_DB_DIR` to keep it elsewhere. `data/` is only read by `db import`; re-import with `db import --replace` after editing files there. **`--replace` deletes everything entered in the app** (courses, questions, imported answers, grades, reviews); download questions from Editor Soal and the grade exports first. Older databases are upgraded in place on first use. A run can be resumed with `run ... --run-id <id>`. Lecturer corrections: `override --run <id> --file overrides.yaml`; evidence audit: `audit-template --run <id>`, fill the CSV, then `audit-import --file <csv>`.

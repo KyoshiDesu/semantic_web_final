@@ -59,3 +59,22 @@ def fresh_db(tmp_path, monkeypatch):
     """An empty, separate database directory for tests that build their own data."""
     monkeypatch.setenv("AUTOGRADE_DB_DIR", str(tmp_path / "db"))
     return tmp_path / "db"
+
+
+@pytest.fixture
+def client(fresh_db, monkeypatch):
+    """The API on a fresh import of the demo data, grading offline: stub embeddings, SPARQL reasoner, no API key."""
+    from fastapi.testclient import TestClient
+
+    from autograde import importer, llm, pipeline
+    from autograde.api.app import create_app
+    from test_pipeline import STUB
+    importer.import_files()
+    orig = pipeline.Context.load.__func__
+    monkeypatch.setattr(pipeline.Context, "load",
+                        classmethod(lambda cls, q, **k: orig(cls, q, reasoner="sparql", cosine=STUB)))
+    monkeypatch.setattr(llm, "load_dotenv", lambda *a, **k: None)  # a real key in .env must never reach a test
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    monkeypatch.delenv("ANTHROPIC_AUTH_TOKEN", raising=False)
+    with TestClient(create_app(), base_url="http://127.0.0.1") as c:
+        yield c
