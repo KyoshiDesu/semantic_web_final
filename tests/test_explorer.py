@@ -43,3 +43,14 @@ def test_page_cannot_be_broken_by_student_text():
     page = explorer.html(g)
     data = page.split("const D = ", 1)[1]
     assert "</script><script>alert" not in data and "<\\/script><script>alert(1)" in data
+
+
+def test_details_follow_the_language():
+    text = io.load_answers(include_synthetic=True).set_index("answer_id").text["Q1_A08"]
+    ctx, a = graded("Q1", "Q1_A08", text)
+    en = explorer.build(ctx, [a], ctx.params, lang="en")
+    reasoning = en["details"]["ans:Q1_A08_t4"]["sections"][1]["items"][0]
+    assert "Rule 1" in reasoning and "incompatibleWith" in reasoning
+    assert en["details"]["ans:Q1_A08"]["kind"] == "Answer (ag:Answer)"
+    assert set(explorer.TEXT["id"]) == set(explorer.TEXT["en"])
+    assert [n["id"] for n in en["nodes"]] == [n["id"] for n in explorer.build(ctx, [a], ctx.params)["nodes"]]

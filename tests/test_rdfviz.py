@@ -59,4 +59,13 @@ def test_pellet_before_after(answer_id, triple, ref, rule):
     _, eq, inc = io.ontology_relations()
     before, after = rdfviz.pellet_dots(g, eq, inc)
     assert "alignedSubject" in before and "contradicts" not in before
-    assert f'"{triple}" -> "{ref}" [label="ag:contradicts\\n(Aturan {rule})"' in after
+    assert f'"{triple}" -> "{ref}" [label="ag:contradicts\\n(SWRL {rule})"' in after
+
+
+def test_labels_are_language_neutral_and_titles_translated():
+    assert list(rdfviz.properties_table(io.ontology_graph()).columns) == \
+        ["property", "kind", "domain", "range", "characteristics"]
+    dot = rdfviz.alignment_dot([], [], [], {"sigmas": {}, "aligned": [], "contradictions": []})
+    assert 'label="ag:StudentTriple"' in dot and 'label="ag:ReferenceTriple"' in dot and "Jawaban" not in dot
+    titles = [*rdfviz.ANSWER_QUERIES, *rdfviz.RUN_QUERIES, *rdfviz.KG_QUERIES]
+    assert sorted(rdfviz.TITLES_EN) == sorted(titles)

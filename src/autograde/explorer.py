@@ -11,22 +11,106 @@ from autograde.models import STATUS_IRI_NAME, LedgerEntry, StudentTriple
 
 VIS_JS = io.ROOT / "app" / "static" / "vis-network.min.js"
 
-NODE_TYPES = {  # key: (legend label, colour, vis shape, shown by default)
-    "answer": ("Jawaban", "#f97316", "ellipse", True),
-    "student": ("Triple jawaban", "#6366f1", "dot", True),
-    "reference": ("Triple acuan", "#3b82f6", "box", True),
-    "concept": ("Konsep", "#10b981", "dot", True),
+NODE_TYPES = {  # key: (legend label, colour, vis shape, shown by default); colours are the pages' namespace palette
+    "answer": ("Jawaban", "#6d28d9", "ellipse", True),
+    "student": ("Triple jawaban", "#8b5cf6", "dot", True),
+    "reference": ("Triple acuan", "#1d4ed8", "box", True),
+    "concept": ("Konsep", "#047857", "dot", True),
     "unknown": ("Konsep tak dikenal", "#9ca3af", "dot", True),
-    "relation": ("Predikat (ag:Relation)", "#eab308", "diamond", True),
-    "sentence": ("Kalimat (PROV-O)", "#64748b", "box", False),
+    "relation": ("Predikat (ag:Relation)", "#b45309", "diamond", True),
+    "sentence": ("Kalimat (PROV-O)", "#0e7490", "box", False),
 }
 EDGE_TYPES = {  # key: (legend label, colour, dashed, width, shown by default)
     "asserted": ("Relasi eksplisit (RDF)", "#94a3b8", False, 1, True),
-    "ontology": ("Relasi ontologi (OWL)", "#ca8a04", False, 2, True),
-    "match": ("Cocok / Parsial (ledger)", "#10b981", True, 2, True),
-    "inferred": ("Disimpulkan Pellet (SWRL)", "#dc2626", True, 3, True),
-    "aligned": ("Selaras (masukan reasoner)", "#a855f7", True, 1, False),
-    "hierarchy": ("Hierarki konsep (skos:broader)", "#0d9488", True, 2, True),
+    "ontology": ("Relasi ontologi (OWL)", "#b45309", False, 2, True),
+    "match": ("Cocok / Parsial (ledger)", "#2e7d32", True, 2, True),
+    "inferred": ("Disimpulkan Pellet (SWRL)", "#c62828", True, 3, True),
+    "aligned": ("Selaras (masukan reasoner)", "#8b5cf6", True, 1, False),
+    "hierarchy": ("Hierarki konsep (skos:broader)", "#047857", True, 2, True),
+}
+
+# The explorer's node details in each UI language; the web pages pass ?lang=, Streamlit uses the default.
+TEXT = {
+    "id": {
+        "broader_partial": "{stud} lebih umum dari {key} (skos:broader) → kredit parsial",
+        "narrower_same": "{stud} lebih khusus dari {key} (skos:broader) → dihitung sama",
+        "answer_title": "Jawaban {aid}", "sentence_kind": "Kalimat (prov:Entity)", "text": "Teks",
+        "answer": "Jawaban", "from_sentence": "Triple yang berasal dari kalimat ini",
+        "unknown_title": "“{raw}” — tidak ada di tabel alias", "unknown_kind": "Konsep tak dikenal",
+        "from_triple": "Dari triple", "role": "Peran", "why_grey": "Mengapa abu-abu?",
+        "why_grey_text": "Kata ini tidak ada di tabel alias dosen, jadi dibandingkan dengan konsep kunci lewat "
+                         "kemiripan embedding (0–1).",
+        "rule1": "Aturan 1 (predikat inkompatibel)", "rule2": "Aturan 2 (predikat sama, dinegasi)",
+        "rule3": "Aturan 3 (predikat setara, dinegasi)",
+        "why_negated": "{tp} dinegasi, padahal kunci menyatakan {rp}",
+        "why_incompatible": "{tp} incompatibleWith {rp}, tidak dinegasi",
+        "contradiction": "{ref} · KONTRADIKSI — disimpulkan Pellet dengan {rule}: {why}; subjek dan objek selaras "
+                         "(σ = {sig:.2f} ≥ τh {tau_h}) → ag:contradicts.",
+        "matched": "Cocok", "partial": "Parsial",
+        "band_full": "σ = {sig:.2f} ≥ τh {tau_h} → kredit 1",
+        "band_partial": "τl {tau_l} ≤ σ = {sig:.2f} < τh {tau_h} → kredit δ {delta}, perlu ditinjau",
+        "same_pred": "predikat sama", "equiv_pred": "predikat {tp} setara dengan {rp} (ontologi)",
+        "match": "{ref} · {kind} — {same}; {band}{notes}. Dicatat di ledger sebagai bukti (ag:matchedBy).",
+        "also_matches": "{ref} · juga cocok (σ = {sig:.2f}), tetapi triple lain dipilih sebagai bukti (aturan seri).",
+        "aligned_only": "{ref} · selaras (σ = {sig:.2f}) tetapi predikat {tp} tidak setara dan tidak inkompatibel "
+                        "dengan {rp} → tidak ada kredit, bukan kontradiksi.",
+        "student_kind": "Triple jawaban (ag:StudentTriple)", "subject": "Subjek", "predicate": "Predikat",
+        "object": "Objek", "alias_table": "(tabel alias)", "embedding": "? (embedding)", "negated": " — DINEGASI",
+        "provenance": "Provenance (prov:wasDerivedFrom)", "reasoning": "Penalaran",
+        "no_match": "Tidak cocok dengan triple acuan mana pun (σ < τl {tau_l} atau predikat lain).",
+        "evidence": " (bukti {t})", "system_score": "Skor sistem", "sparql_recompute": "Hitung ulang SPARQL",
+        "human_score": "Nilai manusia", "answer_kind": "Jawaban (ag:Answer)", "empty": "(kosong)",
+        "ledger_heading": "Ledger (satu baris per triple acuan)", "relation_kind": "Predikat (ag:Relation)",
+        "meaning": "Arti", "aliases_norm": "Alias (normalisasi)", "equivalent": "Setara (≡)",
+        "incompatible": "Inkompatibel (⊥)", "from_owl": "Dari ontologi OWL",
+        "owl_note": "≡ simetris dan transitif: dihitung cocok. ⊥ simetris: bahan aturan kontradiksi SWRL.",
+        "by": " (oleh {t})", "reference_kind": "Triple acuan (ag:ReferenceTriple)",
+        "accepted_subjects": "Subjek diterima", "criterion": "Kriteria", "weight": "Bobot",
+        "status_in": "Status di {n} jawaban yang dimuat", "none_graded": "Belum ada jawaban dinilai.",
+        "as_subject": "subjek", "as_object": "objek", "concept_kind": "Konsep (ag:Concept, skos:Concept)",
+        "aliases_lecturer": "Alias (tabel dosen)", "broader": "Lebih umum (skos:broader+)",
+        "narrower": "Lebih khusus", "used_by": "Dipakai oleh",
+    },
+    "en": {
+        "broader_partial": "{stud} is broader than {key} (skos:broader) → partial credit",
+        "narrower_same": "{stud} is narrower than {key} (skos:broader) → counts the same",
+        "answer_title": "Answer {aid}", "sentence_kind": "Sentence (prov:Entity)", "text": "Text",
+        "answer": "Answer", "from_sentence": "Triples derived from this sentence",
+        "unknown_title": "“{raw}” — not in the alias table", "unknown_kind": "Unknown concept",
+        "from_triple": "From triple", "role": "Role", "why_grey": "Why grey?",
+        "why_grey_text": "This word is not in the lecturer's alias table, so it is compared with the key's concepts "
+                         "by embedding similarity (0–1).",
+        "rule1": "Rule 1 (incompatible predicate)", "rule2": "Rule 2 (same predicate, negated)",
+        "rule3": "Rule 3 (equivalent predicate, negated)",
+        "why_negated": "{tp} is negated, but the key states {rp}",
+        "why_incompatible": "{tp} incompatibleWith {rp}, not negated",
+        "contradiction": "{ref} · CONTRADICTION — inferred by Pellet with {rule}: {why}; subject and object aligned "
+                         "(σ = {sig:.2f} ≥ τh {tau_h}) → ag:contradicts.",
+        "matched": "Matched", "partial": "Partial",
+        "band_full": "σ = {sig:.2f} ≥ τh {tau_h} → credit 1",
+        "band_partial": "τl {tau_l} ≤ σ = {sig:.2f} < τh {tau_h} → credit δ {delta}, needs review",
+        "same_pred": "same predicate", "equiv_pred": "predicate {tp} is equivalent to {rp} (ontology)",
+        "match": "{ref} · {kind} — {same}; {band}{notes}. Recorded in the ledger as evidence (ag:matchedBy).",
+        "also_matches": "{ref} · also matches (σ = {sig:.2f}), but another triple was chosen as evidence (tie rule).",
+        "aligned_only": "{ref} · aligned (σ = {sig:.2f}) but predicate {tp} is neither equivalent nor incompatible "
+                        "with {rp} → no credit, not a contradiction.",
+        "student_kind": "Student triple (ag:StudentTriple)", "subject": "Subject", "predicate": "Predicate",
+        "object": "Object", "alias_table": "(alias table)", "embedding": "? (embedding)", "negated": " — NEGATED",
+        "provenance": "Provenance (prov:wasDerivedFrom)", "reasoning": "Reasoning",
+        "no_match": "Matches no reference triple (σ < τl {tau_l} or another predicate).",
+        "evidence": " (evidence {t})", "system_score": "System score", "sparql_recompute": "SPARQL recompute",
+        "human_score": "Lecturer score", "answer_kind": "Answer (ag:Answer)", "empty": "(empty)",
+        "ledger_heading": "Ledger (one row per reference triple)", "relation_kind": "Predicate (ag:Relation)",
+        "meaning": "Meaning", "aliases_norm": "Aliases (normalisation)", "equivalent": "Equivalent (≡)",
+        "incompatible": "Incompatible (⊥)", "from_owl": "From the OWL ontology",
+        "owl_note": "≡ symmetric and transitive: counts as a match. ⊥ symmetric: input to the SWRL contradiction rules.",
+        "by": " (by {t})", "reference_kind": "Reference triple (ag:ReferenceTriple)",
+        "accepted_subjects": "Accepted subjects", "criterion": "Criterion", "weight": "Weight",
+        "status_in": "Status in the {n} loaded answers", "none_graded": "No answers graded yet.",
+        "as_subject": "subject", "as_object": "object", "concept_kind": "Concept (ag:Concept, skos:Concept)",
+        "aliases_lecturer": "Aliases (lecturer's table)", "broader": "Broader (skos:broader+)",
+        "narrower": "Narrower", "used_by": "Used by",
+    },
 }
 
 
@@ -49,8 +133,9 @@ def load_answer(run_id, answer_id):
             "contradictions": {tuple(x) for x in r["trace"]["contradictions"]}}
 
 
-def build(ctx, answers, params, human=None, predicates=None):
-    """{nodes, edges, details} for one question and any number of graded answers."""
+def build(ctx, answers, params, human=None, predicates=None, lang="id"):
+    """{nodes, edges, details} for one question and any number of graded answers; details in `lang` (id or en)."""
+    T = TEXT[lang]
     qid, human = ctx.qid, human or {}
     preds = {p["id"]: p for p in (predicates or io.load_predicates())["predicates"]}
     criteria = {c["id"]: c["description"] for c in ctx.rubric["criteria"]}
@@ -81,9 +166,9 @@ def build(ctx, answers, params, human=None, predicates=None):
     def hierarchy_note(key_c, stud_c):
         if key_c and stud_c and key_c != stud_c:
             if stud_c in above.get(key_c, ()):
-                return f"{stud_c} lebih umum dari {key_c} (skos:broader) → kredit parsial"
+                return T["broader_partial"].format(stud=stud_c, key=key_c)
             if key_c in above.get(stud_c, ()):
-                return f"{stud_c} lebih khusus dari {key_c} (skos:broader) → dihitung sama"
+                return T["narrower_same"].format(stud=stud_c, key=key_c)
         return None
 
     # --- the graded answers (answer + ledger graphs) ---
@@ -91,16 +176,16 @@ def build(ctx, answers, params, human=None, predicates=None):
     by_triple = {}
     for a in answers:
         aid, short = a["answer_id"], short_answer(qid, a["answer_id"])
-        node(f"ans:{aid}", "answer", f"{short} · {a['score']['score']:.0f}", f"Jawaban {aid}")
+        node(f"ans:{aid}", "answer", f"{short} · {a['score']['score']:.0f}", T["answer_title"].format(aid=aid))
         text = dict(a["sentences"])
         matched = {(e.matched_by, e.reference_id): e for e in a["entries"] if e.matched_by}
         for e in a["entries"]:
             ref_status[e.reference_id].append((short, e))
         for sid, sent in a["sentences"]:
             node(f"ans:{sid}", "sentence", sid.rsplit("_", 1)[1], sent)
-            details[f"ans:{sid}"] = {"kind": "Kalimat (prov:Entity)", "title": f"ans:{sid}",
-                                    "fields": [["Teks", sent], ["Jawaban", aid]],
-                                    "sections": [{"heading": "Triple yang berasal dari kalimat ini",
+            details[f"ans:{sid}"] = {"kind": T["sentence_kind"], "title": f"ans:{sid}",
+                                    "fields": [[T["text"], sent], [T["answer"], aid]],
+                                    "sections": [{"heading": T["from_sentence"],
                                                   "items": [t.id for t in a["students"] if sid in t.sentence_ids] or ["—"]}]}
         for t in a["students"]:
             tid, tn = f"ans:{t.id}", t.id.rsplit("_", 1)[1]
@@ -115,12 +200,10 @@ def build(ctx, answers, params, human=None, predicates=None):
                     edge(tid, f"key:{concept}", "asserted", role)
                 else:
                     cid = f"ans:{t.id}_{'s' if role == 'hasSubject' else 'o'}"
-                    node(cid, "unknown", raw, f"“{raw}” — tidak ada di tabel alias")
-                    details[cid] = {"kind": "Konsep tak dikenal", "title": raw,
-                                    "fields": [["Dari triple", t.id], ["Peran", role]],
-                                    "sections": [{"heading": "Mengapa abu-abu?", "items": [
-                                        "Kata ini tidak ada di tabel alias dosen, jadi dibandingkan dengan konsep kunci "
-                                        "lewat kemiripan embedding (0–1)."]}]}
+                    node(cid, "unknown", raw, T["unknown_title"].format(raw=raw))
+                    details[cid] = {"kind": T["unknown_kind"], "title": raw,
+                                    "fields": [[T["from_triple"], t.id], [T["role"], role]],
+                                    "sections": [{"heading": T["why_grey"], "items": [T["why_grey_text"]]}]}
                     edge(tid, cid, "asserted", role)
             for sid in t.sentence_ids:
                 edge(tid, f"ans:{sid}", "asserted", "prov:wasDerivedFrom")
@@ -130,48 +213,50 @@ def build(ctx, answers, params, human=None, predicates=None):
                 rid, e = f"key:{qid}_{r.id}", matched.get((t.id, r.id))
                 if (t.id, r.id) in a["contradictions"]:
                     if t.negated:
-                        rule = "Aturan 2 (predikat sama, dinegasi)" if t.p == r.p else "Aturan 3 (predikat setara, dinegasi)"
-                        why = f"{t.p} dinegasi, padahal kunci menyatakan {r.p}"
+                        rule = T["rule2"] if t.p == r.p else T["rule3"]
+                        why = T["why_negated"].format(tp=t.p, rp=r.p)
                     else:
-                        rule, why = "Aturan 1 (predikat inkompatibel)", f"{t.p} incompatibleWith {r.p}, tidak dinegasi"
+                        rule, why = T["rule1"], T["why_incompatible"].format(tp=t.p, rp=r.p)
                     edge(tid, rid, "inferred", "contradicts", f"{rule}: {why}")
-                    reasoning.append(f"{r.id} · KONTRADIKSI — disimpulkan Pellet dengan {rule}: {why}; subjek dan objek "
-                                     f"selaras (σ = {sig:.2f} ≥ τh {params['tau_h']}) → ag:contradicts.")
+                    reasoning.append(T["contradiction"].format(ref=r.id, rule=rule, why=why, sig=sig,
+                                                               tau_h=params["tau_h"]))
                 elif e:
-                    kind = "Cocok" if e.status == "MATCHED" else "Parsial"
+                    kind = T["matched"] if e.status == "MATCHED" else T["partial"]
                     edge(tid, rid, "match", f"{kind} σ={sig:.2f}", f"ledger: {e.entry_id} ag:matchedBy {t.id}")
-                    band = (f"σ = {sig:.2f} ≥ τh {params['tau_h']} → kredit 1" if kind == "Cocok" else
-                            f"τl {params['tau_l']} ≤ σ = {sig:.2f} < τh {params['tau_h']} → kredit δ {params['delta']}, perlu ditinjau")
-                    same = "predikat sama" if t.p == r.p else f"predikat {t.p} setara dengan {r.p} (ontologi)"
+                    band = (T["band_full"] if e.status == "MATCHED" else T["band_partial"]).format(
+                        sig=sig, tau_h=params["tau_h"], tau_l=params["tau_l"], delta=params["delta"])
+                    same = T["same_pred"] if t.p == r.p else T["equiv_pred"].format(tp=t.p, rp=r.p)
                     notes = [n for n in (hierarchy_note(r.o, t.o_concept),
                                          *(hierarchy_note(k, t.s_concept) for k in r.s)) if n]
-                    reasoning.append(f"{r.id} · {kind.upper()} — {same}; {band}"
-                                     + (f" ({'; '.join(notes)})" if notes else "") + ". Dicatat di ledger sebagai bukti (ag:matchedBy).")
+                    reasoning.append(T["match"].format(ref=r.id, kind=kind.upper(), same=same, band=band,
+                                                       notes=f" ({'; '.join(notes)})" if notes else ""))
                 elif mu(r, t, sig, params, ctx.rel) > 0:
-                    reasoning.append(f"{r.id} · juga cocok (σ = {sig:.2f}), tetapi triple lain dipilih sebagai bukti (aturan seri).")
+                    reasoning.append(T["also_matches"].format(ref=r.id, sig=sig))
                 elif (t.id, r.id) in a["aligned"]:
                     edge(tid, rid, "aligned", "aligned", f"alignedSubject + alignedObject (σ = {sig:.2f})")
-                    reasoning.append(f"{r.id} · selaras (σ = {sig:.2f}) tetapi predikat {t.p} tidak setara dan tidak "
-                                     f"inkompatibel dengan {r.p} → tidak ada kredit, bukan kontradiksi.")
+                    reasoning.append(T["aligned_only"].format(ref=r.id, sig=sig, tp=t.p, rp=r.p))
             details[tid] = {
-                "kind": "Triple jawaban (ag:StudentTriple)", "title": f"{t.s_text} —{neg}{t.p}→ {t.o_text}",
-                "fields": [["IRI", tid], ["Jawaban", aid],
-                           ["Subjek", f"“{t.s_text}” → " + (f"key:{t.s_concept} (tabel alias)" if t.s_concept else "? (embedding)")],
-                           ["Predikat", f"ag:{t.p}" + (" — DINEGASI" if t.negated else "")],
-                           ["Objek", f"“{t.o_text}” → " + (f"key:{t.o_concept} (tabel alias)" if t.o_concept else "? (embedding)")]],
-                "sections": [{"heading": "Provenance (prov:wasDerivedFrom)",
+                "kind": T["student_kind"], "title": f"{t.s_text} —{neg}{t.p}→ {t.o_text}",
+                "fields": [["IRI", tid], [T["answer"], aid],
+                           [T["subject"], f"“{t.s_text}” → " + (f"key:{t.s_concept} {T['alias_table']}" if t.s_concept
+                                                              else T["embedding"])],
+                           [T["predicate"], f"ag:{t.p}" + (T["negated"] if t.negated else "")],
+                           [T["object"], f"“{t.o_text}” → " + (f"key:{t.o_concept} {T['alias_table']}" if t.o_concept
+                                                             else T["embedding"])]],
+                "sections": [{"heading": T["provenance"],
                               "items": [f"{s.rsplit('_', 1)[1]}: “{text.get(s, '')}”" for s in t.sentence_ids]},
-                             {"heading": "Penalaran", "items": reasoning or [
-                                 f"Tidak cocok dengan triple acuan mana pun (σ < τl {params['tau_l']} atau predikat lain)."]}]}
+                             {"heading": T["reasoning"],
+                              "items": reasoning or [T["no_match"].format(tau_l=params["tau_l"])]}]}
         status_line = lambda e: (f"{e.reference_id} · {STATUS_IRI_NAME[e.status]} · {e.credit:g} × {e.weight:g}"
-                                 + (f" (bukti {e.matched_by or e.contradicted_by})" if e.matched_by or e.contradicted_by else ""))
+                                 + (T["evidence"].format(t=e.matched_by or e.contradicted_by)
+                                    if e.matched_by or e.contradicted_by else ""))
         sc = a["score"]
-        fields = [["Skor sistem", f"{sc['score']:.1f}"], ["Hitung ulang SPARQL", f"{sc['sparql_score']:.1f}"]]
+        fields = [[T["system_score"], f"{sc['score']:.1f}"], [T["sparql_recompute"], f"{sc['sparql_score']:.1f}"]]
         if aid in human:
-            fields.append(["Nilai manusia", f"{human[aid]:.1f}"])
-        details[f"ans:{aid}"] = {"kind": "Jawaban (ag:Answer)", "title": f"ans:{aid}", "fields": fields,
-                                "sections": [{"heading": "Teks", "items": [s for _, s in a["sentences"]] or ["(kosong)"]},
-                                             {"heading": "Ledger (satu baris per triple acuan)",
+            fields.append([T["human_score"], f"{human[aid]:.1f}"])
+        details[f"ans:{aid}"] = {"kind": T["answer_kind"], "title": f"ans:{aid}", "fields": fields,
+                                "sections": [{"heading": T["text"], "items": [s for _, s in a["sentences"]] or [T["empty"]]},
+                                             {"heading": T["ledger_heading"],
                                               "items": [status_line(e) for e in a["entries"]]}]}
 
     # --- the ontology's predicate vocabulary (OWL) ---
@@ -197,34 +282,36 @@ def build(ctx, answers, params, human=None, predicates=None):
         if a in shown_rel and b in shown_rel:
             edge(f"ag:{a}", f"ag:{b}", "ontology", "⊥ incompatibleWith")
     for p in shown_rel:
-        details[f"ag:{p}"] = {"kind": "Predikat (ag:Relation)", "title": f"ag:{p}",
-                              "fields": [["Arti", preds.get(p, {}).get("description", "—")],
-                                         ["Alias (normalisasi)", ", ".join(preds.get(p, {}).get("aliases", [])) or "—"],
-                                         ["Setara (≡)", ", ".join(sorted(eq.get(p, {p}) - {p})) or "—"],
-                                         ["Inkompatibel (⊥)", ", ".join(sorted(next(iter(x - {p})) for x in inc if p in x)) or "—"]],
-                              "sections": [{"heading": "Dari ontologi OWL", "items": [
-                                  "≡ simetris dan transitif: dihitung cocok. ⊥ simetris: bahan aturan kontradiksi SWRL."]}]}
+        details[f"ag:{p}"] = {"kind": T["relation_kind"], "title": f"ag:{p}",
+                              "fields": [[T["meaning"], preds.get(p, {}).get("description", "—")],
+                                         [T["aliases_norm"], ", ".join(preds.get(p, {}).get("aliases", [])) or "—"],
+                                         [T["equivalent"], ", ".join(sorted(eq.get(p, {p}) - {p})) or "—"],
+                                         [T["incompatible"],
+                                          ", ".join(sorted(next(iter(x - {p})) for x in inc if p in x)) or "—"]],
+                              "sections": [{"heading": T["from_owl"], "items": [T["owl_note"]]}]}
 
     # --- details for key facts and concepts ---
     for r in ctx.refs:
-        lines = [f"{s} · {STATUS_IRI_NAME[e.status]}" + (f" (oleh {(e.matched_by or e.contradicted_by).rsplit('_', 1)[1]})"
-                                                       if e.matched_by or e.contradicted_by else "")
+        lines = [f"{s} · {STATUS_IRI_NAME[e.status]}"
+                 + (T["by"].format(t=(e.matched_by or e.contradicted_by).rsplit("_", 1)[1])
+                    if e.matched_by or e.contradicted_by else "")
                  for s, e in ref_status[r.id]]
         details[f"key:{qid}_{r.id}"] = {
-            "kind": "Triple acuan (ag:ReferenceTriple)", "title": f"{r.id}: {' / '.join(r.s)} {r.p} {r.o}",
-            "fields": [["IRI", f"key:{qid}_{r.id}"], ["Subjek diterima", ", ".join(r.s)], ["Predikat", r.p],
-                       ["Objek", r.o], ["Kriteria", f"{r.criterion} — {criteria[r.criterion]}"], ["Bobot", f"{r.weight:g}"]],
-            "sections": [{"heading": f"Status di {len(lines)} jawaban yang dimuat", "items": lines or ["Belum ada jawaban dinilai."]}]}
+            "kind": T["reference_kind"], "title": f"{r.id}: {' / '.join(r.s)} {r.p} {r.o}",
+            "fields": [["IRI", f"key:{qid}_{r.id}"], [T["accepted_subjects"], ", ".join(r.s)],
+                       [T["predicate"], r.p], [T["object"], r.o],
+                       [T["criterion"], f"{r.criterion} — {criteria[r.criterion]}"], [T["weight"], f"{r.weight:g}"]],
+            "sections": [{"heading": T["status_in"].format(n=len(lines)), "items": lines or [T["none_graded"]]}]}
     for c, spec in concepts.items():
-        users = [f"{r.id} ({'subjek' if c in r.s else 'objek'})" for r in ctx.refs if c in r.s or c == r.o]
+        users = [f"{r.id} ({T['as_subject'] if c in r.s else T['as_object']})" for r in ctx.refs if c in r.s or c == r.o]
         users += [t.id.rsplit("_", 2)[-2] + "·" + t.id.rsplit("_", 1)[1] for t in by_triple.values()
                   if c in (t.s_concept, t.o_concept)]
         narrower = sorted(x for x, ups in above.items() if c in ups)
-        details[f"key:{c}"] = {"kind": "Konsep (ag:Concept, skos:Concept)", "title": f"key:{c}",
-                              "fields": [["Alias (tabel dosen)", ", ".join((spec or {}).get("aliases", [])) or "—"],
-                                         ["Lebih umum (skos:broader+)", ", ".join(sorted(above.get(c, ()))) or "—"],
-                                         ["Lebih khusus", ", ".join(narrower) or "—"]],
-                              "sections": [{"heading": "Dipakai oleh", "items": users or ["—"]}]}
+        details[f"key:{c}"] = {"kind": T["concept_kind"], "title": f"key:{c}",
+                              "fields": [[T["aliases_lecturer"], ", ".join((spec or {}).get("aliases", [])) or "—"],
+                                         [T["broader"], ", ".join(sorted(above.get(c, ()))) or "—"],
+                                         [T["narrower"], ", ".join(narrower) or "—"]],
+                              "sections": [{"heading": T["used_by"], "items": users or ["—"]}]}
     return {"nodes": list(nodes.values()), "edges": edges, "details": details}
 
 
