@@ -50,10 +50,11 @@ def test_reload_during_grading_follows_the_same_job(page, live_server, aid, erro
     db.update_question("Q1", q["prompt"], q["reference_answer"], q["rubric"], q["gold"])  # every answer goes stale
     page.goto(f"{live_server}/penilaian.html?id={aid}")
     page.get_by_role("button", name=tr("penilaian.grade_stale", n=7)).click()
-    expect(page.locator("#job-area progress")).to_be_visible()
+    cancel = page.get_by_role("button", name=tr("penilaian.cancel"))  # only while a job runs; the last job's bar stays
+    expect(cancel).to_be_visible()
     job = HTTP.get(f"{live_server}/api/assessments/{aid}/status").json()["job"]
     page.reload()
-    expect(page.locator("#job-area progress")).to_be_visible()
+    expect(cancel).to_be_visible()
     expect(page.get_by_role("button", name=tr("penilaian.grade_stale", n=7))).to_have_count(0)  # no second start
     gate.set()
     expect(page.locator(".counts")).to_contain_text(f"7 {tr('status.dinilai')}", timeout=60000)
