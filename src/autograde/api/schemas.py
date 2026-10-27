@@ -3,7 +3,7 @@ import json
 from typing import Annotated, Literal
 
 import pandas as pd
-from pydantic import BaseModel, StringConstraints
+from pydantic import BaseModel, Field, StringConstraints, model_validator
 
 from autograde import authoring
 
@@ -81,3 +81,35 @@ class PreviewRequest(BaseModel):
     id: QuestionId
     draft: QuestionDraft
     base_id: str | None = None  # the question edited or copied: its keys the editor doesn't manage are kept
+
+
+class AnswerSource(BaseModel):
+    """One question's answers: a column of a wide table, or a long table's rows where filter_column == filter_value."""
+    column: str
+    filter_column: str | None = None
+    filter_value: str | None = None
+
+    @model_validator(mode="after")
+    def _filter_pair(self):
+        if (self.filter_column is None) != (self.filter_value is None):
+            raise ValueError("filter_column and filter_value go together")
+        return self
+
+
+class AnswerMapping(BaseModel):
+    id_col: str
+    name_cols: list[str] = []
+    columns: dict[str, AnswerSource] = Field(min_length=1)
+    split: Literal["pilot", "test"] = "test"
+
+    def source_map(self):
+        """importer.answers_from_table's form: qid -> (answer column, None | (question column, value))."""
+        return {q: (s.column, (s.filter_column, s.filter_value) if s.filter_column else None)
+                for q, s in self.columns.items()}
+
+
+class ScoreMapping(BaseModel):
+    id_col: str
+    question_id: str
+    columns: dict[str, str] = Field(min_length=1)  # criterion id, or "_total" for a holistic score -> column
+    rater_id: Name = "D1"
