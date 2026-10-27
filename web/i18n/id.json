@@ -368,5 +368,19 @@
     "graph_after": "Named graph setelah disimpan:",
     "save": "Simpan",
     "saved": "{id} disimpan; {n} hasil penilaian kini usang sampai dinilai ulang."
+  },
+  "search": {
+    "title": "Jawaban mahasiswa",
+    "label": "Cari jawaban",
+    "placeholder": "Cari jawaban, NIM, nama, atau soal…",
+    "filter_contradiction": "ada kontradiksi",
+    "filter_flagged": "perlu ditinjau ⚑",
+    "filter_corrected": "dikoreksi dosen",
+    "filter_ungraded": "belum dinilai",
+    "templates": "Contoh SPARQL:",
+    "explore": "jelajahi relasi semantik ↗",
+    "to_grading": "belum dinilai → penilaian",
+    "none": "Tidak ada jawaban yang cocok.",
+    "count": "{n} jawaban ditampilkan (paling banyak 30)."
   }
 }

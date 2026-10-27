@@ -368,5 +368,19 @@
     "graph_after": "Named graph after saving:",
     "save": "Save",
     "saved": "{id} saved; {n} graded results are now stale until regraded."
+  },
+  "search": {
+    "title": "Student answers",
+    "label": "Search answers",
+    "placeholder": "Search answers, student ids, names or questions…",
+    "filter_contradiction": "has a contradiction",
+    "filter_flagged": "needs review ⚑",
+    "filter_corrected": "corrected by the lecturer",
+    "filter_ungraded": "not graded",
+    "templates": "SPARQL examples:",
+    "explore": "explore semantic relationships ↗",
+    "to_grading": "not graded → assessment",
+    "none": "No matching answers.",
+    "count": "{n} answers shown (30 at most)."
   }
 }
