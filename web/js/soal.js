@@ -2,14 +2,16 @@
 import { api, url } from "./api.js";
 import { dot } from "./graph.js";
 import { t } from "./i18n.js";
-import { button, code, dl, el, field, href, iri, loading, panel, param, records, score, select, start, stripComments,
-  table, tabs, triple } from "./ui.js";
+import { button, code, dl, el, fail, field, fill, href, iri, loading, panel, param, records, score, select, start,
+  stripComments, table, tabs, triple } from "./ui.js";
+import { EMPTY_DRAFT, editor } from "./editor.js";
 
 const enc = encodeURIComponent;
 
 async function list(main) {
   const qs = await api.get("/questions");
-  main.replaceChildren(el("div", { class: "row" }, el("h1", {}, t("soal.title"))),
+  main.replaceChildren(el("div", { class: "row" }, el("h1", {}, t("soal.title")),
+    el("a", { class: "btn primary", href: href("soal.html", { new: 1 }) }, t("editor.new_title"))),
     table(records(qs, ["id", "prompt", "language", "assessment_id", "answers", "results"]), { cell: (c, v) => {
       if (c === "id") return el("a", { href: href("soal.html", { id: v }) }, v);
       if (c === "prompt") {
@@ -84,21 +86,42 @@ async function answersTab(p, qid) {
         { kind: "primary", slot: result }))));
 }
 
-async function question(main, qid) {
+async function editTab(p, qid, refresh) {
+  const q = await api.get(`/questions/${enc(qid)}`);
+  const box = el("div");
+  fill(p, q.results ? el("div", { class: "notice" }, t("editor.stale_warning", { n: q.results })) : null, box);
+  await editor(box, { qid, draft: q.draft, baseId: qid, onSaved: refresh });
+}
+
+async function newQuestion(main, copy) {
+  const courses = await api.get("/courses");
+  const lists = await Promise.all(courses.map(c => api.get(`/courses/${c.id}/assessments`)));
+  const assessments = courses.flatMap((c, i) => lists[i].map(a => ({ id: a.id, label: `${c.code} · ${a.name}` })));
+  if (!assessments.length) throw fail("not_found", t("editor.no_assessments"));
+  const draft = copy ? { ...(await api.get(`/questions/${enc(copy)}`)).draft, validated_by: "" } : EMPTY_DRAFT;
+  const box = el("div");
+  main.replaceChildren(el("h1", {}, copy ? t("editor.copy_title", { id: copy }) : t("editor.new_title")), box);
+  await editor(box, { draft, baseId: copy, assessments, onSaved: id => location.assign(href("soal.html", { id })) });
+}
+
+async function question(main, qid, refresh) {
   const g = await api.get(`/questions/${enc(qid)}/gold`);
   const body = el("div");
   main.replaceChildren(
     el("div", { class: "row" }, el("h1", {}, qid), el("span", { class: "chip" }, g.language.toUpperCase()),
-      el("a", { href: href("jelajah.html", { question: qid }) }, t("soal.explore"))),
+      el("a", { href: href("jelajah.html", { question: qid }) }, t("soal.explore")),
+      el("a", { href: href("soal.html", { new: 1, copy: qid }) }, t("editor.copy"))),
     notice(g), body);
   await tabs(body, [
     { id: "kunci", label: t("soal.tab_key"), render: p => keyTab(p, qid, g) },
+    { id: "editor", label: t("editor.tab"), render: p => editTab(p, qid, refresh) },
     { id: "jawaban", label: t("soal.tab_answers"), render: p => answersTab(p, qid) },
   ]);
 }
 
-start("soal.html", "soal.title", async main => {
+start("soal.html", "soal.title", async (main, refresh) => {
   const qid = param("id");
-  if (qid) await question(main, qid);
+  if (param("new")) await newQuestion(main, param("copy"));
+  else if (qid) await question(main, qid, refresh);
   else await list(main);
 });

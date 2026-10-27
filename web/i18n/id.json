@@ -341,5 +341,32 @@
     "try_pasted": "Nilai jawaban ini (LLM)",
     "baseline": "Baseline B1 (kata kunci): {score}",
     "open_result": "Buka hasil lengkap →"
+  },
+  "editor": {
+    "tab": "Editor",
+    "copy": "Salin sebagai soal baru",
+    "new_title": "Soal baru",
+    "copy_title": "Soal baru, salinan dari {id}",
+    "new_id": "ID soal baru",
+    "assessment": "Ke penilaian",
+    "no_assessments": "Buat mata kuliah dan penilaian dulu di halaman Kelas.",
+    "stale_warning": "{n} hasil penilaian memakai kunci ini. Setelah disimpan, hasil itu usang sampai dinilai ulang.",
+    "language": "Bahasa soal",
+    "lang_id": "Indonesia",
+    "lang_en": "Inggris",
+    "validated_by": "Divalidasi oleh (kosongkan bila belum)",
+    "triples_help": "Subjek boleh lebih dari satu, dipisah koma (semua diterima). ID kosong diberi nomor R<n> saat disimpan.",
+    "remove_row": "Hapus baris {n}",
+    "add_row": "+ baris",
+    "unknown": "tidak dikenal",
+    "preview": "Pratinjau graf acuan",
+    "preview_view": "Tampilan pratinjau",
+    "checking": "Memeriksa…",
+    "valid": "Valid: siap disimpan.",
+    "invalid": "Belum valid.",
+    "not_valid": "Belum valid",
+    "graph_after": "Named graph setelah disimpan:",
+    "save": "Simpan",
+    "saved": "{id} disimpan; {n} hasil penilaian kini usang sampai dinilai ulang."
   }
 }

@@ -341,5 +341,32 @@
     "try_pasted": "Grade this answer (LLM)",
     "baseline": "Baseline B1 (keywords): {score}",
     "open_result": "Open the full result →"
+  },
+  "editor": {
+    "tab": "Editor",
+    "copy": "Copy as a new question",
+    "new_title": "New question",
+    "copy_title": "New question, copied from {id}",
+    "new_id": "New question id",
+    "assessment": "Into assessment",
+    "no_assessments": "Create a course and an assessment on the Classes page first.",
+    "stale_warning": "{n} graded results use this key. After saving, they are stale until regraded.",
+    "language": "Question language",
+    "lang_id": "Indonesian",
+    "lang_en": "English",
+    "validated_by": "Validated by (leave empty if not yet)",
+    "triples_help": "A triple may accept several subjects, separated by commas. An empty id becomes the next R<n> on saving.",
+    "remove_row": "Remove row {n}",
+    "add_row": "+ row",
+    "unknown": "unknown",
+    "preview": "Reference graph preview",
+    "preview_view": "Preview view",
+    "checking": "Checking…",
+    "valid": "Valid: ready to save.",
+    "invalid": "Not valid yet.",
+    "not_valid": "Not valid yet",
+    "graph_after": "Named graph after saving:",
+    "save": "Save",
+    "saved": "{id} saved; {n} graded results are now stale until regraded."
   }
 }
