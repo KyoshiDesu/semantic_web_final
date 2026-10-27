@@ -458,6 +458,13 @@ def running_job():
     return None if row is None else _job(row)
 
 
+def latest_job(assessment_id):
+    with tx() as c:
+        row = c.execute("SELECT * FROM job WHERE assessment_id = ? ORDER BY id DESC LIMIT 1",
+                        (assessment_id,)).fetchone()
+    return None if row is None else _job(row)
+
+
 def update_job(job_id, current, done, failures):
     with tx() as c:
         c.execute("UPDATE job SET current = ?, done = ?, failures = ? WHERE id = ?",

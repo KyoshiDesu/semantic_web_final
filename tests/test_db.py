@@ -217,3 +217,14 @@ def test_job_lifecycle(fresh_db):
     other = db.create_job(a, "assessment-1", "stale", False, ["Q1_x"])
     assert db.interrupt_running_jobs() == 1 and db.job(other)["status"] == "interrupted"
     assert db.job(999) is None
+
+
+def test_latest_job(fresh_db):
+    db.connect(create=True).close()
+    a = db.add_assessment(db.add_course("C1", "Course"), "UTS")
+    db.create_run("assessment-1", "auto", "all", "all", {}, False, "sparql", True, a)
+    assert db.latest_job(a) is None
+    first = db.create_job(a, "assessment-1", "new", False, ["Q1_x"])
+    db.finish_job(first, "done")
+    second = db.create_job(a, "assessment-1", "stale", False, ["Q1_x"])
+    assert db.latest_job(a)["id"] == second and db.latest_job(999) is None

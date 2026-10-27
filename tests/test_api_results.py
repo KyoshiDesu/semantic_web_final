@@ -67,3 +67,13 @@ def test_explorer(client):
     with_answer = client.get("/api/questions/Q1/explorer", params={"run": "ui", "answers": "Q1_A08"}).json()
     assert len(with_answer["graph"]["nodes"]) > len(e["graph"]["nodes"])
     assert client.get("/api/questions/Q1/explorer", params={"run": "ui", "answers": "Q1_A01"}).status_code == 404
+
+
+def test_views_and_explorer_follow_the_language(client):
+    client.post("/api/questions/Q1/try", json={"answer_id": "Q1_A08", "mode": "gold"})
+    assert client.get("/api/results/ui/Q1_A08").json()["assessment_id"] is None  # the UI run has no assessment
+    en = client.get("/api/results/ui/Q1_A08/views/graph", params={"lang": "en"}).json()
+    assert en["graph"]["details"]["ans:Q1_A08"]["kind"] == "Answer (ag:Answer)"
+    ex = client.get("/api/questions/Q1/explorer", params={"run": "ui", "answers": "Q1_A08", "lang": "en"}).json()
+    assert ex["graph"]["details"]["ans:Q1_A08"]["kind"] == "Answer (ag:Answer)"
+    assert client.get("/api/results/ui/Q1_A08/views/graph", params={"lang": "fr"}).status_code == 422

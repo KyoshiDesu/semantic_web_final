@@ -65,3 +65,8 @@ def test_owl_export(client):
     assert len(Graph().parse(data=r.content, format="xml")) > 0
     assert client.get("/api/export/owl", params={"run": "nope"}).status_code == 404
     assert client.get("/api/export/owl", params={"run": "ui", "answer": "Q1_A01"}).status_code == 404
+
+
+def test_template_titles_follow_the_language(client):
+    en = client.get("/api/sparql/templates", params={"scope": "kg", "lang": "en"}).json()
+    assert list(en)[0] == "Triples per named graph" and list(en.values()) == list(rdfviz.KG_QUERIES.values())

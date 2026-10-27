@@ -154,3 +154,29 @@ def test_context_reloads_after_the_key_is_edited(client):
     q = db.question("Q1")
     db.update_question("Q1", q["prompt"], q["reference_answer"], q["rubric"], q["gold"])
     assert jobs.context("Q1") is not first and len(jobs._contexts) == 1
+
+
+def test_status_names_the_assessment_and_its_latest_job(client):
+    aid = demo_assessment(client)
+    st = client.get(f"/api/assessments/{aid}/status").json()
+    assert st["assessment"]["id"] == aid and st["course"]["code"] == "DEMO" and st["job"] is None
+    job = wait(client, client.post(f"/api/assessments/{aid}/grading", json={"which": "new"}).json()["id"])
+    assert client.get(f"/api/assessments/{aid}/status").json()["job"]["id"] == job["id"]
+
+
+def test_answer_search(client):
+    aid = demo_assessment(client)
+    rows = client.get("/api/answers").json()
+    assert len(rows) == 7 and {r["status"] for r in rows} == {"belum dinilai"}
+    assert rows[0]["triple"] is None and rows[0]["name"] is None and rows[0]["text"]
+    wait(client, client.post(f"/api/assessments/{aid}/grading", json={"which": "new"}).json()["id"])
+    contra = client.get("/api/answers", params={"filter": "contradiction"}).json()
+    assert [r["answer_id"] for r in contra] == ["Q1_A08", "Q1_S03"]
+    assert contra[0]["triple"]["contradicts"] == "key:Q1_R2" and contra[0]["run_id"] == f"assessment-{aid}"
+    assert [r["answer_id"] for r in client.get("/api/answers", params={"filter": "flagged"}).json()] == \
+        ["Q1_A07", "Q1_A08"]
+    s01 = client.get("/api/answers", params={"q": "glukosa oksigen dilepaskan"}).json()
+    assert [r["answer_id"] for r in s01] == ["Q1_S01"] and s01[0]["triple"]["contradicts"] is None
+    assert len(client.get("/api/answers", params={"q": "karbon", "limit": 2}).json()) == 2
+    assert client.get("/api/answers", params={"filter": "corrected"}).json() == []
+    assert client.get("/api/answers", params={"filter": "nope"}).status_code == 422

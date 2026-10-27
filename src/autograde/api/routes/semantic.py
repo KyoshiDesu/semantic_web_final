@@ -92,8 +92,8 @@ def sparql(body: SparqlIn):
 
 
 @router.get("/sparql/templates")
-def templates(scope: Literal["answer", "run", "kg"] = "kg"):
-    return TEMPLATES[scope]
+def templates(scope: Literal["answer", "run", "kg"] = "kg", lang: Literal["id", "en"] = "id"):
+    return {rdfviz.TITLES_EN.get(k, k) if lang == "en" else k: v for k, v in TEMPLATES[scope].items()}
 
 
 @router.get("/questions/{qid}/gold")
@@ -143,7 +143,8 @@ def human_totals(ctx):
 
 def result_view(run_id, answer_id):
     r = deps.result_or_404(run_id, answer_id)
-    qid, params = r["question_id"], db.run(run_id)["params"]
+    run = db.run(run_id)
+    qid, params = r["question_id"], run["params"]
     gold_name, answer_name, ledger_name = rdfviz.answer_graph_names(qid, run_id, answer_id)
     rows = ledger.recompute_rows(kg.get_graph(ledger_name), kg.get_graph(gold_name), params["lambda"])
     refs = {x.id: x for x in gold.load(qid)[2]}
@@ -153,7 +154,8 @@ def result_view(run_id, answer_id):
                              if e["reference_id"] in refs else None} for e in entries]
 
     sc = r["score"]
-    return {"run_id": run_id, "answer_id": answer_id, "question_id": qid, "graded": r["graded"],
+    return {"run_id": run_id, "answer_id": answer_id, "question_id": qid, "assessment_id": run["assessment_id"],
+            "graded": r["graded"],
             "reviewed": r["reviewed"], "reviewed_by": r["reviewed_by"], "stale": deps.is_stale(r),
             "score": sc, "score_corrected": r["score_corrected"],
             "recompute": {"query": ledger.RECOMPUTE_QUERY.strip(), "graphs": [ledger_name, gold_name],
@@ -199,15 +201,16 @@ def get_result(run_id: str, answer_id: str):
 
 
 @router.get("/results/{run_id}/{answer_id}/views/{view}")
-def result_views(run_id: str, answer_id: str, view: Literal["graph", "alignment", "reasoning"]):
+def result_views(run_id: str, answer_id: str, view: Literal["graph", "alignment", "reasoning"],
+                 lang: Literal["id", "en"] = "id"):
     r = deps.result_or_404(run_id, answer_id)
     qid, params = r["question_id"], db.run(run_id)["params"]
     ctx, a = jobs.context(qid), explorer.load_answer(run_id, answer_id)
     trace = {"sigmas": a["sigmas"], "aligned": sorted(a["aligned"]), "contradictions": sorted(a["contradictions"])}
     try:  # a KeyError here means the key gained a reference triple this answer was never matched against
         if view == "graph":
-            return {"graph": explorer.build(ctx, [a], params, human_totals(ctx)), "node_types": explorer.NODE_TYPES,
-                    "edge_types": explorer.EDGE_TYPES}
+            return {"graph": explorer.build(ctx, [a], params, human_totals(ctx), lang=lang),
+                    "node_types": explorer.NODE_TYPES, "edge_types": explorer.EDGE_TYPES}
         if view == "alignment":
             return {"dot": rdfviz.alignment_dot(ctx.refs, a["students"], a["entries"], trace),
                     "graph": kg.answer_graph_name(run_id, answer_id, "answer")}
@@ -227,7 +230,7 @@ def result_views(run_id: str, answer_id: str, view: Literal["graph", "alignment"
 
 
 @router.get("/questions/{qid}/explorer")
-def explorer_view(qid: str, run: str | None = None, answers: str = ""):
+def explorer_view(qid: str, run: str | None = None, answers: str = "", lang: Literal["id", "en"] = "id"):
     """The question's knowledge graph; with a run, plus the chosen answers (default: its first 12)."""
     deps.question_or_404(qid)
     ctx = jobs.context(qid)
@@ -245,7 +248,7 @@ def explorer_view(qid: str, run: str | None = None, answers: str = ""):
             raise HTTPException(404, f"not graded in run {run}: {', '.join(missing)}")
         chosen = [explorer.load_answer(run, x) for x in ids]
     try:
-        graph = explorer.build(ctx, chosen, params, human_totals(ctx))
+        graph = explorer.build(ctx, chosen, params, human_totals(ctx), lang=lang)
     except KeyError:
         raise HTTPException(409, f"an answer was {OLD_KEY}") from None
     return {"sources": sources, "graph": graph, "node_types": explorer.NODE_TYPES, "edge_types": explorer.EDGE_TYPES}

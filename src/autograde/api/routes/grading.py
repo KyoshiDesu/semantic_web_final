@@ -2,7 +2,7 @@
 from datetime import date
 from typing import Literal
 
-from fastapi import APIRouter, HTTPException, Response
+from fastapi import APIRouter, HTTPException, Query, Response
 
 from autograde import db, grades, importer, pipeline
 from autograde.api import deps, jobs
@@ -31,7 +31,10 @@ def _pending(run_id, answer_id):
 @router.get("/assessments/{assessment_id}/status")
 def status(assessment_id: int):
     run_id, t = _status(assessment_id)
-    return {"run_id": run_id, "counts": {s: int(n) for s, n in t.status.value_counts().items()},
+    a = db.assessment(assessment_id)
+    return {"run_id": run_id, "assessment": a, "course": db.course(a["course_id"]),
+            "job": db.latest_job(assessment_id),
+            "counts": {s: int(n) for s, n in t.status.value_counts().items()},
             "approvable": grades.bulk_approvable(t), "ready": grades.ready(t),
             "synthetic": bool((t.source == "synthetic").any()), **table(t)}
 
@@ -110,3 +113,49 @@ def export(assessment_id: int, kind: Literal["grades", "feedback"], draft: bool 
            f"{'_draf' if draft else ''}.csv"
     return Response(text.encode("utf-8-sig"), media_type="text/csv",
                     headers={"Content-Disposition": f'attachment; filename="{name}"'})
+
+
+SEARCH_FILTERS = {"contradiction": lambda row, r: row["contradictions"] > 0,
+                  "flagged": lambda row, r: row["status"] == "dinilai" and row["flagged"] > 0,
+                  "corrected": lambda row, r: bool(r and r["score_corrected"]),
+                  "ungraded": lambda row, r: row["status"] == "belum dinilai"}
+
+
+def _triple(s):
+    return {"s": s["s_text"], "p": s["p"], "o": s["o_text"], "negated": s["negated"]}
+
+
+def highlight(r):
+    """The triple an answer card shows: a contradicting one if any, else the first matched one."""
+    if r is None:
+        return None
+    students = {s["id"]: s for s in r["students"]}
+    if r["trace"]["contradictions"]:
+        t_id, ref = r["trace"]["contradictions"][0]
+        return {**_triple(students[t_id]), "contradicts": f"key:{r['question_id']}_{ref}"}
+    matched = next((e["matched_by"] for e in r["ledger"] if e["matched_by"]), None)
+    return {**_triple(students[matched]), "contradicts": None} if matched else None
+
+
+@router.get("/answers")
+def search_answers(q: str = "", filter_: Literal["contradiction", "flagged", "corrected", "ungraded"] | None =
+                   Query(None, alias="filter"), limit: int = Query(30, ge=1, le=200)):
+    """The home page's search over every assessment: each answer with its grading status, score and one triple.
+    Every word of q must appear in the answer id, student id or name, answer text, question id or prompt."""
+    words, out = q.lower().split(), []
+    for course in db.courses():
+        for a in db.assessments(course["id"]):
+            run_id = pipeline.assessment_run(a["id"])
+            data, results = table(grades.status_table(a["id"], run_id)), db.results(run_id)
+            texts = db.assessment_answers(a["id"]).set_index("answer_id").text
+            prompts = {qid: db.question(qid)["prompt"] for qid in db.questions(a["id"])}
+            for row in (dict(zip(data["columns"], values)) for values in data["rows"]):
+                r = results.get(row["answer_id"])
+                hay = " ".join((row["answer_id"], row["external_id"], row["name"] or "", texts[row["answer_id"]],
+                                row["question_id"], prompts[row["question_id"]])).lower()
+                if all(w in hay for w in words) and (filter_ is None or SEARCH_FILTERS[filter_](row, r)):
+                    out.append({**row, "assessment_id": a["id"], "run_id": run_id, "text": texts[row["answer_id"]],
+                                "corrected": bool(r and r["score_corrected"]), "triple": highlight(r)})
+                    if len(out) == limit:
+                        return out
+    return out

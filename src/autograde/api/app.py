@@ -21,6 +21,9 @@ from autograde.api.routes import courses, grading, imports, questions, research,
 WEB = io.ROOT / "web"
 HOSTS = ["localhost", "127.0.0.1"]
 SAFE_METHODS = {"GET", "HEAD", "OPTIONS"}
+# The pages load nothing from other origins; Graphviz needs WebAssembly, vis-network injects its own styles.
+CSP = "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:"
+NO_CSP = ("/api", "/docs", "/redoc", "/openapi.json")  # Swagger UI loads from a CDN
 CODES = {400: "bad_request", 403: "forbidden", 404: "not_found", 405: "method_not_allowed", 409: "conflict",
          413: "too_large", 422: "invalid", 503: "busy"}
 ROUTERS = [courses.router, questions.router, imports.router, grading.router, semantic.router, research.router]
@@ -90,6 +93,13 @@ def create_app():
                 and urlsplit(origin).netloc != request.headers.get("host"):
             return error(403, "cross-origin request refused")
         return await call_next(request)
+
+    @app.middleware("http")
+    async def page_policy(request: Request, call_next):
+        response = await call_next(request)
+        if not request.url.path.startswith(NO_CSP):
+            response.headers["Content-Security-Policy"] = CSP
+        return response
 
     app.add_middleware(TrustedHostMiddleware, allowed_hosts=HOSTS)
     for router in ROUTERS:

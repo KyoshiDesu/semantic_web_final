@@ -70,3 +70,10 @@ def test_serve_binds_localhost_on_an_empty_database(fresh_db, monkeypatch):
     monkeypatch.setattr(uvicorn, "run", lambda app, **kw: calls.append(kw))
     cli.main(["serve", "--port", "8123"])
     assert calls == [{"host": "127.0.0.1", "port": 8123}]
+
+
+def test_pages_get_a_content_security_policy(client):
+    csp = client.get("/").headers["content-security-policy"]
+    assert "default-src 'self'" in csp and "'wasm-unsafe-eval'" in csp
+    assert "content-security-policy" not in client.get("/api/courses").headers
+    assert "content-security-policy" not in client.get("/docs").headers
