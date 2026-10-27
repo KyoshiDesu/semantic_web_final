@@ -139,3 +139,16 @@ class CorrectionsIn(BaseModel):
 class SparqlIn(BaseModel):
     query: str = Field(min_length=1)
     graphs: list[str] | None = None  # named graphs (plus the ontology) queried with rdflib; None: the whole store
+
+
+class TryIn(BaseModel):
+    answer_id: str | None = None  # a stored answer of this question...
+    text: str | None = None  # ...or a pasted one, graded as <qid>_UI
+    mode: Literal["gold", "llm"] = "llm"
+    llm_feedback: bool = False
+
+    @model_validator(mode="after")
+    def _one_source(self):
+        if (self.answer_id is None) == (self.text is None or not self.text.strip()):
+            raise ValueError("give answer_id or text, not both")
+        return self
