@@ -16,6 +16,8 @@ Pellet needs **Java 25+** (Owlready2 0.51). It is looked up in `JAVA_EXE`, `JAVA
 
 ## Run
 
+`./run.sh` (macOS, Linux) or `.\run.ps1` (Windows PowerShell) starts the app on http://127.0.0.1:8000: the API and the web pages are one server. On the first start it imports `data/` into an empty database. A port can be given: `./run.sh 8080`, `.\run.ps1 -Port 8080`. If Windows blocks the script, run `powershell -ExecutionPolicy Bypass -File .\run.ps1`.
+
 ```bash
 pytest                                             # all tests, offline (they build their own temp database)
 python -m autograde db import                      # once: data/ -> db/autograde.sqlite + db/kg/ (Oxigraph)
