@@ -1,0 +1,9 @@
+# Source: UKARA 1.0 Challenge Track 1 (UGM NLP group & PUSPENDIK Kemendikbud), Task B.
+# question.md = the stimulus and question from the dataset's coding-guideline file.
+# reference_answer.md and the criterion are drafted by Claude (AI) from the coding guideline (Label 1);
+# the dataset itself has no reference answer. Labels are binary: 1 -> 100, 0 -> 0 (_total).
+question_id: ID_UKARA_B
+language: id
+criteria:
+  - id: K1_Alasan
+    description: "Menjelaskan alasan berdonasi: kesadaran akan kondisi kerja di industri pakaian, dampak tindakan konsumen bagi orang lain, atau emosi/motivasi donatur"

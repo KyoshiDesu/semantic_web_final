@@ -1,0 +1,9 @@
+# Source: UKARA 1.0 Challenge Track 1 (UGM NLP group & PUSPENDIK Kemendikbud), Task A.
+# question.md = the stimulus and question from the dataset's coding-guideline file.
+# reference_answer.md and the criterion are drafted by Claude (AI) from the coding guideline (Label 1);
+# the dataset itself has no reference answer. Labels are binary: 1 -> 100, 0 -> 0 (_total).
+question_id: ID_UKARA_A
+language: id
+criteria:
+  - id: K1_Tantangan
+    description: "Menyebutkan tantangan nyata yang dihadapi pengungsi di tempat baru (adaptasi, komunikasi, finansial/ekonomi, sosial, atau kebutuhan hidup)"

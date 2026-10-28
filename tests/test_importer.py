@@ -115,6 +115,12 @@ def wide():
                          "Last": ["S", "", "T", "U"], "R1": ["Fotosintesis ...", "x", "-", ""]})
 
 
+def test_dataset_questions_are_valid():
+    """datasets/ keys use relations nothing else uses (menghadapi, menyebabkan); removing one breaks their upload."""
+    folders = [d for d in (io.ROOT / "datasets").iterdir() if (d / "questions").is_dir()]
+    assert folders and all(importer.read_questions(d) for d in folders)
+
+
 def test_wide_and_long_tables_give_the_same_rows(course):
     rows, report = importer.answers_from_table(wide(), "ID", ["First", "Last"], {"Q1": ("R1", None)}, "test")
     assert [r["answer_id"] for r in rows] == ["Q1_101", "Q1_102"] and report == {"blank": 2, "existing": []}

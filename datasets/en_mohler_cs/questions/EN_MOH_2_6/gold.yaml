@@ -1,0 +1,18 @@
+# Source: Mohler, Bunescu & Mihalcea (2011) short-answer grading data, question 2.6.
+# Question and reference answer are the dataset's; criteria are drafted by Claude (AI).
+# Human scores in the dataset are holistic (0-5 per grader), imported as _total = 20 x points.
+# Drafted by Claude (AI) as a starting point; NOT validated by a lecturer. Review before research use.
+question_id: EN_MOH_2_6
+validated_by: null
+validated_on: null
+concepts:
+  FunctionPrototype:  {aliases: [function prototype, prototype, a prototype, a function prototype]}
+  FunctionDefinition: {aliases: [function definition, definition, a definition, a function definition]}
+  FunctionSignature:  {aliases: [signature, function signature, function header, header, declaration]}
+  ReturnType:         {aliases: [return type, return types, the return type], broader: [FunctionSignature]}
+  FunctionName:       {aliases: [name, function name, the name of the function, name of the function], broader: [FunctionSignature]}
+  ParameterList:      {aliases: [parameters, parameter types, parameter list, arguments, types of the parameters, "parameters' type"], broader: [FunctionSignature]}
+  FunctionBody:       {aliases: [body, function body, code, the code, implementation, actual code, body of the function, statements]}
+triples:
+  - {id: R1, s: [FunctionPrototype], p: has, o: FunctionSignature, criterion: K1_Prototype, weight: 1}
+  - {id: R2, s: [FunctionDefinition], p: has, o: FunctionBody, criterion: K2_Definition, weight: 1}

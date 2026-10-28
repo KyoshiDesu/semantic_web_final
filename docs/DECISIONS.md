@@ -101,3 +101,13 @@ Agent Rule 2: formula changes need a human decision recorded here. Newest last.
 - The database now holds data that exists nowhere else, so schema changes are upgraded in place (`db.UPGRADES`, schema version 2) instead of asking for `db import --replace`.
 - One grading run per assessment (`assessment-<id>`, mode `auto`: gold extraction for hand-annotated answers, LLM otherwise). Lecturer corrections are re-applied after a re-grade when their reference triple still exists. Corrected scores still never feed `evaluate`.
 - Corrected answers get template feedback rebuilt from the corrected ledger in the export, because the stored feedback quotes the original score.
+
+## 2026-10-28 — Public datasets for the app (`datasets/`)
+
+- Two importable datasets, kept outside `data/` so `db import` never reads them; loaded through the Kelas page or `datasets/import_datasets.py`. Details and citations: `datasets/README.md`.
+  - **English:** 12 of the 80 questions of Mohler et al. (2011), CS data structures, 343 answers, two graders (0–5 → `_total` 0–100, raters G1 and G2). Chosen because the reference answers can be written as triples with the existing English predicates. No official split: every 5th answer per question is pilot.
+  - **Indonesian:** UKARA 1.0 Track 1, Tasks A and B, 2,860 answers, binary labels (→ 0/100, rater UKARA). Official splits kept (train → pilot, dev, test).
+- **Rubrics and gold keys were drafted by Claude (AI), not by a lecturer**, as were the UKARA reference answers (the dataset has none; drafted from the coding guideline's Label 1). `validated_by: null` everywhere. Demonstration only until reviewed; not for the gold-mode ablation.
+- **New Indonesian relations `menghadapi` and `menyebabkan`** (`build_ontology.py`, `predicates.yaml`, `autograde.owl` regenerated; the regenerated file was identical to the previous one before the change). The four Q1 predicates can't express UKARA's "pengungsi menghadapi tantangan" or "alasan menyebabkan donasi". No equivalences or incompatibilities added. Validate with the lecturer.
+- **Either/or rubrics through `skos:broader`:** UKARA accepts any one reason, so each key has one triple whose object is a general concept (`TantanganPengungsi`, `AlasanBerdonasi`) and the accepted reasons are narrower concepts, which count as the key concept itself. Mohler 12.9 (successor or predecessor) uses the accepted-subjects list.
+- Known misfits: the UKARA guideline stimulus differs from what students saw (answers mention "Travina" and a 2-Euro T-shirt vending machine in Berlin); UKARA labels are noisy (Septiandri et al. 2020 relabelled 73 of 573 training answers); vague answers may get partial credit by embedding.

@@ -1,0 +1,1 @@
+Pembeli memilih berdonasi karena gambar tersebut menyadarkan mereka akan kondisi kerja yang buruk di pabrik pakaian, sehingga mereka ingin tindakannya membantu orang lain. Rasa iba dan kepedulian juga mendorong mereka untuk berdonasi.

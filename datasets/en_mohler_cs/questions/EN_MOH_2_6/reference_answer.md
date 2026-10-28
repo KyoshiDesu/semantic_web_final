@@ -1,0 +1,1 @@
+A function prototype includes the function signature, i.e., the name of the function, the return type, and the parameters' type. The function definition includes the actual body of the function.

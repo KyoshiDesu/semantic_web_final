@@ -1,0 +1,1 @@
+The elements in an array can be accessed directly (as opposed to linked lists, which require iterative traversal).

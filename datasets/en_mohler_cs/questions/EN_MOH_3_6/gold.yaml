@@ -1,0 +1,14 @@
+# Source: Mohler, Bunescu & Mihalcea (2011) short-answer grading data, question 3.6.
+# Question and reference answer are the dataset's; criteria are drafted by Claude (AI).
+# Human scores in the dataset are holistic (0-5 per grader), imported as _total = 20 x points.
+# Drafted by Claude (AI) as a starting point; NOT validated by a lecturer. Review before research use.
+question_id: EN_MOH_3_6
+validated_by: null
+validated_on: null
+concepts:
+  MissingBaseCase:        {aliases: [no base case, missing base case, omitting the base case, not having a base case, without a base case, lack of a base case, base case not included, absence of a base case]}
+  IncorrectRecursionStep: {aliases: [incorrect recursion step, wrong recursion step, recursion step defined incorrectly, incorrect recursive step, not reaching the base case, never reaching the base case, not converging on the base case, not progressing toward the base case]}
+  InfiniteRecursion:      {aliases: [infinite recursion, infinite loop, endless recursion, recursing forever, recursion forever, stack overflow]}
+triples:
+  - {id: R1, s: [MissingBaseCase], p: causes, o: InfiniteRecursion, criterion: K1_BaseCase, weight: 1}
+  - {id: R2, s: [IncorrectRecursionStep], p: causes, o: InfiniteRecursion, criterion: K2_Step, weight: 1}

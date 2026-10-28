@@ -1,0 +1,18 @@
+# Source: UKARA 1.0 Challenge Track 1 (UGM NLP group & PUSPENDIK Kemendikbud), Task A.
+# question.md = the stimulus and question from the dataset's coding-guideline file.
+# reference_answer.md and the criterion are drafted by Claude (AI) from the coding guideline (Label 1);
+# the dataset itself has no reference answer. Labels are binary: 1 -> 100, 0 -> 0 (_total).
+# Drafted by Claude (AI) as a starting point; NOT validated by a lecturer. Review before research use.
+question_id: ID_UKARA_A
+validated_by: null
+validated_on: null
+concepts:
+  Pengungsi:          {aliases: [pengungsi, pengungsi iklim, penduduk, warga, mereka, masyarakat, orang-orang, orang orang]}
+  TantanganPengungsi: {aliases: [tantangan pengungsi, kesulitan pengungsi]}
+  KesulitanAdaptasi:  {aliases: [adaptasi, beradaptasi, kesulitan beradaptasi, penyesuaian diri, menyesuaikan diri, lingkungan baru, adaptasi lingkungan baru, iklim baru], broader: [TantanganPengungsi]}
+  HambatanKomunikasi: {aliases: [komunikasi, berkomunikasi, bahasa, bahasa baru, kesulitan berkomunikasi, perbedaan bahasa], broader: [TantanganPengungsi]}
+  MasalahEkonomi:     {aliases: [ekonomi, masalah ekonomi, perekonomian, finansial, keuangan, pekerjaan, pekerjaan baru, mata pencaharian, lapangan pekerjaan, kehilangan pekerjaan, lahan pertanian, kehilangan lahan], broader: [TantanganPengungsi]}
+  MasalahSosial:      {aliases: [sosial, masalah sosial, penolakan, budaya, kebudayaan, budaya baru, teman baru, tetangga baru, orang baru, lingkungan sosial, perbedaan budaya], broader: [TantanganPengungsi]}
+  KebutuhanHidup:     {aliases: [tempat tinggal, tempat tinggal baru, rumah, makanan, pangan, kebutuhan sehari-hari, kebutuhan hidup, air bersih, kekurangan makanan], broader: [TantanganPengungsi]}
+triples:
+  - {id: R1, s: [Pengungsi], p: menghadapi, o: TantanganPengungsi, criterion: K1_Tantangan, weight: 1}

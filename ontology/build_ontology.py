@@ -15,6 +15,7 @@ IRI = "http://example.org/autograde/ontology#"  # schema namespace (prefix ag:)
 # Every predicate id in config/predicates.yaml except `other` must exist here.
 # Indonesian (Q1; validate with the lecturer) and English relations (kept for English questions).
 RELATIONS = ["menggunakan", "menyerap", "mengonsumsi", "menghasilkan",
+             "menghadapi", "menyebabkan",  # UKARA (datasets/id_ukara); validate with the lecturer
              "is_a", "uses", "utilizes", "requires", "has", "lacks", "assigns", "provides", "replaces",
              "transmits", "allows", "enables", "prevents", "decreases", "increases",
              "causes", "determines", "follows", "precedes", "reduces"]

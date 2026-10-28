@@ -1,0 +1,1 @@
+It makes a copy of the function code in every place where a function call is made.

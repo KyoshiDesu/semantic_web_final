@@ -1,0 +1,1 @@
+Pengungsi menghadapi tantangan untuk beradaptasi dengan lingkungan yang baru. Mereka juga menghadapi hambatan komunikasi, masalah ekonomi seperti kehilangan mata pencaharian dan harus mencari pekerjaan baru, serta masalah sosial dalam kehidupan di tempat yang baru.

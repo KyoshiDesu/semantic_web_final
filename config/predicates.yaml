@@ -19,6 +19,14 @@ predicates:
     lang: id
     description: subjek membuat atau mengeluarkan sesuatu sebagai hasil
     aliases: [memproduksi, membentuk, melepaskan]
+  - id: menghadapi
+    lang: id
+    description: subjek mengalami atau harus mengatasi sesuatu (tantangan, kesulitan, masalah)
+    aliases: [mengalami, menemui, berhadapan dengan, menanggung]   # UKARA Task A; validate with lecturer
+  - id: menyebabkan
+    lang: id
+    description: subjek menjadi sebab atau alasan terjadinya sesuatu
+    aliases: [mengakibatkan, menimbulkan, memicu, mendorong, berakibat pada]   # UKARA Task B; validate with lecturer
 
   # --- English ---
   - id: is_a

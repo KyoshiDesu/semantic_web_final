@@ -1,0 +1,16 @@
+# Source: UKARA 1.0 Challenge Track 1 (UGM NLP group & PUSPENDIK Kemendikbud), Task B.
+# question.md = the stimulus and question from the dataset's coding-guideline file.
+# reference_answer.md and the criterion are drafted by Claude (AI) from the coding guideline (Label 1);
+# the dataset itself has no reference answer. Labels are binary: 1 -> 100, 0 -> 0 (_total).
+# Drafted by Claude (AI) as a starting point; NOT validated by a lecturer. Review before research use.
+question_id: ID_UKARA_B
+validated_by: null
+validated_on: null
+concepts:
+  Donasi:                 {aliases: [donasi, berdonasi, menyumbang, sumbangan, menyumbangkan uang, memilih berdonasi, memberi donasi, beramal]}
+  AlasanBerdonasi:        {aliases: [alasan berdonasi, alasan menyumbang]}
+  KesadaranKondisiKerja:  {aliases: [kondisi kerja, kondisi kerja buruk, kondisi pekerja, kondisi kerja pabrik, upah tidak layak, nasib pekerja, kondisi pabrik, melihat kondisi pekerja, gambar kondisi kerja], broader: [AlasanBerdonasi]}
+  DampakTindakanKonsumen: {aliases: [produksi pakaian beretika, pakaian beretika, lebih beretika, membantu pekerja, membantu orang lain, membantu yang membutuhkan, mengurangi fast fashion, mengurangi sampah pakaian, membantu orang yang membutuhkan], broader: [AlasanBerdonasi]}
+  EmosiDonatur:           {aliases: [kasihan, rasa kasihan, iba, rasa iba, empati, peduli, kepedulian, simpati, rasa bersalah, tersentuh, amal, pahala], broader: [AlasanBerdonasi]}
+triples:
+  - {id: R1, s: [AlasanBerdonasi], p: menyebabkan, o: Donasi, criterion: K1_Alasan, weight: 1}

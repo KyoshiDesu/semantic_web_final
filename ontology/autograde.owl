@@ -210,6 +210,14 @@
   <incompatibleWith rdf:resource="#mengonsumsi"/>
 </owl:NamedIndividual>
 
+<owl:NamedIndividual rdf:about="#menghadapi">
+  <rdf:type rdf:resource="#Relation"/>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#menyebabkan">
+  <rdf:type rdf:resource="#Relation"/>
+</owl:NamedIndividual>
+
 <owl:NamedIndividual rdf:about="#is_a">
   <rdf:type rdf:resource="#Relation"/>
 </owl:NamedIndividual>

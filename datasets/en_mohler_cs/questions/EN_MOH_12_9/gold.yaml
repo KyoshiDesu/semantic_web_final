@@ -1,0 +1,13 @@
+# Source: Mohler, Bunescu & Mihalcea (2011) short-answer grading data, question 12.9.
+# Question and reference answer are the dataset's; criteria are drafted by Claude (AI).
+# Human scores in the dataset are holistic (0-5 per grader), imported as _total = 20 x points.
+# Drafted by Claude (AI) as a starting point; NOT validated by a lecturer. Review before research use.
+question_id: EN_MOH_12_9
+validated_by: null
+validated_on: null
+concepts:
+  InorderSuccessor:   {aliases: [leftmost node of the right subtree, leftmost node from its right subtree, smallest element of the right subtree, smallest node in the right subtree, smallest in the right subtree, minimum of the right subtree, in-order successor, inorder successor, successor]}
+  InorderPredecessor: {aliases: [rightmost node of the left subtree, rightmost node from its left subtree, largest element of the left subtree, largest node in the left subtree, largest in the left subtree, maximum of the left subtree, in-order predecessor, inorder predecessor, predecessor]}
+  DeletedNode:        {aliases: [the node, node to be deleted, deleted node, the deleted node, node being deleted, the node to delete]}
+triples:
+  - {id: R1, s: [InorderSuccessor, InorderPredecessor], p: replaces, o: DeletedNode, criterion: K1_Replace, weight: 1}

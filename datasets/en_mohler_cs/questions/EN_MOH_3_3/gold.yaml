@@ -1,0 +1,13 @@
+# Source: Mohler, Bunescu & Mihalcea (2011) short-answer grading data, question 3.3.
+# Question and reference answer are the dataset's; criteria are drafted by Claude (AI).
+# Human scores in the dataset are holistic (0-5 per grader), imported as _total = 20 x points.
+# Drafted by Claude (AI) as a starting point; NOT validated by a lecturer. Review before research use.
+question_id: EN_MOH_3_3
+validated_by: null
+validated_on: null
+concepts:
+  InlineFunction: {aliases: [inline function, inline functions, inline]}
+  FunctionCode:   {aliases: [function code, copy of the function code, "the function's code", "function's code", "copy of the function's code", code of the function, function body, function definition, copy of the function]}
+  FunctionCall:   {aliases: [function call, call, each call, every call, the call, function calls, call site]}
+triples:
+  - {id: R1, s: [FunctionCode, InlineFunction], p: replaces, o: FunctionCall, criterion: K1_Expansion, weight: 1}

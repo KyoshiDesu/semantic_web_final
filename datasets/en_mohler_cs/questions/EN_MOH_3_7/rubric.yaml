@@ -1,0 +1,12 @@
+# Source: Mohler, Bunescu & Mihalcea (2011) short-answer grading data, question 3.7.
+# Question and reference answer are the dataset's; criteria are drafted by Claude (AI).
+# Human scores in the dataset are holistic (0-5 per grader), imported as _total = 20 x points.
+question_id: EN_MOH_3_7
+language: en
+criteria:
+  - id: K1_Repetition
+    description: Both involve repetition
+  - id: K2_Termination
+    description: Both have a termination test
+  - id: K3_Infinite
+    description: Both can run infinitely
