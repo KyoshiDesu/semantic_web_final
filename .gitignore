@@ -7,3 +7,5 @@ __pycache__/
 .DS_Store
 db/
 .superpowers/
+docs/paper/
+slide_deck.html
