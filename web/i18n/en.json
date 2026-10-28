@@ -243,7 +243,7 @@
     "synthetic": "Contains synthetic answers (demo data), not real student answers.",
     "no_answers": "No answers for this assessment yet. Import them on the Classes page.",
     "grading": "Grading",
-    "grading_help": "Runs on the server: you can close the page. Annotated answers use their annotation; the rest are extracted by the LLM (needs ANTHROPIC_API_KEY).",
+    "grading_help": "Runs on the server: you can close the page. Annotated answers use their annotation; the rest are extracted by the LLM (needs OPENROUTER_API_KEY).",
     "llm_feedback": "Feedback from the LLM (needs an API key)",
     "grade_new": "Grade {n} ungraded answers",
     "grade_stale": "Regrade {n} stale answers",

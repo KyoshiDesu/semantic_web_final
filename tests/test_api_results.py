@@ -35,7 +35,7 @@ def test_try_rejects_bad_requests(client):
 def test_llm_mode_without_a_key_is_400(client):
     r = client.post("/api/questions/Q1/try", json={"text": "Uji tanpa kunci API 4f1c: tumbuhan menyerap air.",
                                                    "mode": "llm"})
-    assert r.status_code == 400 and "ANTHROPIC_API_KEY" in r.json()["message"]
+    assert r.status_code == 400 and "OPENROUTER_API_KEY" in r.json()["message"]
 
 
 def test_answer_views(client):

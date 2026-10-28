@@ -243,6 +243,7 @@ Aliases in this file are only for normalizing raw LLM output into predicate IDs 
 
 ```yaml
 question_id: Q1
+language: id   # id (default) or en: picks the extraction prompt and the predicate list
 criteria:
   - id: K1_Bahan
     description: Menyebutkan bahan fotosintesis

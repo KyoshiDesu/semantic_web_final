@@ -63,6 +63,7 @@ def test_template_without_api_key(worked, entries, monkeypatch, tmp_path):
     monkeypatch.setattr(llm, "load_dotenv", lambda *a: None)
     monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
     monkeypatch.delenv("ANTHROPIC_AUTH_TOKEN", raising=False)
+    monkeypatch.delenv("OPENROUTER_API_KEY", raising=False)
     fb = feedback.generate("Q1_A07", entries, worked["refs"], worked["rubric"], SENTS, 70.0)
     assert fb.source == "template"
     assert [c.kind for c in fb.claims] == ["missing", "partial", "correct"]

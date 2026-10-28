@@ -84,6 +84,7 @@ def offline(mp):
     mp.setattr(llm, "load_dotenv", lambda *a, **k: None)  # a real key in .env must never reach a test
     mp.delenv("ANTHROPIC_API_KEY", raising=False)
     mp.delenv("ANTHROPIC_AUTH_TOKEN", raising=False)
+    mp.delenv("OPENROUTER_API_KEY", raising=False)
 
 
 @pytest.fixture

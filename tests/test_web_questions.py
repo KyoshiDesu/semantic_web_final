@@ -29,7 +29,7 @@ def test_grade_a_stored_and_a_pasted_answer(page, live_server, errors):
     expect(answers.locator(".score-big")).to_have_text("50.0")
     answers.get_by_label(tr("soal.paste")).fill("Tumbuhan menyerap air.")
     answers.get_by_role("button", name=tr("soal.try_pasted")).click()
-    expect(answers.get_by_role("alert")).to_contain_text("ANTHROPIC_API_KEY")  # LLM mode without a key
+    expect(answers.get_by_role("alert")).to_contain_text("OPENROUTER_API_KEY")  # LLM mode without a key
     answers.get_by_role("row").filter(has_text="Q1_A08").get_by_role("button", name=tr("soal.try")).click()
     answers.get_by_role("link", name=tr("soal.open_result")).click()
     expect(page).to_have_url(re.compile(r"jawaban\.html\?run=ui&answer=Q1_A08"))

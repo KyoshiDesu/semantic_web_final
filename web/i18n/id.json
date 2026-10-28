@@ -243,7 +243,7 @@
     "synthetic": "Berisi jawaban sintetis (data demo), bukan jawaban mahasiswa nyata.",
     "no_answers": "Belum ada jawaban untuk penilaian ini. Impor jawaban di halaman Kelas.",
     "grading": "Penilaian otomatis",
-    "grading_help": "Berjalan di server: halaman boleh ditutup. Jawaban beranotasi memakai anotasinya; sisanya diekstraksi dengan LLM (butuh ANTHROPIC_API_KEY).",
+    "grading_help": "Berjalan di server: halaman boleh ditutup. Jawaban beranotasi memakai anotasinya; sisanya diekstraksi dengan LLM (butuh OPENROUTER_API_KEY).",
     "llm_feedback": "Umpan balik dari LLM (butuh API key)",
     "grade_new": "Nilai {n} jawaban yang belum dinilai",
     "grade_stale": "Nilai ulang {n} jawaban usang",
