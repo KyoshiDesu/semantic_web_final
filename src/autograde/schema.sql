@@ -1,4 +1,4 @@
--- AutoGrade-RDF records (schema version 2, see db.SCHEMA_VERSION). Pipeline objects are stored as JSON text.
+-- AutoGrade-RDF records (schema version 3, see db.SCHEMA_VERSION). Pipeline objects are stored as JSON text.
 CREATE TABLE meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);
 CREATE TABLE course (id INTEGER PRIMARY KEY, code TEXT NOT NULL UNIQUE, name TEXT NOT NULL);
 CREATE TABLE assessment (id INTEGER PRIMARY KEY, course_id INTEGER NOT NULL REFERENCES course(id),
@@ -32,3 +32,10 @@ CREATE TABLE override (id INTEGER PRIMARY KEY, answer_id TEXT NOT NULL REFERENCE
 CREATE TABLE evidence_audit (row_type TEXT, run_id TEXT, answer_id TEXT, entry_id TEXT, reference_id TEXT,
                              status TEXT, quoted_sentences TEXT, present_in_answer TEXT, evidence_correct TEXT,
                              claim_index TEXT, text TEXT, ledger_entry_ids TEXT, supported TEXT);
+-- Background grading in the API (one job at a time); answer_ids and failures are JSON lists.
+CREATE TABLE job (id INTEGER PRIMARY KEY, assessment_id INTEGER NOT NULL REFERENCES assessment(id),
+                  run_id TEXT NOT NULL REFERENCES run(id), which TEXT NOT NULL CHECK (which IN ('new', 'stale')),
+                  llm_feedback INTEGER NOT NULL, answer_ids TEXT NOT NULL, total INTEGER NOT NULL,
+                  done INTEGER NOT NULL DEFAULT 0, current TEXT, failures TEXT NOT NULL DEFAULT '[]',
+                  status TEXT NOT NULL CHECK (status IN ('running', 'done', 'cancelled', 'interrupted')),
+                  created TEXT NOT NULL, finished TEXT);

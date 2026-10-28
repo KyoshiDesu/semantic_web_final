@@ -65,7 +65,7 @@ def test_resume_grades_each_answer_once(fast_context, monkeypatch):
 
 
 def test_skos_preset_finds_the_broader_concept(ctx):
-    import rdfviz
+    from autograde import rdfviz
     text = io.load_yaml(io.ROOT / "tests" / "fixtures" / "worked_example.yaml")["text"]
     run_id = pipeline.ui_run()
     pipeline.run_answer(ctx, "Q1_A07", text, "gold", run_id, use_llm_feedback=False)

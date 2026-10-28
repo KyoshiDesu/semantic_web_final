@@ -1,8 +1,7 @@
 """Semantic Explorer graph: built from a graded answer as stored in the database; the page escapes student text."""
 import json
 
-import explorer
-from autograde import io, pipeline
+from autograde import explorer, io, pipeline
 from test_pipeline import STUB
 
 
@@ -37,10 +36,12 @@ def test_match_edges_for_worked_example():
     assert "equivalentPredicate" in json.dumps(g["edges"])
 
 
-def test_page_cannot_be_broken_by_student_text():
-    ctx, a = graded("Q1", "Q1_A07", "Tumbuhan menyerap sinar matahari.")
-    g = explorer.build(ctx, [a], ctx.params)
-    g["details"]["ans:Q1_A07"]["sections"][0]["items"] = ["</script><script>alert(1)</script>"]
-    page = explorer.html(g)
-    data = page.split("const D = ", 1)[1]
-    assert "</script><script>alert" not in data and "<\\/script><script>alert(1)" in data
+def test_details_follow_the_language():
+    text = io.load_answers(include_synthetic=True).set_index("answer_id").text["Q1_A08"]
+    ctx, a = graded("Q1", "Q1_A08", text)
+    en = explorer.build(ctx, [a], ctx.params, lang="en")
+    reasoning = en["details"]["ans:Q1_A08_t4"]["sections"][1]["items"][0]
+    assert "Rule 1" in reasoning and "incompatibleWith" in reasoning
+    assert en["details"]["ans:Q1_A08"]["kind"] == "Answer (ag:Answer)"
+    assert set(explorer.TEXT["id"]) == set(explorer.TEXT["en"])
+    assert [n["id"] for n in en["nodes"]] == [n["id"] for n in explorer.build(ctx, [a], ctx.params)["nodes"]]

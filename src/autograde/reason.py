@@ -1,4 +1,6 @@
 """Contradiction reasoning (Eq. 5): SWRL rules under Pellet, or the same logic as SPARQL over rdflib."""
+import threading
+
 from rdflib import RDF, Graph, Literal
 
 from autograde import io
@@ -86,6 +88,7 @@ class PelletReasoner:
 
 
 _pellet = None
+_pellet_lock = threading.Lock()  # one owlready2 World: answers reasoned at once would see each other's individuals
 
 
 def contradictions(qid, refs, students, aligned, reasoner=None):
@@ -95,5 +98,6 @@ def contradictions(qid, refs, students, aligned, reasoner=None):
         return contradictions_sparql(qid, refs, students, aligned)
     if reasoner != "pellet":
         raise ValueError(f"unknown reasoner {reasoner!r}")
-    _pellet = _pellet or PelletReasoner()
-    return _pellet.contradictions(qid, refs, students, aligned)
+    with _pellet_lock:
+        _pellet = _pellet or PelletReasoner()
+        return _pellet.contradictions(qid, refs, students, aligned)

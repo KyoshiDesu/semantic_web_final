@@ -80,10 +80,10 @@ def properties_table(g):
     rows = []
     for kind, label in ((OWL.ObjectProperty, "object"), (OWL.DatatypeProperty, "data")):
         for p in sorted(g.subjects(RDF.type, kind)):
-            rows.append({"Properti": short(p), "Jenis": label,
-                         "Domain": ", ".join(short(d) for d in g.objects(p, RDFS.domain)),
-                         "Range": ", ".join(short(r) for r in g.objects(p, RDFS.range)),
-                         "Karakteristik": ", ".join(v for k, v in chars.items() if (p, RDF.type, k) in g)})
+            rows.append({"property": short(p), "kind": label,
+                         "domain": ", ".join(short(d) for d in g.objects(p, RDFS.domain)),
+                         "range": ", ".join(short(r) for r in g.objects(p, RDFS.range)),
+                         "characteristics": ", ".join(v for k, v in chars.items() if (p, RDF.type, k) in g)})
     return pd.DataFrame(rows)
 
 
@@ -132,14 +132,14 @@ def alignment_dot(refs, students, entries, trace):
     """Student triples (left) linked to reference triples (right) by the ledger's evidence and the reasoner."""
     status = {e.reference_id: e for e in entries}
     lines = ["digraph { rankdir=LR; nodesep=0.25; node [fontname=Helvetica, fontsize=10, shape=box, style=\"rounded,filled\"]; edge [fontsize=9];",
-             'subgraph cluster_s { label="Jawaban mahasiswa (ag:StudentTriple)"; color="#90a4ae";']
+             'subgraph cluster_s { label="ag:StudentTriple"; color="#90a4ae";']
     for t in students:
         concept = lambda c: f"[{c}]" if c else "[?]"
         lines.append(f'"{t.id}" [fillcolor="#eceff1", label="{esc(t.id.rsplit("_", 1)[1])}: {esc(triple_text(t))}\\n'
                      f'{concept(t.s_concept)} … {concept(t.o_concept)}"];')
     if not students:
-        lines.append('"(tidak ada triple)" [fillcolor="#eceff1"];')
-    lines += ["}", 'subgraph cluster_r { label="Kunci jawaban (ag:ReferenceTriple)"; color="#90a4ae";']
+        lines.append('"∅" [fillcolor="#eceff1"];')
+    lines += ["}", 'subgraph cluster_r { label="ag:ReferenceTriple"; color="#90a4ae";']
     for r in refs:
         e = status[r.id]
         lines.append(f'"{r.id}" [fillcolor="{STATUS_COLOR[e.status]}", fontcolor=white, '
@@ -361,10 +361,33 @@ WHERE { GRAPH <urn:ag:gold:Q1> { ?concept skos:broader+ ?broader . } }
 ORDER BY ?concept ?broader""",
 }
 
-VIS_NODE_TYPES = {  # key: (legend label, colour, vis shape, shown by default)
-    "ag": ("ag: (skema/ontologi)", "#eab308", "diamond", True),
-    "key": ("key: (data dosen)", "#3b82f6", "dot", True),
-    "ans": ("ans: (data mahasiswa)", "#6366f1", "dot", True),
+TITLES_EN = {
+    "Hitung ulang skor (Pers. 6)": "Recompute the score (Eq. 6)",
+    "Status per triple acuan": "Status per reference triple",
+    "Bukti: kalimat sumber tiap entri (PROV-O)": "Evidence: source sentence of each entry (PROV-O)",
+    "Triple acuan yang hilang, per kriteria": "Missing reference triples, per criterion",
+    "Aturan kontradiksi SWRL, ditulis ulang sebagai SPARQL": "SWRL contradiction rules, rewritten as SPARQL",
+    "Kontradiksi yang disimpulkan Pellet": "Contradictions inferred by Pellet",
+    "Konsep jawaban yang tidak ada di tabel alias": "Answer concepts missing from the alias table",
+    "Hierarki konsep (skos:broader+)": "Concept hierarchy (skos:broader+)",
+    "Kredit parsial karena konsep lebih umum": "Partial credit for a broader concept",
+    "Predikat setara (property path)": "Equivalent predicates (property path)",
+    "Distribusi status per triple acuan": "Status distribution per reference triple",
+    "Skor semua jawaban (hitung ulang)": "Scores of all answers (recomputed)",
+    "Jawaban yang bertentangan dengan kunci": "Answers that contradict the key",
+    "Kriteria yang paling sering terlewat": "Most often missed criteria",
+    "Jumlah triple per named graph": "Triples per named graph",
+    "Hitung ulang skor tiap jawaban (Pers. 6) dari graf tersimpan":
+        "Recompute each answer's score (Eq. 6) from the stored graphs",
+    "Semua entri Kontradiksi untuk satu soal": "All Kontradiksi entries of one question",
+    "Triple jawaban dari satu kalimat (PROV-O)": "Student triples from one sentence (PROV-O)",
+    "Hierarki konsep satu soal (skos:broader+)": "Concept hierarchy of one question (skos:broader+)",
+}
+
+VIS_NODE_TYPES = {  # key: (legend label, colour, vis shape, shown by default); colours are the pages' palette
+    "ag": ("ag: (skema/ontologi)", "#b45309", "diamond", True),
+    "key": ("key: (data dosen)", "#1d4ed8", "dot", True),
+    "ans": ("ans: (data mahasiswa)", "#6d28d9", "dot", True),
     "other": ("IRI lain (rdf, owl, skos, prov)", "#64748b", "dot", True),
     "literal": ("Literal", "#9ca3af", "box", True),
 }
@@ -440,7 +463,7 @@ def pellet_dots(g, eq, inc):
         lines.append(f'"{name(t)}" -> "{name(r)}" [label="alignedSubject +\\nalignedObject", color="#a855f7", '
                      f'style=dashed];')
     before = "\n".join(lines + ["}"])
-    inferred = [f'"{name(t)}" -> "{name(r)}" [label="ag:contradicts\\n(Aturan '
+    inferred = [f'"{name(t)}" -> "{name(r)}" [label="ag:contradicts\\n(SWRL '
                 f'{swrl_rule(pred[t], pred[r], negated.get(t, False), eq, inc)})", color="#dc2626", '
                 f'fontcolor="#dc2626", style=dashed, penwidth=2.5];' for t, r in contra]
     return before, "\n".join(lines + inferred + ["}"])

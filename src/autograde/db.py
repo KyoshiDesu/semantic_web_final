@@ -14,13 +14,19 @@ import pandas as pd
 
 from autograde import io
 
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 3
 # In-place upgrades: the database holds courses entered in the app, which `db import --replace` would destroy.
 UPGRADES = {1: ["ALTER TABLE run ADD COLUMN assessment_id INTEGER REFERENCES assessment(id)",
                 "ALTER TABLE question ADD COLUMN updated TEXT",
                 "ALTER TABLE result ADD COLUMN graded TEXT",
                 "ALTER TABLE result ADD COLUMN reviewed TEXT",
-                "ALTER TABLE result ADD COLUMN reviewed_by TEXT"]}
+                "ALTER TABLE result ADD COLUMN reviewed_by TEXT"],
+            2: ["CREATE TABLE job (id INTEGER PRIMARY KEY, assessment_id INTEGER NOT NULL REFERENCES assessment(id), "
+                "run_id TEXT NOT NULL REFERENCES run(id), which TEXT NOT NULL CHECK (which IN ('new', 'stale')), "
+                "llm_feedback INTEGER NOT NULL, answer_ids TEXT NOT NULL, total INTEGER NOT NULL, "
+                "done INTEGER NOT NULL DEFAULT 0, current TEXT, failures TEXT NOT NULL DEFAULT '[]', "
+                "status TEXT NOT NULL CHECK (status IN ('running', 'done', 'cancelled', 'interrupted')), "
+                "created TEXT NOT NULL, finished TEXT)"]}
 SCHEMA = Path(__file__).with_name("schema.sql")
 ANSWER_COLUMNS = ["answer_id", "question_id", "text", "split", "source", "synthetic", "annotated"]
 SCORE_COLUMNS = ["answer_id", "rater_id", "criterion", "score_0_100"]
@@ -132,6 +138,18 @@ def courses():
 def assessments(course_id):
     with tx() as c:
         return [dict(r) for r in c.execute("SELECT * FROM assessment WHERE course_id = ? ORDER BY name", (course_id,))]
+
+
+def course(course_id):
+    with tx() as c:
+        row = c.execute("SELECT * FROM course WHERE id = ?", (course_id,)).fetchone()
+    return None if row is None else dict(row)
+
+
+def assessment(assessment_id):
+    with tx() as c:
+        row = c.execute("SELECT * FROM assessment WHERE id = ?", (assessment_id,)).fetchone()
+    return None if row is None else dict(row)
 
 
 def update_question(qid, prompt, reference_answer, rubric, gold):
@@ -408,6 +426,61 @@ def evidence_audit():
     with tx() as c:
         rows = [tuple(r) for r in c.execute(f"SELECT {', '.join(AUDIT_COLUMNS)} FROM evidence_audit")]
     return pd.DataFrame(rows, columns=AUDIT_COLUMNS)
+
+
+# ---------- grading jobs (the API's background grading) ----------
+
+def _job(row):
+    j = dict(row)
+    j["answer_ids"], j["failures"] = json.loads(j["answer_ids"]), json.loads(j["failures"])
+    j["llm_feedback"] = bool(j["llm_feedback"])
+    return j
+
+
+def create_job(assessment_id, run_id, which, llm_feedback, answer_ids):
+    answer_ids = list(answer_ids)
+    with tx() as c:
+        return c.execute("INSERT INTO job (assessment_id, run_id, which, llm_feedback, answer_ids, total, status, "
+                         "created) VALUES (?, ?, ?, ?, ?, ?, 'running', ?)",
+                         (assessment_id, run_id, which, int(llm_feedback), _dumps(answer_ids), len(answer_ids),
+                          _now())).lastrowid
+
+
+def job(job_id):
+    with tx() as c:
+        row = c.execute("SELECT * FROM job WHERE id = ?", (job_id,)).fetchone()
+    return None if row is None else _job(row)
+
+
+def running_job():
+    with tx() as c:
+        row = c.execute("SELECT * FROM job WHERE status = 'running' ORDER BY id LIMIT 1").fetchone()
+    return None if row is None else _job(row)
+
+
+def latest_job(assessment_id):
+    with tx() as c:
+        row = c.execute("SELECT * FROM job WHERE assessment_id = ? ORDER BY id DESC LIMIT 1",
+                        (assessment_id,)).fetchone()
+    return None if row is None else _job(row)
+
+
+def update_job(job_id, current, done, failures):
+    with tx() as c:
+        c.execute("UPDATE job SET current = ?, done = ?, failures = ? WHERE id = ?",
+                  (current, done, _dumps(failures), job_id))
+
+
+def finish_job(job_id, status):
+    with tx() as c:
+        c.execute("UPDATE job SET status = ?, current = NULL, finished = ? WHERE id = ?", (status, _now(), job_id))
+
+
+def interrupt_running_jobs():
+    """At server start: a job still marked running lost its thread when the previous server stopped."""
+    with tx() as c:
+        return c.execute("UPDATE job SET status = 'interrupted', current = NULL, finished = ? "
+                         "WHERE status = 'running'", (_now(),)).rowcount
 
 
 # ---------- meta ----------

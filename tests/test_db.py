@@ -148,6 +148,7 @@ def test_version_1_database_is_upgraded_in_place(demo):
     for table, column in [("run", "assessment_id"), ("question", "updated"), ("result", "graded"),
                           ("result", "reviewed"), ("result", "reviewed_by")]:
         con.execute(f"ALTER TABLE {table} DROP COLUMN {column}")
+    con.execute("DROP TABLE job")  # version 1 files predate the job table
     con.execute("PRAGMA user_version = 1")
     con.commit()
     con.close()
@@ -174,3 +175,56 @@ def test_timestamps_review_marks_and_assessment_answers(demo):
     assert db.results("a")["Q9_A1"]["reviewed"] is None
     df = db.assessment_answers(demo)
     assert df.external_id.tolist() == ["Q9_A1", "Q9_S1"] and df.annotated.tolist() == [True, False]
+
+
+def test_version_2_database_gets_the_job_table(demo):
+    con = sqlite3.connect(db.db_path())
+    con.execute("DROP TABLE job")
+    con.execute("PRAGMA user_version = 2")
+    con.commit()
+    con.close()
+    assert db.questions() == ["Q9"]  # data kept
+    con = db.connect()
+    assert con.execute("PRAGMA user_version").fetchone()[0] == db.SCHEMA_VERSION == 3
+    assert "answer_ids" in [r[1] for r in con.execute("PRAGMA table_info(job)")]
+    con.close()
+
+
+def test_course_and_assessment_lookup(fresh_db):
+    db.connect(create=True).close()
+    course = db.add_course("C1", "Course")
+    a = db.add_assessment(course, "UTS")
+    assert db.course(course) == {"id": course, "code": "C1", "name": "Course"}
+    assert db.assessment(a) == {"id": a, "course_id": course, "name": "UTS"}
+    assert db.course(999) is None and db.assessment(999) is None
+
+
+def test_job_lifecycle(fresh_db):
+    db.connect(create=True).close()
+    a = db.add_assessment(db.add_course("C1", "Course"), "UTS")
+    db.create_run("assessment-1", "auto", "all", "all", {}, False, "sparql", True, a)
+    job_id = db.create_job(a, "assessment-1", "new", True, ["Q1_x", "Q1_y"])
+    j = db.job(job_id)
+    assert (j["status"], j["total"], j["done"], j["answer_ids"], j["failures"], j["llm_feedback"]) == \
+        ("running", 2, 0, ["Q1_x", "Q1_y"], [], True)
+    assert db.running_job()["id"] == job_id
+    db.update_job(job_id, "Q1_y", 1, [{"answer_id": "Q1_x", "error": "no key"}])
+    j = db.job(job_id)
+    assert (j["current"], j["done"], j["failures"][0]["answer_id"]) == ("Q1_y", 1, "Q1_x")
+    db.finish_job(job_id, "done")
+    j = db.job(job_id)
+    assert j["status"] == "done" and j["current"] is None and j["finished"] and db.running_job() is None
+    other = db.create_job(a, "assessment-1", "stale", False, ["Q1_x"])
+    assert db.interrupt_running_jobs() == 1 and db.job(other)["status"] == "interrupted"
+    assert db.job(999) is None
+
+
+def test_latest_job(fresh_db):
+    db.connect(create=True).close()
+    a = db.add_assessment(db.add_course("C1", "Course"), "UTS")
+    db.create_run("assessment-1", "auto", "all", "all", {}, False, "sparql", True, a)
+    assert db.latest_job(a) is None
+    first = db.create_job(a, "assessment-1", "new", False, ["Q1_x"])
+    db.finish_job(first, "done")
+    second = db.create_job(a, "assessment-1", "stale", False, ["Q1_x"])
+    assert db.latest_job(a)["id"] == second and db.latest_job(999) is None

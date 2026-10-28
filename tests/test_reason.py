@@ -71,3 +71,14 @@ def test_sparql_alone(test_ontology):
     for i, (name, ref_p, students, want) in enumerate(CASES):
         refs, sts, aligned = case_inputs(i, ref_p, students)
         assert reason.contradictions_sparql("Q9", refs, sts, aligned) == expected(i, want), name
+
+
+@pytest.mark.pellet
+def test_concurrent_answers_do_not_see_each_other(test_ontology, monkeypatch):
+    from concurrent.futures import ThreadPoolExecutor
+
+    monkeypatch.setattr(reason, "_pellet", None)  # built on the test ontology, dropped afterwards
+    cases = [(i, *case_inputs(i, ref_p, students), want) for i, (_, ref_p, students, want) in enumerate(CASES)]
+    with ThreadPoolExecutor(4) as pool:
+        got = list(pool.map(lambda c: reason.contradictions("Q9", c[1], c[2], c[3], "pellet"), cases))
+    assert got == [expected(c[0], c[4]) for c in cases]

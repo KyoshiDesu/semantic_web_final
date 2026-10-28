@@ -21,6 +21,10 @@ class ImportDataError(ValueError):
     pass
 
 
+class QuestionExistsError(ImportDataError):
+    pass
+
+
 def validate_question(prompt, reference_answer, rubric, gold_raw, relations):
     """The reference triples of one question, or an error naming what is wrong."""
     if not isinstance(rubric, dict) or not isinstance(rubric.get("criteria"), list):
@@ -77,7 +81,7 @@ def save_question(qid, prompt, reference_answer, rubric, gold_raw, assessment_id
         raise ImportDataError(f"rubric.yaml says question_id {rubric['question_id']!r}, expected {qid!r}")
     exists = qid in db.questions()
     if assessment_id is not None and exists:
-        raise ImportDataError(f"question {qid} already exists; change question_id in rubric.yaml and gold.yaml")
+        raise QuestionExistsError(f"question {qid} already exists; change question_id in rubric.yaml and gold.yaml")
     if assessment_id is None and not exists:
         raise ImportDataError(f"unknown question {qid}")
     if exists:

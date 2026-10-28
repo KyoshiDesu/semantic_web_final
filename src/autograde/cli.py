@@ -104,6 +104,14 @@ def cmd_db(args):
         print(f"imported {importer.import_files(replace=args.replace)} -> {db.db_dir()}")
 
 
+def cmd_serve(args):
+    import uvicorn
+
+    from autograde.api.app import create_app
+    print(f"AutoGrade-RDF on http://127.0.0.1:{args.port} (API docs: /docs)")
+    uvicorn.run(create_app(), host="127.0.0.1", port=args.port)  # local only: there is no login
+
+
 def main(argv=None):
     p = argparse.ArgumentParser(prog="python -m autograde")
     sub = p.add_subparsers(dest="command", required=True)
@@ -150,8 +158,11 @@ def main(argv=None):
     s.add_argument("action", choices=["init", "import"])
     s.add_argument("--replace", action="store_true", help="rebuild a non-empty database from data/")
     s.set_defaults(func=cmd_db)
+    s = sub.add_parser("serve", help="run the local API and web app on http://127.0.0.1")
+    s.add_argument("--port", type=int, default=8000)
+    s.set_defaults(func=cmd_serve)
     args = p.parse_args(argv)
-    if args.command != "db":
+    if args.command not in ("db", "serve"):
         from autograde import db
         try:
             if db.is_empty():
