@@ -2,7 +2,7 @@
 import { api } from "./api.js";
 import { t } from "./i18n.js";
 import { sparqlConsole } from "./query.js";
-import { el, field, href, param, select, start } from "./ui.js";
+import { el, field, href, param, select, start, ticked } from "./ui.js";
 
 start("sparql.html", "nav.sparql", async main => {
   const graphs = await api.get("/graphs");
@@ -22,7 +22,7 @@ start("sparql.html", "nav.sparql", async main => {
       field(t("sparql_page.pick_run"), pickRun), el("div", { class: "graph-list" }, boxes),
       el("div", { class: "actions" },
         el("button", { type: "button", class: "btn secondary", onclick: () => location.assign(href("sparql.html", {
-          graphs: boxes.map(b => b.firstChild).filter(i => i.checked).map(i => i.value).join(",") })) }, t("sparql_page.use_graphs")),
+          graphs: ticked(boxes).join(",") })) }, t("sparql_page.use_graphs")),
         el("a", { class: "btn secondary", href: "sparql.html" }, t("sparql_page.whole_store")))),
     box);
   await sparqlConsole(box, { graphs: chosen.length ? chosen : null, scope: chosen.length ? "run" : "kg", template: param("template") });

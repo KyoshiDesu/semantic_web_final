@@ -37,6 +37,4 @@ export function t(key, vars = {}) {
 
 export function apply(root) {
   for (const n of root.querySelectorAll("[data-i18n]")) n.textContent = t(n.dataset.i18n);
-  for (const n of root.querySelectorAll("[data-i18n-placeholder]")) n.placeholder = t(n.dataset.i18nPlaceholder);
-  for (const n of root.querySelectorAll("[data-i18n-title]")) n.title = t(n.dataset.i18nTitle);
 }

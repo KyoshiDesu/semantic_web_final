@@ -2,7 +2,7 @@
 import { api } from "./api.js";
 import { network } from "./graph.js";
 import { lang, t } from "./i18n.js";
-import { el, fail, field, fill, href, param, select, start } from "./ui.js";
+import { el, fail, field, fill, href, param, select, start, ticked } from "./ui.js";
 
 start("jelajah.html", "nav.explorer", async main => {
   const questions = await api.get("/questions");
@@ -24,7 +24,7 @@ start("jelajah.html", "nav.explorer", async main => {
     el("div", { class: "row" }, field(t("jelajah.question"), questionPick), field(t("jelajah.run"), runPick)),
     source ? el("fieldset", {}, el("legend", {}, t("jelajah.answers")), el("div", { class: "row" }, boxes),
       el("button", { type: "button", class: "btn secondary", onclick: () => go({ question: qid, run,
-        answers: boxes.map(b => b.firstChild).filter(i => i.checked).map(i => i.value).join(",") }) }, t("jelajah.show")))
+        answers: ticked(boxes).join(",") }) }, t("jelajah.show")))
       : data.sources.length ? null : el("p", { class: "muted" }, t("jelajah.none_graded")),
     graph);
   await network(graph, data.graph, data.node_types, data.edge_types, { height: 640 });

@@ -1,8 +1,8 @@
 // Kelas: courses and assessments, students, question upload, and the LMS CSV import through a column mapping.
 import { api } from "./api.js";
 import { t } from "./i18n.js";
-import { add, button, el, errorPanel, fail, field, fill, href, loading, panel, param, records, report, select, start,
-  table, tabs, toast } from "./ui.js";
+import { add, button, el, fail, field, fill, href, loading, panel, param, records, select, showError, start, table,
+  tabs, ticked, toast } from "./ui.js";
 
 const MAX_UPLOAD = 10 * 1024 * 1024;
 const NONE = [["", "—"]];
@@ -34,8 +34,7 @@ function csvStep(p, before, drawMapping) {
         return api.form(path, fd, { dry_run: dryRun });
       }, result);
     } catch (e) {
-      mapping.replaceChildren(errorPanel(e));
-      report(e);
+      showError(mapping, e);
     }
   });
   p.replaceChildren(before, field(t("import.file"), file), mapping, result);
@@ -79,7 +78,7 @@ function answersTab(p, courseId, assessments, refresh) {
           columns[q] = { column: aCol.value, filter_column: qCol.value, filter_value: long[q].value.trim() };
         }
       }
-      return { id_col: idCol.value, name_cols: names.map(l => l.firstChild).filter(i => i.checked).map(i => i.value),
+      return { id_col: idCol.value, name_cols: ticked(names),
         columns, split: split.value };
     };
     const go = dryRun => async () => {

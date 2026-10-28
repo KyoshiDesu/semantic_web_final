@@ -51,12 +51,12 @@ def test_get_retries_a_busy_store_but_post_does_not(page, live_server):
     assert calls["GET"] == 2 and courses[0]["code"] == "DEMO"
     err = page.evaluate("""async () => { const { api } = await import('/js/api.js');
         try { await api.post('/courses', { code: 'X9', name: 'x' }); return null; }
-        catch (e) { return { status: e.status, code: e.code }; } }""")
-    assert err == {"status": 503, "code": "busy"} and calls["POST"] == 1
+        catch (e) { return { status: e.status, error: e.error }; } }""")
+    assert err == {"status": 503, "error": "busy"} and calls["POST"] == 1
 
 
 def test_api_errors_carry_the_error_body(page, live_server):
     page.goto(f"{live_server}/")
     err = page.evaluate("""async () => { const { api } = await import('/js/api.js');
-        try { await api.get('/courses/999/assessments'); } catch (e) { return [e.code, e.message, e.details]; } }""")
+        try { await api.get('/courses/999/assessments'); } catch (e) { return [e.error, e.message, e.details]; } }""")
     assert err == ["not_found", "unknown course 999", []]

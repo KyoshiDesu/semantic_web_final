@@ -21,9 +21,10 @@ def test_grade_review_and_export(page, live_server, aid, errors):
     page.get_by_role("button", name=tr("penilaian.grade_new", n=7)).click()
     expect(page.locator("#job-area progress")).to_be_visible()
     expect(page.locator(".counts")).to_contain_text(f"7 {tr('status.dinilai')}", timeout=60000)
-    page.locator("#reviewer").fill("DS")
-    page.locator("#reviewer").press("Tab")
     page.get_by_role("button", name=tr("penilaian.approve", n=4)).click()
+    dialog = page.get_by_role("dialog")
+    dialog.get_by_label(tr("reviewer.name")).fill("DS")
+    dialog.get_by_role("button", name=tr("reviewer.save")).click()
     expect(page.locator(".counts")).to_contain_text(f"4 {tr('status.ditinjau')}")
     expect(page.get_by_role("button", name=tr("penilaian.final_grades"))).to_be_disabled()
     with page.expect_download() as download:
@@ -32,6 +33,7 @@ def test_grade_review_and_export(page, live_server, aid, errors):
     for answer in ("Q1_A07", "Q1_A08", "Q1_S03"):  # the flagged ones, reviewed one by one on their pages
         HTTP.post(f"{live_server}/api/results/assessment-{aid}/{answer}/review", json={"by": "DS"})
     page.reload()
+    expect(page.get_by_role("button", name=f"{tr('nav.reviewer')}: DS")).to_be_visible()  # kept in this browser
     with page.expect_download() as download:
         page.get_by_role("link", name=tr("penilaian.final_grades")).click()
     assert download.value.path().read_text(encoding="utf-8-sig").startswith("external_id,name,Q1")

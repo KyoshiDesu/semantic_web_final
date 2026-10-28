@@ -18,7 +18,7 @@
     "sparql": "SPARQL console",
     "evaluation": "Evaluation",
     "reviewer": "Reviewer",
-    "reviewer_placeholder": "initials",
+    "reviewer_change": "Change the reviewer name",
     "language": "Language"
   },
   "error": {
@@ -34,7 +34,14 @@
     "internal": "Server error",
     "offline": "Server not running",
     "offline_hint": "Run `python -m autograde serve`, then reload the page.",
-    "reviewer": "Fill in the reviewer name in the top bar first."
+    "reviewer": "A review or correction needs a reviewer name."
+  },
+  "reviewer": {
+    "title": "Reviewer",
+    "help": "Your name or initials, saved with every review and correction. This browser remembers it.",
+    "name": "Name or initials",
+    "save": "Save",
+    "cancel": "Cancel"
   },
   "status": {
     "belum dinilai": "not graded",
@@ -232,6 +239,7 @@
     "title": "Assessment",
     "missing": "Open this page from an assessment on the Classes page.",
     "course": "back to the course",
+    "run": "run",
     "synthetic": "Contains synthetic answers (demo data), not real student answers.",
     "no_answers": "No answers for this assessment yet. Import them on the Classes page.",
     "grading": "Grading",

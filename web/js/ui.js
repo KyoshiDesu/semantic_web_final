@@ -1,4 +1,5 @@
 // Shared page building blocks: the DOM builder (text only, never HTML), nav, tables, tabs, chips, errors, start-up.
+import { query } from "./api.js";
 import { init, lang, setLang, t } from "./i18n.js";
 
 export function el(tag, attrs = {}, ...children) {
@@ -6,7 +7,6 @@ export function el(tag, attrs = {}, ...children) {
   for (const [k, v] of Object.entries(attrs || {})) {
     if (v === undefined || v === null || v === false) continue;
     if (k === "class") n.className = v;
-    else if (k === "dataset") Object.assign(n.dataset, v);
     else if (k === "style") Object.assign(n.style, v);
     else if (k.startsWith("on")) n.addEventListener(k.slice(2), v);
     else if (["value", "checked", "disabled", "hidden", "selected", "open"].includes(k)) n[k] = v;
@@ -24,17 +24,9 @@ export const fill = (node, ...children) => { node.replaceChildren(...kids(childr
 export const add = (node, ...children) => { node.append(...kids(children)); return node; };
 export const $ = (selector, root = document) => root.querySelector(selector);
 export const param = name => new URLSearchParams(location.search).get(name);
+export const href = (file, params = {}) => `${file}${query(params)}`;
 export const stripComments = text => (text || "").replace(/<!--[\s\S]*?-->/g, "").trim();
 export const score = v => (v === null || v === undefined ? "—" : Number(v).toFixed(1));
-
-export function href(file, params = {}) {
-  const q = new URLSearchParams();
-  for (const [k, v] of Object.entries(params)) {
-    if (v !== undefined && v !== null && v !== "") q.set(k, v);
-  }
-  const s = q.toString();
-  return s ? `${file}?${s}` : file;
-}
 
 export function fmt(v) {
   if (v === null || v === undefined || v === "") return "—";
@@ -44,8 +36,8 @@ export function fmt(v) {
   return String(v);
 }
 
-export function table(data, { cell = null, translate = true, empty = null } = {}) {
-  if (!data.rows.length) return el("p", { class: "muted" }, empty ?? t("common.empty"));
+export function table(data, { cell = null, translate = true } = {}) {
+  if (!data.rows.length) return el("p", { class: "muted" }, t("common.empty"));
   const head = data.columns.map(c => el("th", { scope: "col" }, translate ? t(`col.${c}`, { fallback: c }) : c));
   const rows = data.rows.map(row => el("tr", {}, row.map((v, i) => {
     const custom = cell ? cell(data.columns[i], v, row) : undefined;
@@ -56,28 +48,68 @@ export function table(data, { cell = null, translate = true, empty = null } = {}
 }
 
 export const records = (items, columns) => ({ columns, rows: items.map(o => columns.map(c => o[c])) });
+// a reader for one column of an API table: column(data, "status")(row)
+export const column = (data, name) => {
+  const i = data.columns.indexOf(name);
+  return row => row[i];
+};
+// the values of the ticked boxes among labels built as <label><input type=checkbox value=…> text</label>
+export const ticked = labels => labels.map(l => l.firstChild).filter(i => i.checked).map(i => i.value);
 
 export function loading() {
   return el("p", { class: "muted", role: "status" }, t("common.loading"));
 }
 
+// Shows "loading" in box while job runs, then its result; on failure empties box and rethrows (for button()).
+export async function into(box, job) {
+  box.replaceChildren(loading());
+  try {
+    fill(box, await job());
+  } catch (e) {
+    box.replaceChildren();
+    throw e;
+  }
+}
+
+// run(current) is called ms after the last later(), or at once with now(); current() is false once a newer call
+// started, so a slow response never overwrites a newer one (search boxes, the editor preview).
+export function debounced(ms, run) {
+  let timer = null;
+  let seq = 0;
+  const now = () => {
+    const mine = ++seq;
+    return run(() => mine === seq);
+  };
+  const later = () => {
+    clearTimeout(timer);
+    timer = setTimeout(now, ms);
+  };
+  return { now, later };
+}
+
 export function fail(code, message) {
-  return Object.assign(new Error(message), { code });
+  return Object.assign(new Error(message), { error: code });
 }
 
 export function report(error) {
-  if (!error.code) console.error(error);  // an unexpected error is a bug: keep it visible in the console
+  if (!error.error) console.error(error);  // an unexpected error is a bug: keep it visible in the console
 }
 
-export function errorPanel(error, home = false) {
-  const code = error.code || "internal";
+function errorPanel(error, home = false) {
+  const code = error.error || "internal";
   const hint = { busy: "error.busy_hint", offline: "error.offline_hint" }[code];
   return el("div", { class: "error", role: "alert" },
     el("strong", {}, t(`error.${code}`, { fallback: t("error.internal") })),
-    el("p", {}, error.message),
+    error.message ? el("p", {}, error.message) : null,
     hint ? el("p", {}, t(hint)) : null,
     error.details?.length ? el("ul", {}, error.details.map(d => el("li", {}, d))) : null,
     home ? el("p", {}, el("a", { href: "index.html" }, t("common.home"))) : null);
+}
+
+export function showError(node, error, { home = false, append = false } = {}) {
+  if (append) node.append(errorPanel(error, home));
+  else node.replaceChildren(errorPanel(error, home));
+  report(error);
 }
 
 export function toast(message) {
@@ -95,8 +127,7 @@ export function button(label, onClick, { kind = "secondary", slot = null, disabl
     try {
       await onClick(b);
     } catch (e) {
-      where.append(errorPanel(e));
-      report(e);
+      showError(where, e, { append: true });
     } finally {
       b.disabled = false;
     }
@@ -121,8 +152,11 @@ export function iri(text) {
   return el("code", { class: `iri ns-${NAMESPACES.includes(ns) ? ns : "other"}` }, text);
 }
 
+// The core's grading statuses (the API sends these values; status.<value> translates them).
+export const STATUS = { ungraded: "belum dinilai", stale: "usang", graded: "dinilai", reviewed: "ditinjau" };
+export const statusClass = status => `st-${status.replace(" ", "-")}`;
 export const statusChip = status =>
-  el("span", { class: `chip st-${status.replace(" ", "-")}` }, t(`status.${status}`, { fallback: status }));
+  el("span", { class: `chip ${statusClass(status)}` }, t(`status.${status}`, { fallback: status }));
 export const ledgerChip = status =>
   el("span", { class: `chip ld-${status.toLowerCase()}` }, t(`ledger.${status}`, { fallback: status }));
 
@@ -163,16 +197,17 @@ export function tabs(parent, specs) {
     try {
       await specs[i].render(panels[i]);
     } catch (e) {
-      panels[i].replaceChildren(errorPanel(e));
-      report(e);
+      showError(panels[i], e);
     }
   }
   return open(location.hash.slice(1), false);
 }
 
 const REVIEWER = "autograde.reviewer";
+let current = "";
+let navButton = null;
 
-export function reviewer() {
+function storedReviewer() {
   try {
     return (localStorage.getItem(REVIEWER) || "").trim();
   } catch {
@@ -180,13 +215,43 @@ export function reviewer() {
   }
 }
 
-export function requireReviewer() {
-  const input = $("#reviewer");
-  const by = (input?.value || "").trim();
-  if (!by) {
-    input?.focus();
-    throw fail("invalid", t("error.reviewer"));
+function setReviewer(by) {
+  current = by;
+  try {
+    localStorage.setItem(REVIEWER, by);
+  } catch {
+    // storage blocked: the name lasts until the page reloads, then the app asks again
   }
+  navButton.textContent = `${t("nav.reviewer")}: ${by}`;
+}
+
+// The reviewer dialog; resolves with the name entered, or "" when it was left empty or cancelled.
+function askReviewer() {
+  const input = el("input", { id: "reviewer", class: "mono", value: current, autocomplete: "off" });
+  const dialog = el("dialog", { "aria-labelledby": "reviewer-title" },
+    el("form", { method: "dialog" },
+      el("h2", { id: "reviewer-title" }, t("reviewer.title")),
+      el("p", { class: "small muted" }, t("reviewer.help")),
+      field(t("reviewer.name"), input),
+      el("div", { class: "actions" },
+        el("button", { class: "btn primary", value: "ok" }, t("reviewer.save")),
+        el("button", { class: "btn secondary", value: "cancel" }, t("reviewer.cancel")))));
+  document.body.append(dialog);
+  return new Promise(resolve => {
+    dialog.addEventListener("close", () => {
+      const by = dialog.returnValue === "ok" ? input.value.trim() : "";
+      dialog.remove();
+      if (by) setReviewer(by);
+      resolve(by);
+    });
+    dialog.showModal();
+  });
+}
+
+// The reviewer name for a review or correction: asked for once, then kept; no name stops the action.
+export async function requireReviewer() {
+  const by = current || await askReviewer();
+  if (!by) throw fail("invalid", t("error.reviewer"));
   return by;
 }
 
@@ -200,18 +265,12 @@ function nav(active) {
   const menu = el("details", { class: SEMANTIC.some(([f]) => f === active) ? "menu active" : "menu" },
     el("summary", {}, t("nav.semantic")), el("div", { class: "menu-items" }, SEMANTIC.map(link)));
   document.addEventListener("click", e => { if (!menu.contains(e.target)) menu.open = false; });
-  const who = el("input", { id: "reviewer", class: "mono reviewer-input", value: reviewer(),
-    placeholder: t("nav.reviewer_placeholder"), onchange: e => {
-      try {
-        localStorage.setItem(REVIEWER, e.target.value.trim());
-      } catch {
-        // storage blocked: the name lasts until the page reloads
-      }
-    } });
+  current = storedReviewer();
+  navButton = el("button", { type: "button", class: "reviewer mono", title: t("nav.reviewer_change"),
+    onclick: () => askReviewer() }, `${t("nav.reviewer")}: ${current || "—"}`);
   return el("nav", { class: "topnav", "aria-label": t("nav.label") },
     el("a", { href: "index.html", class: "brand" }, "ag:AutoGrade"), MAIN.map(link), menu,
-    link(["evaluasi.html", "nav.evaluation"]), el("span", { class: "spacer" }),
-    el("label", { for: "reviewer" }, t("nav.reviewer")), who,
+    link(["evaluasi.html", "nav.evaluation"]), el("span", { class: "spacer" }), navButton,
     el("span", { class: "langs", role: "group", "aria-label": t("nav.language") },
       ["id", "en"].map(l => el("button", { type: "button", "aria-pressed": String(l === lang()),
         onclick: () => setLang(l) }, l.toUpperCase()))));
@@ -228,8 +287,7 @@ export async function start(active, titleKey, render) {
     try {
       await render(main, refresh);
     } catch (e) {
-      main.replaceChildren(errorPanel(e, true));
-      report(e);
+      showError(main, e, { home: true });
     }
   };
   await refresh();

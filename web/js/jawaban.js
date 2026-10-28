@@ -3,13 +3,13 @@ import { api, url } from "./api.js";
 import { dot, network } from "./graph.js";
 import { lang, t } from "./i18n.js";
 import { sparqlConsole } from "./query.js";
-import { button, code, dl, el, fail, fill, fmt, href, iri, ledgerChip, panel, param, records, requireReviewer,
-  score, select, start, stat, statusChip, table, tabs, toast } from "./ui.js";
+import { button, code, column, dl, el, fail, fill, fmt, href, iri, ledgerChip, panel, param, records,
+  requireReviewer, score, select, start, stat, STATUS, statusChip, table, tabs, toast } from "./ui.js";
 
-const enc = encodeURIComponent;
 const LEDGER_STATUSES = ["MATCHED", "PARTIAL", "MISSING", "CONTRADICTED"];
 
-const statusOf = r => (r.stale ? "usang" : r.reviewed ? "ditinjau" : "dinilai");
+const statusOf = r => (r.stale ? STATUS.stale : r.reviewed ? STATUS.reviewed : STATUS.graded);
+const resultPath = (run, answer) => `/results/${encodeURIComponent(run)}/${encodeURIComponent(answer)}`;
 
 function sparqlCheck(r) {
   const c = r.recompute;
@@ -70,18 +70,14 @@ function reviewControls(entries) {
 
 async function nextToReview(assessmentId, current) {
   const st = await api.get(`/assessments/${assessmentId}/status`);
-  const col = name => st.columns.indexOf(name);
-  const pending = st.rows.filter(row => row[col("status")] === "dinilai" && row[col("answer_id")] !== current)
-    .sort((a, b) => (b[col("flagged")] - a[col("flagged")]) || (b[col("contradictions")] - a[col("contradictions")]));
-  return pending.length ? pending[0][col("answer_id")] : null;
+  const [status, id, flagged, contradictions] = ["status", "answer_id", "flagged", "contradictions"].map(c => column(st, c));
+  const pending = st.rows.filter(row => status(row) === STATUS.graded && id(row) !== current)
+    .sort((a, b) => (flagged(b) - flagged(a)) || (contradictions(b) - contradictions(a)));
+  return pending.length ? id(pending[0]) : null;
 }
 
 async function reviewBlock(r, run, answer, refresh, controls) {
-  if (!r.assessment_id) return null;
-  if (r.stale) {
-    return el("div", { class: "notice" }, t("review.stale"), " ",
-      el("a", { href: href("penilaian.html", { id: r.assessment_id }) }, t("review.to_assessment")));
-  }
+  if (!r.assessment_id || r.stale) return null;  // a stale answer gets the banner above the tabs instead
   const next = await nextToReview(r.assessment_id, answer);
   const nextLink = next ? el("a", { href: href("jawaban.html", { run, answer: next }) }, t("review.next"))
     : el("span", { class: "muted" }, t("review.none_left"));
@@ -90,16 +86,16 @@ async function reviewBlock(r, run, answer, refresh, controls) {
   const slot = el("div");
   const save = button(t("review.save"), async () => {
     if (!changed().length) throw fail("invalid", t("review.nothing_changed"));
-    const by = requireReviewer();
-    const res = await api.post(`/results/${enc(run)}/${enc(answer)}/corrections`, { by,
+    const by = await requireReviewer();
+    const res = await api.post(`${resultPath(run, answer)}/corrections`, { by,
       corrections: changed().map(c => ({ reference_id: c.entry.reference_id, status: c.select.value, reason: c.reason.value })) });
     toast(t("review.saved", { score: score(res.score.score), sparql: score(res.score.sparql_score) }));
     await refresh();
   }, { slot });
   const mark = button(t("review.mark"), async () => {
     if (changed().length) throw fail("invalid", t("review.save_first"));
-    const by = requireReviewer();
-    await api.post(`/results/${enc(run)}/${enc(answer)}/review`, { by });
+    const by = await requireReviewer();
+    await api.post(`${resultPath(run, answer)}/review`, { by });
     toast(t("review.marked", { answer }));
     await refresh();
   }, { kind: "primary", slot });
@@ -163,23 +159,26 @@ start("jawaban.html", "jawaban.title", async (main, refresh) => {
   const run = param("run");
   const answer = param("answer");
   if (!run || !answer) throw fail("not_found", t("jawaban.missing"));
-  const base = `/results/${enc(run)}/${enc(answer)}`;
+  const base = resultPath(run, answer);
   const r = await api.get(base);
   const body = el("div");
-  main.replaceChildren(header(r, run, answer), body);
+  fill(main, header(r, run, answer),
+    r.stale ? el("div", { class: "notice" }, t("review.stale"), r.assessment_id ? [" ",
+      el("a", { href: href("penilaian.html", { id: r.assessment_id }) }, t("review.to_assessment"))] : null) : null,
+    body);
   await tabs(body, [
     { id: "ledger", label: t("jawaban.tab_ledger"), render: p => ledgerTab(p, r, run, answer, refresh) },
-    { id: "graph", label: t("jawaban.tab_graph"), render: async p => {
+    { id: "graf", label: t("jawaban.tab_graph"), render: async p => {
       const g = await api.get(`${base}/views/graph`, { lang: lang() });
       await network(p, g.graph, g.node_types, g.edge_types);
     } },
-    { id: "alignment", label: t("jawaban.tab_alignment"), render: async p => {
+    { id: "penyelarasan", label: t("jawaban.tab_alignment"), render: async p => {
       const a = await api.get(`${base}/views/alignment`);
       const box = el("div");
       p.replaceChildren(box, el("p", { class: "small muted" }, t("jawaban.alignment_help"), " ", iri(a.graph)));
       await dot(box, a.dot);
     } },
-    { id: "reasoning", label: t("jawaban.tab_reasoning"), render: p => reasoningTab(p, r, base) },
+    { id: "penalaran", label: t("jawaban.tab_reasoning"), render: p => reasoningTab(p, r, base) },
     { id: "rdf", label: t("jawaban.tab_rdf"), render: p => rdfTab(p, r) },
     { id: "sparql", label: t("jawaban.tab_sparql"), render: p => sparqlConsole(p, { graphs: r.graphs, scope: "answer" }) },
   ]);

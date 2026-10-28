@@ -31,11 +31,13 @@ def test_score_check_and_every_tab(page, live_server, run, errors):
 def test_correct_review_and_move_on(page, live_server, run, errors):
     page.goto(f"{live_server}/jawaban.html?run={run}&answer=Q1_A08")
     page.get_by_role("button", name=tr("review.mark")).click()
-    expect(page.get_by_role("alert")).to_contain_text(tr("error.reviewer"))  # no reviewer name yet
-    page.locator("#reviewer").fill("DS")
-    page.locator("#reviewer").press("Tab")
+    page.get_by_role("dialog").get_by_role("button", name=tr("reviewer.cancel")).click()
+    expect(page.get_by_role("alert")).to_contain_text(tr("error.reviewer"))  # no reviewer name, no review
     page.get_by_label(tr("review.status_for", ref="R2")).select_option("MATCHED")
     page.get_by_role("button", name=tr("review.save")).click()
+    dialog = page.get_by_role("dialog")  # asked for once, on the first action that needs it
+    dialog.get_by_label(tr("reviewer.name")).fill("DS")
+    dialog.get_by_role("button", name=tr("reviewer.save")).click()
     expect(page.get_by_role("alert")).to_contain_text("reason")  # the API's 422 names the empty reason
     page.get_by_label(tr("review.reason_for", ref="R2")).fill("dibaca ulang")
     page.get_by_role("button", name=tr("review.save")).click()

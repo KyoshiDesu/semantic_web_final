@@ -2,7 +2,7 @@
 import { Marked } from "/vendor/marked.esm.js";
 import { api, url } from "./api.js";
 import { t } from "./i18n.js";
-import { el, errorPanel, href, iri, param, records, report, start, table } from "./ui.js";
+import { el, href, iri, param, records, showError, start, table } from "./ui.js";
 
 const ESCAPES = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
 // Raw HTML inside the Markdown is shown as text: the report is the only HTML string this app renders.
@@ -34,7 +34,6 @@ start("evaluasi.html", "nav.evaluation", async main => {
   try {
     await detail(box, id);
   } catch (e) {
-    box.replaceChildren(errorPanel(e));
-    report(e);
+    showError(box, e);
   }
 });

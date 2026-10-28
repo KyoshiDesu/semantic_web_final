@@ -18,7 +18,7 @@
     "sparql": "Konsol SPARQL",
     "evaluation": "Evaluasi",
     "reviewer": "Peninjau",
-    "reviewer_placeholder": "inisial",
+    "reviewer_change": "Ganti nama peninjau",
     "language": "Bahasa"
   },
   "error": {
@@ -34,7 +34,14 @@
     "internal": "Kesalahan server",
     "offline": "Server tidak berjalan",
     "offline_hint": "Jalankan `python -m autograde serve`, lalu muat ulang halaman.",
-    "reviewer": "Isi nama peninjau di bilah atas dulu."
+    "reviewer": "Tinjauan atau koreksi perlu nama peninjau."
+  },
+  "reviewer": {
+    "title": "Peninjau",
+    "help": "Nama atau inisial Anda, disimpan bersama setiap tinjauan dan koreksi. Peramban ini mengingatnya.",
+    "name": "Nama atau inisial",
+    "save": "Simpan",
+    "cancel": "Batal"
   },
   "status": {
     "belum dinilai": "belum dinilai",
@@ -232,6 +239,7 @@
     "title": "Penilaian",
     "missing": "Buka halaman ini dari sebuah penilaian di halaman Kelas.",
     "course": "kembali ke mata kuliah",
+    "run": "run",
     "synthetic": "Berisi jawaban sintetis (data demo), bukan jawaban mahasiswa nyata.",
     "no_answers": "Belum ada jawaban untuk penilaian ini. Impor jawaban di halaman Kelas.",
     "grading": "Penilaian otomatis",

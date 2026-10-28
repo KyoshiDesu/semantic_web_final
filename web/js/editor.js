@@ -2,7 +2,7 @@
 import { api } from "./api.js";
 import { dot } from "./graph.js";
 import { t } from "./i18n.js";
-import { button, code, el, errorPanel, field, fill, iri, panel, report, select, toast } from "./ui.js";
+import { button, code, debounced, el, field, fill, iri, panel, select, showError, toast } from "./ui.js";
 
 export const EMPTY_DRAFT = { prompt: "", reference_answer: "", language: "id", validated_by: "",
   criteria: [{ id: "K1", description: "" }], concepts: [], triples: [] };
@@ -54,8 +54,6 @@ export async function editor(container, { qid = null, draft, baseId = null, asse
   const preview = el("div");
   const newId = qid ? null : el("input", { placeholder: "Q2" });
   const target = assessments ? select(assessments.map(a => [String(a.id), a.label]), String(assessments[0].id)) : null;
-  let seq = 0;
-  let timer = null;
 
   const save = button(t("editor.save"), async () => {
     if (qid) {
@@ -68,22 +66,20 @@ export async function editor(container, { qid = null, draft, baseId = null, asse
     }
   }, { kind: "primary", disabled: true });
 
-  async function check() {
-    const mine = ++seq;
+  const check = debounced(500, async current => {
     save.disabled = true;
     status.textContent = t("editor.checking");
     let res;
     try {
       res = await api.post("/questions/preview", { id: qid || newId.value.trim() || "Q_NEW", draft: d, base_id: baseId });
     } catch (e) {
-      if (mine === seq) {
+      if (current()) {
         status.textContent = "";
-        preview.replaceChildren(errorPanel(e));
-        report(e);
+        showError(preview, e);
       }
       return;
     }
-    if (mine !== seq) return;  // a newer edit is already being checked
+    if (!current()) return;  // a newer edit is already being checked
     save.disabled = !res.valid;
     status.textContent = t(res.valid ? "editor.valid" : "editor.invalid");
     if (!res.valid) {
@@ -103,13 +99,12 @@ export async function editor(container, { qid = null, draft, baseId = null, asse
     preview.replaceChildren(el("p", { class: "small muted" }, t("editor.graph_after"), " ", iri(res.graph)),
       field(t("editor.preview_view"), view), graph);
     await show();
-  }
+  });
 
   const syncConcepts = () => datalist.replaceChildren(...concepts().map(c => el("option", { value: c })));
   const changed = () => {
     syncConcepts();
-    clearTimeout(timer);
-    timer = setTimeout(check, 500);
+    check.later();
   };
   const triples = rowsEditor([
     { key: "id", label: t("col.id"), kind: "text" },
@@ -148,5 +143,5 @@ export async function editor(container, { qid = null, draft, baseId = null, asse
     panel(t("editor.preview"), status, preview),
     el("div", { class: "actions" }, save));
   syncConcepts();
-  await check();
+  await check.now();
 }

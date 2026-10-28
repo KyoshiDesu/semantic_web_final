@@ -2,7 +2,7 @@
 import { api } from "./api.js";
 import { dot } from "./graph.js";
 import { t } from "./i18n.js";
-import { code, el, errorPanel, field, iri, records, report, select, start, stat, table, tabs } from "./ui.js";
+import { code, el, field, iri, records, select, showError, start, stat, table, tabs } from "./ui.js";
 
 async function relations(p, o) {
   const graph = el("div");
@@ -17,8 +17,7 @@ async function relations(p, o) {
     try {
       await show(filter.value === "all" ? o : await api.get("/ontology", { lang: filter.value }));
     } catch (e) {
-      list.replaceChildren(errorPanel(e));
-      report(e);
+      showError(list, e);
     }
   });
   p.replaceChildren(field(t("ontologi.lang_filter"), filter), graph,

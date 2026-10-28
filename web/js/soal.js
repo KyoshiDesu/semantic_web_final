@@ -2,11 +2,11 @@
 import { api, url } from "./api.js";
 import { dot } from "./graph.js";
 import { t } from "./i18n.js";
-import { button, code, dl, el, fail, field, fill, href, iri, loading, panel, param, records, score, select, start,
+import { button, code, column, dl, el, fail, field, fill, href, into, iri, panel, param, records, score, select, start,
   stripComments, table, tabs, triple } from "./ui.js";
 import { EMPTY_DRAFT, editor } from "./editor.js";
 
-const enc = encodeURIComponent;
+const questionPath = qid => `/questions/${encodeURIComponent(qid)}`;
 
 async function list(main) {
   const qs = await api.get("/questions");
@@ -43,7 +43,7 @@ async function keyTab(p, qid, g) {
     panel(t("soal.graph"), el("p", { class: "small muted" }, t("soal.graph_help"), " ", iri(g.graph)),
       field(t("soal.graph_view"), view), graph),
     panel("Turtle", el("div", { class: "actions" }, dl(url("/graphs/turtle", { name: g.graph }), t("common.download")),
-      dl(url(`/questions/${enc(qid)}/files.zip`), t("soal.zip"))), code(g.turtle)));
+      dl(url(`${questionPath(qid)}/files.zip`), t("soal.zip"))), code(g.turtle)));
   await dot(graph, g.concept_dot);
 }
 
@@ -56,26 +56,19 @@ function tryResult(res) {
 }
 
 async function answersTab(p, qid) {
-  const data = await api.get(`/questions/${enc(qid)}/answers`);
-  const col = name => data.columns.indexOf(name);
+  const data = await api.get(`${questionPath(qid)}/answers`);
+  const [answerId, annotated] = ["answer_id", "annotated"].map(c => column(data, c));
   const llm = el("input", { type: "checkbox" });
   const result = el("div", { "aria-live": "polite" });
-  const grade = body => async () => {
-    result.replaceChildren(loading());
-    try {
-      result.replaceChildren(tryResult(await api.post(`/questions/${enc(qid)}/try`, { ...body, llm_feedback: llm.checked })));
-    } catch (e) {
-      result.replaceChildren();
-      throw e;
-    }
-  };
+  const grade = body => () => into(result, async () =>
+    tryResult(await api.post(`${questionPath(qid)}/try`, { ...body, llm_feedback: llm.checked })));
   const pasted = el("textarea", { rows: 4 });
   const rows = { columns: [...data.columns, "try"], rows: data.rows.map(r => [...r, null]) };
   p.replaceChildren(
     el("p", { class: "small muted" }, t("soal.try_help")), el("label", {}, llm, " ", t("soal.llm_feedback")), result,
     table(rows, { cell: (c, v, row) => {
       if (c === "try") {
-        return button(t("soal.try"), grade({ answer_id: row[col("answer_id")], mode: row[col("annotated")] ? "gold" : "llm" }),
+        return button(t("soal.try"), grade({ answer_id: answerId(row), mode: annotated(row) ? "gold" : "llm" }),
           { slot: result });
       }
       if (c === "human") return score(v);
@@ -87,7 +80,7 @@ async function answersTab(p, qid) {
 }
 
 async function editTab(p, qid, refresh) {
-  const q = await api.get(`/questions/${enc(qid)}`);
+  const q = await api.get(questionPath(qid));
   const box = el("div");
   fill(p, q.results ? el("div", { class: "notice" }, t("editor.stale_warning", { n: q.results })) : null, box);
   await editor(box, { qid, draft: q.draft, baseId: qid, onSaved: refresh });
@@ -98,14 +91,14 @@ async function newQuestion(main, copy) {
   const lists = await Promise.all(courses.map(c => api.get(`/courses/${c.id}/assessments`)));
   const assessments = courses.flatMap((c, i) => lists[i].map(a => ({ id: a.id, label: `${c.code} · ${a.name}` })));
   if (!assessments.length) throw fail("not_found", t("editor.no_assessments"));
-  const draft = copy ? { ...(await api.get(`/questions/${enc(copy)}`)).draft, validated_by: "" } : EMPTY_DRAFT;
+  const draft = copy ? { ...(await api.get(questionPath(copy))).draft, validated_by: "" } : EMPTY_DRAFT;
   const box = el("div");
   main.replaceChildren(el("h1", {}, copy ? t("editor.copy_title", { id: copy }) : t("editor.new_title")), box);
   await editor(box, { draft, baseId: copy, assessments, onSaved: id => location.assign(href("soal.html", { id })) });
 }
 
 async function question(main, qid, refresh) {
-  const g = await api.get(`/questions/${enc(qid)}/gold`);
+  const g = await api.get(`${questionPath(qid)}/gold`);
   const body = el("div");
   main.replaceChildren(
     el("div", { class: "row" }, el("h1", {}, qid), el("span", { class: "chip" }, g.language.toUpperCase()),

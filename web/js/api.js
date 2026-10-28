@@ -1,23 +1,25 @@
 // The JSON API client: one error type, the 503 retry for reads, and URLs for links and downloads.
 export class ApiError extends Error {
   constructor(status, body) {
-    super(body.message || `HTTP ${status}`);
+    super(body.message || (status ? `HTTP ${status}` : ""));
     this.status = status;
-    this.code = body.error || "internal";
+    this.error = body.error || "internal";
     this.details = body.details || [];
   }
 }
 
-export function url(path, params = {}) {
+// "?k=v&…" without the empty values, or "" (for API URLs and page links alike)
+export function query(params = {}) {
   const q = new URLSearchParams();
   for (const [k, v] of Object.entries(params || {})) {
     if (v !== undefined && v !== null && v !== "") q.set(k, v);
   }
   const s = q.toString();
-  return `/api${path}${s ? `?${s}` : ""}`;
+  return s ? `?${s}` : "";
 }
 
-const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+export const url = (path, params = {}) => `/api${path}${query(params)}`;
+export const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 async function request(method, path, { params, json, form, text = false } = {}) {
   const init = { method, headers: {} };
@@ -31,7 +33,7 @@ async function request(method, path, { params, json, form, text = false } = {}) 
     try {
       res = await fetch(url(path, params), init);
     } catch {
-      throw new ApiError(0, { error: "offline", message: "the server is not running" });
+      throw new ApiError(0, { error: "offline" });  // the error panel says so in the UI language
     }
     // Only reads are retried: a resent import or correction could apply twice.
     if (res.status === 503 && method === "GET" && attempt < 3) {
