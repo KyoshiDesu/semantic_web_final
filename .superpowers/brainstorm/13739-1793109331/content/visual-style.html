@@ -1,0 +1,115 @@
+<h2>Which visual direction should the app have?</h2>
+<p class="subtitle">The same home page (hero, Semantic Web chips, search, two answer cards) in three looks. Fonts are system fonts, so the app works offline. Pick the closest one; details can change afterwards.</p>
+
+<div class="cards">
+
+  <!-- A: marking sheet -->
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:0;background:#f6f1e6">
+      <div style="font-family:Charter,'Iowan Old Style',Georgia,serif;color:#1f2a44;background:#f6f1e6;background-image:repeating-linear-gradient(#f6f1e6 0 27px,#e6dcc8 27px 28px);padding:14px 18px 18px;min-height:430px">
+        <div style="display:flex;gap:18px;font-size:13px;border-bottom:2px solid #1f2a44;padding-bottom:6px;margin-bottom:16px">
+          <b style="letter-spacing:.02em">AutoGrade-RDF</b><span style="border-bottom:2px solid #c0392b">Beranda</span><span>Kelas</span><span>Soal</span><span>Semantic Web</span><span>Evaluasi</span>
+        </div>
+        <div style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#c0392b">Penilaian jawaban singkat · Semantic Web</div>
+        <div style="font-size:30px;line-height:1.1;margin:4px 0 8px">Setiap nilai punya jejak triple RDF.</div>
+        <div style="font-size:13px;line-height:1.5;max-width:420px">Jawaban diubah jadi triple, dicocokkan dengan kunci dosen, lalu SWRL mencari kontradiksi. Skor dihitung ulang dengan SPARQL.</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin:12px 0;font-size:12px">
+          <span style="border:1px solid #1f2a44;padding:2px 7px">RDF · triple terreifikasi</span><span style="border:1px solid #1f2a44;padding:2px 7px">OWL · ontologi ag:</span><span style="border:1px solid #1f2a44;padding:2px 7px">SWRL · kontradiksi</span><span style="border:1px solid #1f2a44;padding:2px 7px">SKOS · hierarki konsep</span><span style="border:1px solid #1f2a44;padding:2px 7px">PROV · kalimat sumber</span><span style="border:1px solid #1f2a44;padding:2px 7px">SPARQL · hitung ulang</span>
+        </div>
+        <div style="border-bottom:1px solid #1f2a44;font-size:13px;color:#7a7060;padding:6px 0;margin-bottom:12px;font-style:italic">Cari jawaban, NIM, nama, atau soal…</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:12px">
+          <div style="background:#fffdf8;border:1px solid #d8ccb4;padding:10px;position:relative">
+            <div style="position:absolute;right:10px;top:8px;width:38px;height:38px;border:2px solid #c0392b;border-radius:50%;color:#c0392b;font-size:15px;display:flex;align-items:center;justify-content:center;transform:rotate(-8deg)">60</div>
+            <div style="color:#7a7060">Q1 · Q1_A08</div>
+            <div style="margin:6px 50px 6px 0;line-height:1.4">"…Fotosintesis <span style="text-decoration:underline wavy #c0392b">menghasilkan karbon dioksida</span>."</div>
+            <div style="color:#c0392b">✗ 1 kontradiksi (SWRL)</div>
+            <div style="margin-top:6px;text-decoration:underline">Jelajahi relasi semantik →</div>
+          </div>
+          <div style="background:#fffdf8;border:1px solid #d8ccb4;padding:10px;position:relative">
+            <div style="position:absolute;right:10px;top:8px;width:38px;height:38px;border:2px solid #2e6b3a;border-radius:50%;color:#2e6b3a;font-size:15px;display:flex;align-items:center;justify-content:center;transform:rotate(6deg)">80</div>
+            <div style="color:#7a7060">Q1 · Q1_A07</div>
+            <div style="margin:6px 50px 6px 0;line-height:1.4">"Tumbuhan menyerap sinar matahari dan menghasilkan makanan…"</div>
+            <div style="color:#2e6b3a">✓ ditinjau · DS</div>
+            <div style="margin-top:6px;text-decoration:underline">Jelajahi relasi semantik →</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A · Lembar koreksi</h3>
+      <p>A marked exam paper: warm paper, ruled lines, serif type, scores circled in red or green pen. Says "a lecturer grading" first.</p>
+    </div>
+  </div>
+
+  <!-- B: graph schematic -->
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:0">
+      <div style="font-family:'SF Mono',Menlo,ui-monospace,monospace;color:#16202e;background:#fbfcfd;background-image:linear-gradient(#e9eef4 1px,transparent 1px),linear-gradient(90deg,#e9eef4 1px,transparent 1px);background-size:16px 16px;padding:14px 18px 18px;min-height:430px">
+        <div style="display:flex;gap:16px;font-size:12px;border:1px solid #16202e;background:#fff;padding:6px 10px;margin-bottom:16px">
+          <b>ag:AutoGrade</b><span style="background:#16202e;color:#fff;padding:0 5px">Beranda</span><span>Kelas</span><span>Soal</span><span>Semantic&nbsp;Web</span><span>Evaluasi</span>
+        </div>
+        <div style="font-size:11px;color:#6b7280">@prefix ag: · key: · ans: · prov: · skos:</div>
+        <div style="font-family:'Avenir Next','Helvetica Neue',sans-serif;font-weight:600;font-size:28px;line-height:1.1;margin:4px 0 8px">Jawaban → triple → skor yang bisa diaudit</div>
+        <div style="font-family:'Avenir Next','Helvetica Neue',sans-serif;font-size:13px;line-height:1.5;max-width:430px">Setiap jawaban menjadi graf. Ontologi, aturan SWRL, dan SPARQL terlihat di setiap langkah.</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin:12px 0;font-size:11px">
+          <span style="background:#fff;border:1px solid #1d4ed8;color:#1d4ed8;padding:2px 6px">rdf:Statement</span><span style="background:#fff;border:1px solid #b45309;color:#b45309;padding:2px 6px">owl:Class ag:</span><span style="background:#fff;border:1px solid #b91c1c;color:#b91c1c;padding:2px 6px">swrl:Imp → ag:contradicts</span><span style="background:#fff;border:1px solid #047857;color:#047857;padding:2px 6px">skos:broader</span><span style="background:#fff;border:1px solid #6d28d9;color:#6d28d9;padding:2px 6px">prov:wasDerivedFrom</span><span style="background:#fff;border:1px solid #16202e;padding:2px 6px">SELECT ?skor</span>
+        </div>
+        <div style="background:#fff;border:1px solid #16202e;font-size:12px;color:#6b7280;padding:6px 8px;margin-bottom:12px">? cari jawaban, NIM, nama, soal_</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:11px">
+          <div style="background:#fff;border:1px solid #16202e;border-left:5px solid #b91c1c;padding:9px">
+            <div style="display:flex;justify-content:space-between"><span style="color:#6d28d9">ans:Q1_A08</span><b style="font-size:16px">60.0</b></div>
+            <div style="margin:7px 0;line-height:1.6"><span style="border:1px solid #6d28d9;padding:0 3px">Fotosintesis</span> —<b>menghasilkan</b>→ <span style="border:1px solid #6d28d9;padding:0 3px">CO2</span><br><span style="color:#b91c1c">⟂ ag:contradicts key:Q1_R2</span></div>
+            <div style="text-decoration:underline">jelajahi relasi semantik ↗</div>
+          </div>
+          <div style="background:#fff;border:1px solid #16202e;border-left:5px solid #047857;padding:9px">
+            <div style="display:flex;justify-content:space-between"><span style="color:#6d28d9">ans:Q1_A07</span><b style="font-size:16px">80.0</b></div>
+            <div style="margin:7px 0;line-height:1.6"><span style="border:1px solid #6d28d9;padding:0 3px">Tumbuhan</span> —<b>menyerap</b>→ <span style="border:1px solid #6d28d9;padding:0 3px">Cahaya</span><br><span style="color:#047857">✓ ditinjau · DS</span></div>
+            <div style="text-decoration:underline">jelajahi relasi semantik ↗</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B · Skema graf</h3>
+      <p>A technical schematic: graph paper, monospace RDF names, one colour per namespace (key: blue, ans: violet, ag: amber), cards that show a triple. Says "Semantic Web" first.</p>
+    </div>
+  </div>
+
+  <!-- C: bold editorial -->
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:0">
+      <div style="font-family:'Avenir Next','Helvetica Neue',Helvetica,sans-serif;color:#111;background:#fff;padding:0 0 18px;min-height:430px">
+        <div style="display:flex;gap:18px;font-size:13px;font-weight:600;background:#23256b;color:#fff;padding:10px 18px">
+          <span style="font-weight:800">AUTOGRADE·RDF</span><span style="color:#f0a830">Beranda</span><span>Kelas</span><span>Soal</span><span>Semantic Web</span><span>Evaluasi</span>
+        </div>
+        <div style="padding:16px 18px 0">
+          <div style="font-size:34px;font-weight:800;line-height:1;letter-spacing:-.02em">NILAI YANG<br>BISA DIBUKTIKAN.</div>
+          <div style="font-size:13px;line-height:1.5;max-width:420px;margin-top:8px">Triple RDF, ontologi OWL, aturan SWRL dan SPARQL di balik setiap skor.</div>
+          <div style="display:grid;grid-template-columns:repeat(6,1fr);margin:12px 0;font-size:10px;font-weight:700;text-transform:uppercase">
+            <span style="background:#23256b;color:#fff;padding:6px 4px">RDF</span><span style="background:#3a3d9a;color:#fff;padding:6px 4px">OWL</span><span style="background:#f0a830;color:#111;padding:6px 4px">SWRL</span><span style="background:#f5c46a;color:#111;padding:6px 4px">SKOS</span><span style="background:#111;color:#fff;padding:6px 4px">PROV</span><span style="background:#e6e6e6;color:#111;padding:6px 4px">SPARQL</span>
+          </div>
+          <div style="border:3px solid #111;font-size:14px;font-weight:600;color:#888;padding:7px 9px;margin-bottom:12px">Cari jawaban, NIM, nama, atau soal</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:12px">
+            <div style="border-top:6px solid #f0a830;background:#f4f4f4;padding:10px">
+              <div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-weight:700">Q1_A08</span><span style="font-size:30px;font-weight:800">60</span></div>
+              <div style="margin:4px 0 6px;line-height:1.4">"…Fotosintesis menghasilkan karbon dioksida."</div>
+              <div style="font-weight:700;color:#b5541b">1 KONTRADIKSI</div>
+              <div style="margin-top:6px;font-weight:700">JELAJAHI RELASI SEMANTIK →</div>
+            </div>
+            <div style="border-top:6px solid #23256b;background:#f4f4f4;padding:10px">
+              <div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-weight:700">Q1_A07</span><span style="font-size:30px;font-weight:800">80</span></div>
+              <div style="margin:4px 0 6px;line-height:1.4">"Tumbuhan menyerap sinar matahari dan menghasilkan makanan…"</div>
+              <div style="font-weight:700;color:#23256b">DITINJAU · DS</div>
+              <div style="margin-top:6px;font-weight:700">JELAJAHI RELASI SEMANTIK →</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>C · Tegas</h3>
+      <p>Bold editorial: heavy sans type, flat indigo and turmeric blocks, big score numbers, no shadows or rounded corners. Says "a confident product" first.</p>
+    </div>
+  </div>
+
+</div>
