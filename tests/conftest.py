@@ -85,6 +85,7 @@ def offline(mp):
     mp.delenv("ANTHROPIC_API_KEY", raising=False)
     mp.delenv("ANTHROPIC_AUTH_TOKEN", raising=False)
     mp.delenv("OPENROUTER_API_KEY", raising=False)
+    mp.delenv("GEMINI_API_KEY", raising=False)
 
 
 @pytest.fixture

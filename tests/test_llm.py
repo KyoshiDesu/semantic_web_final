@@ -65,3 +65,15 @@ def test_openrouter_backend(monkeypatch, tmp_path):
     monkeypatch.setattr(llm.httpx, "post", lambda *a, **k: httpx.Response(401, text="bad key"))
     with pytest.raises(llm.LLMUnavailable, match="bad key"):
         llm.openrouter_backend("s", "u", SCHEMA, CFG)
+
+
+def test_gemini_backend(monkeypatch, tmp_path):
+    monkeypatch.setattr(llm.io, "ROOT", tmp_path)  # no .env here
+    monkeypatch.setenv("GEMINI_API_KEY", "g")
+    ok = {"choices": [{"finish_reason": "stop", "message": {"content": "{}"}}]}
+    sent = []
+    monkeypatch.setattr(llm.httpx, "post", lambda url, json, headers, **k: sent.append((url, json, headers)) or httpx.Response(200, json=ok))
+    assert llm.gemini_backend("s", "u", SCHEMA, CFG) == "{}"
+    url, body, headers = sent[0]
+    assert url == llm.GEMINI_URL and headers["Authorization"] == "Bearer g" and body["reasoning_effort"] == "medium"
+    assert not {"provider", "reasoning", "temperature"} & body.keys()  # OpenRouter-only fields, unknown to Gemini
