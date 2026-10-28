@@ -2,7 +2,7 @@
 import pytest
 from rdflib import Graph, Literal
 
-from autograde import explorer, io, kg, pipeline, rdfviz
+from autograde import io, kg, pipeline, rdfviz
 from autograde.io import AG, ANS, KEY
 from test_pipeline import STUB
 
@@ -36,8 +36,6 @@ def test_vis_graph_covers_every_triple_and_truncates():
     assert sum(k == "literal" for k in kinds.values()) == 2  # each literal is its own node
     assert {e["from"] for e in vis["edges"]} | {e["to"] for e in vis["edges"]} <= set(kinds)
     assert rdfviz.vis_graph(g, limit=2)["truncated"]
-    page = explorer.html(vis, node_types=rdfviz.VIS_NODE_TYPES, edge_types=rdfviz.VIS_EDGE_TYPES)
-    assert "Literal" in page
 
 
 def test_swrl_rule_labels():

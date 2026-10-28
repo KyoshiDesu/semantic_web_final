@@ -43,3 +43,8 @@ def test_every_key_the_pages_name_exists():
 def test_vendored_libraries_are_the_pinned_releases():
     for name, digest in VENDOR.items():
         assert hashlib.sha256((WEB / "vendor" / name).read_bytes()).hexdigest() == digest, name
+
+
+def test_streamlit_is_gone():
+    assert not (io.ROOT / "app").exists()
+    assert "streamlit" not in (io.ROOT / "requirements.txt").read_text(encoding="utf-8")

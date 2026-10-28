@@ -1,4 +1,4 @@
-"""Courses, assessments and students (Streamlit: Mata Kuliah)."""
+"""Courses, assessments and students (page: kelas.html)."""
 from fastapi import APIRouter
 
 from autograde import db

@@ -1,15 +1,10 @@
 """Interactive knowledge-graph explorer ("Semantic Explorer") for the demo app.
 
-Node ids are the RDF names (ag: schema, key: lecturer's data, ans: student data) and edge labels are the RDF/OWL property names, so the picture is the same graph stored in the knowledge graph (gold, answer and ledger named graphs plus the ontology). Drawn with vis-network 9.1.9, vendored in
-app/static/ so the demo works offline (the API serves the same graph as JSON).
+Node ids are the RDF names (ag: schema, key: lecturer's data, ans: student data) and edge labels are the RDF/OWL property names, so the picture is the same graph stored in the knowledge graph (gold, answer and ledger named graphs plus the ontology). The API serves it as JSON; web/js/graph.js draws it with vis-network 9.1.9 (web/vendor/).
 """
-import json
-
 from autograde import db, gold, io
 from autograde.match import mu
 from autograde.models import STATUS_IRI_NAME, LedgerEntry, StudentTriple
-
-VIS_JS = io.ROOT / "app" / "static" / "vis-network.min.js"
 
 NODE_TYPES = {  # key: (legend label, colour, vis shape, shown by default); colours are the pages' namespace palette
     "answer": ("Jawaban", "#6d28d9", "ellipse", True),
@@ -29,7 +24,7 @@ EDGE_TYPES = {  # key: (legend label, colour, dashed, width, shown by default)
     "hierarchy": ("Hierarki konsep (skos:broader)", "#047857", True, 2, True),
 }
 
-# The explorer's node details in each UI language; the web pages pass ?lang=, Streamlit uses the default.
+# The explorer's node details in each UI language; the web pages pass ?lang=.
 TEXT = {
     "id": {
         "broader_partial": "{stud} lebih umum dari {key} (skos:broader) → kredit parsial",
@@ -313,111 +308,3 @@ def build(ctx, answers, params, human=None, predicates=None, lang="id"):
                                          [T["narrower"], ", ".join(narrower) or "—"]],
                               "sections": [{"heading": T["used_by"], "items": users or ["—"]}]}
     return {"nodes": list(nodes.values()), "edges": edges, "details": details}
-
-
-def html(graph, height=720, node_types=None, edge_types=None):
-    """Self-contained page: vis-network inlined, data as JSON, details rendered with textContent (no HTML injection)."""
-    data = json.dumps({"graph": graph, "nodeTypes": node_types or NODE_TYPES, "edgeTypes": edge_types or EDGE_TYPES},
-                      ensure_ascii=False)
-    data = data.replace("</", "<\\/")  # keep student text from closing the <script> tag
-    return TEMPLATE.replace("__VIS__", VIS_JS.read_text(encoding="utf-8")).replace("__DATA__", data) \
-                   .replace("__HEIGHT__", str(height))
-
-
-TEMPLATE = """<!doctype html><html><head><meta charset="utf-8">
-<style>
-  body { margin: 0; font-family: Inter, -apple-system, Segoe UI, Helvetica, sans-serif; color: #0f172a; }
-  .bar { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; padding: 6px 0 10px; }
-  .chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px;
-          background: #fff; border: 1px solid #e2e8f0; font-size: 12.5px; cursor: pointer; user-select: none; }
-  .chip.off { opacity: .35; }
-  .dot { width: 10px; height: 10px; border-radius: 50%; }
-  .line { width: 18px; height: 0; border-top: 2px solid; }
-  .line.dash { border-top-style: dashed; }
-  .wrap { display: flex; gap: 12px; height: __HEIGHT__px; }
-  #net { flex: 1; border: 1px solid #e2e8f0; border-radius: 12px; background: #fff; }
-  #panel { width: 330px; overflow: auto; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px; background: #f8fafc; font-size: 13px; }
-  #panel h3 { margin: 2px 0 2px; font-size: 15px; } #panel .kind { color: #64748b; font-size: 12px; }
-  #panel table { border-collapse: collapse; margin: 8px 0; width: 100%; }
-  #panel td { vertical-align: top; padding: 3px 4px; border-bottom: 1px solid #e2e8f0; }
-  #panel td:first-child { color: #64748b; width: 34%; }
-  #panel h4 { margin: 12px 0 4px; font-size: 12.5px; text-transform: uppercase; letter-spacing: .03em; color: #475569; }
-  #panel li { margin: 3px 0; }
-  input[type=search] { padding: 5px 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13px; width: 200px; }
-  button { padding: 5px 10px; border: 1px solid #cbd5e1; border-radius: 8px; background: #fff; font-size: 12.5px; cursor: pointer; }
-  .sep { width: 1px; height: 22px; background: #e2e8f0; margin: 0 4px; }
-</style></head><body>
-<div class="bar" id="legend"></div>
-<div class="bar">
-  <input type="search" id="q" placeholder="Cari node… (mis. Oksigen, A07)">
-  <button id="fit">Paskan</button><button id="physics">Bekukan tata letak</button>
-  <label style="font-size:12.5px"><input type="checkbox" id="labels" checked> label relasi</label>
-</div>
-<div class="wrap"><div id="net"></div><div id="panel"><h3>Semantic Explorer</h3>
-<div class="kind">Klik node untuk melihat penalaran dan provenance. Klik chip di atas untuk menyembunyikan jenis node atau relasi.</div></div></div>
-<script>__VIS__</script>
-<script>
-const D = __DATA__;
-const hiddenKinds = new Set(Object.entries(D.nodeTypes).filter(([k, v]) => !v[3]).map(([k]) => k));
-const hiddenEdges = new Set(Object.entries(D.edgeTypes).filter(([k, v]) => !v[4]).map(([k]) => k));
-const nodes = new vis.DataSet(D.graph.nodes.map(n => {
-  const [_, color, shape] = D.nodeTypes[n.kind];
-  const box = shape === 'box' || shape === 'ellipse';
-  return { id: n.id, label: n.label, title: n.title, kind: n.kind, shape: shape,
-           color: { background: color, border: color, highlight: { background: color, border: '#0f172a' } },
-           font: box ? { color: '#fff', size: 13 } : { color: '#0f172a', size: 13 },
-           size: n.kind === 'answer' ? 22 : n.kind === 'student' ? 12 : 14, hidden: hiddenKinds.has(n.kind) };
-}));
-let ei = 0;
-const edges = new vis.DataSet(D.graph.edges.map(e => {
-  const [_, color, dashed, width] = D.edgeTypes[e.kind];
-  return { id: 'e' + (ei++), from: e.from, to: e.to, kind: e.kind, label: e.label, fullLabel: e.label, title: e.title,
-           arrows: e.kind === 'ontology' ? '' : 'to', dashes: dashed, width: width,
-           color: { color: color, highlight: '#0f172a', opacity: e.kind === 'asserted' ? 0.7 : 1 },
-           font: { size: 9, color: '#475569', strokeWidth: 2, align: 'top' }, hidden: hiddenEdges.has(e.kind) };
-}));
-const net = new vis.Network(document.getElementById('net'), { nodes, edges }, {
-  physics: { solver: 'forceAtlas2Based', forceAtlas2Based: { gravitationalConstant: -60, springLength: 110 },
-             stabilization: { iterations: 250 } },
-  interaction: { hover: true, tooltipDelay: 120, navigationButtons: false },
-  edges: { smooth: { type: 'continuous' } }
-});
-function chip(label, swatch, key, set, ds, field) {
-  const c = document.createElement('span'); c.className = 'chip' + (set.has(key) ? ' off' : '');
-  c.appendChild(swatch); c.appendChild(document.createTextNode(label));
-  c.onclick = () => { set.has(key) ? set.delete(key) : set.add(key); c.classList.toggle('off');
-    ds.update(ds.get({ filter: x => x[field] === key }).map(x => ({ id: x.id, hidden: set.has(key) }))); };
-  return c;
-}
-const legend = document.getElementById('legend');
-for (const [k, v] of Object.entries(D.nodeTypes)) {
-  const s = document.createElement('span'); s.className = 'dot'; s.style.background = v[1];
-  legend.appendChild(chip(v[0], s, k, hiddenKinds, nodes, 'kind'));
-}
-const sep = document.createElement('span'); sep.className = 'sep'; legend.appendChild(sep);
-for (const [k, v] of Object.entries(D.edgeTypes)) {
-  const s = document.createElement('span'); s.className = 'line' + (v[2] ? ' dash' : ''); s.style.borderTopColor = v[1];
-  legend.appendChild(chip(v[0], s, k, hiddenEdges, edges, 'kind'));
-}
-function el(tag, text) { const x = document.createElement(tag); if (text !== undefined) x.textContent = text; return x; }
-function show(id) {
-  const d = D.graph.details[id], p = document.getElementById('panel'); p.replaceChildren();
-  if (!d) { p.appendChild(el('h3', id)); return; }
-  p.appendChild(el('div', d.kind)).className = 'kind'; p.appendChild(el('h3', d.title));
-  const t = el('table');
-  for (const [k, v] of d.fields) { const r = el('tr'); r.appendChild(el('td', k)); r.appendChild(el('td', v)); t.appendChild(r); }
-  p.appendChild(t);
-  for (const s of d.sections) { p.appendChild(el('h4', s.heading)); const ul = el('ul'); s.items.forEach(i => ul.appendChild(el('li', i))); p.appendChild(ul); }
-}
-net.on('click', e => { if (e.nodes.length) show(e.nodes[0]); });
-document.getElementById('fit').onclick = () => net.fit({ animation: true });
-let frozen = false;
-document.getElementById('physics').onclick = (ev) => { frozen = !frozen; net.setOptions({ physics: { enabled: !frozen } });
-  ev.target.textContent = frozen ? 'Gerakkan lagi' : 'Bekukan tata letak'; };
-document.getElementById('labels').onchange = (ev) => edges.update(edges.get().map(x => ({ id: x.id, label: ev.target.checked ? x.fullLabel : ' ' })));
-document.getElementById('q').oninput = (ev) => {
-  const q = ev.target.value.trim().toLowerCase(); if (q.length < 2) return;
-  const hit = nodes.get({ filter: n => !n.hidden && (n.label.toLowerCase().includes(q) || (n.title || '').toLowerCase().includes(q)) })[0];
-  if (hit) { net.selectNodes([hit.id]); net.focus(hit.id, { scale: 1.2, animation: true }); show(hit.id); }
-};
-</script></body></html>"""
