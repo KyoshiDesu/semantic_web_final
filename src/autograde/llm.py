@@ -1,6 +1,7 @@
 """LLM client with an on-disk response cache. The LLM never produces a score that the system uses."""
 import hashlib
 import json
+import logging
 import os
 import time
 
@@ -14,6 +15,7 @@ FALLBACK_BETA = "server-side-fallback-2026-07-01"
 OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
 GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions"
 RETRY_STATUS = {429, 500, 502, 503, 504}
+log = logging.getLogger("uvicorn.error")
 
 
 class LLMError(RuntimeError):
@@ -22,6 +24,10 @@ class LLMError(RuntimeError):
 
 class LLMUnavailable(LLMError):
     """No credentials and no cached response: callers fall back (e.g. template feedback)."""
+
+
+class QuotaExceeded(LLMError):
+    """Still 429 after the retries: the key's quota is used up, so complete_json tries llm.fallback."""
 
 
 def cache_dir():
@@ -87,13 +93,13 @@ def chat_backend(url, key_var, system, user, schema, cfg, **extra):
             r = httpx.post(url, json=body, headers={"Authorization": f"Bearer {key}"}, timeout=120)
             if r.status_code not in RETRY_STATUS:
                 break
-            err = f"API error {r.status_code}: {r.text[:300]}"
+            err, quota = f"API error {r.status_code}: {r.text[:300]}", r.status_code == 429
         except httpx.TransportError as e:
-            err = f"connection error: {e}"
+            err, quota = f"connection error: {e}", False
         if attempt < 2:
             time.sleep(2 ** attempt)
     else:
-        raise LLMError(err)
+        raise (QuotaExceeded if quota else LLMError)(err)
     if r.status_code == 401:
         raise LLMUnavailable(f"authentication failed: {r.text[:300]}")
     if r.status_code != 200:
@@ -114,7 +120,8 @@ BACKENDS = {"anthropic": anthropic_backend, "openrouter": openrouter_backend, "g
 
 
 def complete_json(system, user, schema, *, backend=None, cfg=None, cache=None):
-    """JSON dict for (system, user, schema), cached by a hash of the whole request."""
+    """JSON dict for (system, user, schema), cached by a hash of the whole request.
+    If the provider's quota is used up, llm.fallback (provider and model) answers instead, cached under its own name."""
     cfg = cfg or io.load_config()["llm"]
     request = {"provider": cfg["provider"], "model": cfg["model"], "effort": cfg["effort"],
                "schema": schema, "system": system, "user": user}
@@ -124,7 +131,13 @@ def complete_json(system, user, schema, *, backend=None, cfg=None, cache=None):
         return io.load_json(path)["response"]
     backend = backend or BACKENDS[cfg["provider"]]
     for _ in range(3):  # first try + 2 retries on invalid JSON
-        text = backend(system, user, schema, cfg)
+        try:
+            text = backend(system, user, schema, cfg)
+        except QuotaExceeded as e:
+            if not cfg.get("fallback"):
+                raise
+            log.warning("%s quota used up, this call goes to %s (%s)", cfg["provider"], cfg["fallback"], e)
+            return complete_json(system, user, schema, cfg={**cfg, **cfg["fallback"], "fallback": None}, cache=cache)
         try:
             data = json.loads(text)
             break

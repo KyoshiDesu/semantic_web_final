@@ -77,3 +77,21 @@ def test_gemini_backend(monkeypatch, tmp_path):
     url, body, headers = sent[0]
     assert url == llm.GEMINI_URL and headers["Authorization"] == "Bearer g" and body["reasoning_effort"] == "medium"
     assert not {"provider", "reasoning", "temperature"} & body.keys()  # OpenRouter-only fields, unknown to Gemini
+
+    monkeypatch.setattr(llm.time, "sleep", lambda s: None)
+    monkeypatch.setattr(llm.httpx, "post", lambda *a, **k: httpx.Response(429, text="quota"))
+    with pytest.raises(llm.QuotaExceeded):
+        llm.gemini_backend("s", "u", SCHEMA, CFG)
+
+
+def test_quota_falls_back(monkeypatch, tmp_path):
+    def gemini(*a):
+        raise llm.QuotaExceeded("429")
+    monkeypatch.setitem(llm.BACKENDS, "gemini", gemini)
+    monkeypatch.setitem(llm.BACKENDS, "openrouter", lambda *a: '{"x": 1}')
+    cfg = {**CFG, "provider": "gemini", "fallback": {"provider": "openrouter", "model": "m2"}}
+    assert llm.complete_json("s", "u", SCHEMA, cfg=cfg, cache=tmp_path) == {"x": 1}
+    [saved] = tmp_path.glob("*.json")
+    assert llm.io.load_json(saved)["request"]["model"] == "m2"  # cached under the model that answered
+    with pytest.raises(llm.QuotaExceeded):
+        llm.complete_json("s", "u", SCHEMA, cfg={**cfg, "fallback": None}, cache=tmp_path)
