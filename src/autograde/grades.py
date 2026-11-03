@@ -59,9 +59,9 @@ def grades_csv(table, qids, draft=False):
     return DRAFT_MARK + text if draft else text
 
 
-def feedback_csv(table, run_id):
-    """One row per graded answer. A corrected answer gets template feedback rebuilt from the corrected ledger, so
-    the feedback agrees with the final score."""
+def feedback_table(table, run_id):
+    """One row per graded answer: final score and feedback (sumber: llm or template). A corrected answer gets
+    template feedback rebuilt from the corrected ledger, so the feedback agrees with the final score."""
     results, refs, rows = db.results(run_id), {}, []
     for t in table[table.status != "belum dinilai"].itertuples():
         r = results[t.answer_id]
@@ -71,7 +71,11 @@ def feedback_csv(table, run_id):
                 refs[t.question_id] = gold.load(t.question_id)[2]
             fb = feedback.template(t.answer_id, [LedgerEntry(**e) for e in r["ledger_corrected"]],
                                    refs[t.question_id], r["score_corrected"]["score"]).model_dump()
-        rows.append([t.external_id, t.name or "", t.question_id, round(t.final, 1), t.status, fb["summary"],
-                     "\n".join(c["text"] for c in fb["claims"])])
-    return pd.DataFrame(rows, columns=["external_id", "name", "question_id", "nilai", "status", "ringkasan",
-                                       "umpan_balik"]).to_csv(index=False)
+        rows.append([t.answer_id, t.external_id, t.name or "", t.question_id, round(t.final, 1), t.status,
+                     fb["summary"], "\n".join(c["text"] for c in fb["claims"]), fb["source"]])
+    return pd.DataFrame(rows, columns=["answer_id", "external_id", "name", "question_id", "nilai", "status",
+                                       "ringkasan", "umpan_balik", "sumber"])
+
+
+def feedback_csv(table, run_id):
+    return feedback_table(table, run_id).drop(columns=["answer_id", "sumber"]).to_csv(index=False)

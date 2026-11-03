@@ -8,7 +8,7 @@ params:
 llm:
   provider: gemini   # openrouter (OPENROUTER_API_KEY) | gemini (GEMINI_API_KEY, free tier: demo data only) | anthropic (ANTHROPIC_API_KEY, e.g. claude-opus-5-5)
   model: gemini-3.8-flash   # or google/gemini-2.5-pro, deepseek/deepseek-v4.1-flash, deepseek/deepseek-v4-pro; with gemini: gemini-3.8-flash
-  fallback: {provider: openrouter, model: google/gemini-2.5-flash}   # answers a call when the provider's quota is used up (429 after retries); delete to fail instead
+  fallback: {provider: openrouter, model: google/gemini-3.1-flash-lite}   # cheap Gemini that OpenRouter can serve from AI Studio or Vertex, so one rate-limited provider isn't fatal; takes over for 60 s once the provider is out of quota or overloaded (429/503 after retries); delete to fail instead
   effort: medium   # reasoning effort; OpenRouter also sends temperature 0, and the response cache keeps reruns identical
   max_tokens: 16000
 

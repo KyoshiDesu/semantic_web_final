@@ -3,14 +3,19 @@
 # reference_answer.md and the criterion are drafted by Claude (AI) from the coding guideline (Label 1);
 # the dataset itself has no reference answer. Labels are binary: 1 -> 100, 0 -> 0 (_total).
 # Drafted by Claude (AI) as a starting point; NOT validated by a lecturer. Review before research use.
+# Aliases rebuilt 2026-11-03 from the labelled PILOT answers only (phrases in accepted vs rejected answers):
+# reasons tied to the stimulus (working conditions, wages, ethical production, concern for the workers) are kept;
+# generic charity reasons (pahala, amal, helping the needy, fast fashion) are dropped because the lecturers
+# rejected them about as often as they accepted them. No bare generic words (kondisi, keadaan, layak, sadar,
+# produksi): an alias inside a longer phrase names its concept, so "kondisi keuangan" would count as a reason.
 question_id: ID_UKARA_B
 validated_by: null
 validated_on: null
 concepts:
-  Donasi:                 {aliases: [donasi, berdonasi, menyumbang, sumbangan, menyumbangkan uang, memilih berdonasi, memberi donasi, beramal]}
+  Donasi:                 {aliases: [donasi, berdonasi, menyumbang, menyumbangkan, sumbangan, menyumbangkan uang, memilih berdonasi, memilih menyumbang, memberi donasi, memberikan donasi, beramal]}
   AlasanBerdonasi:        {aliases: [alasan berdonasi, alasan menyumbang]}
-  KesadaranKondisiKerja:  {aliases: [kondisi kerja, kondisi kerja buruk, kondisi pekerja, kondisi kerja pabrik, upah tidak layak, nasib pekerja, kondisi pabrik, melihat kondisi pekerja, gambar kondisi kerja], broader: [AlasanBerdonasi]}
-  DampakTindakanKonsumen: {aliases: [produksi pakaian beretika, pakaian beretika, lebih beretika, membantu pekerja, membantu orang lain, membantu yang membutuhkan, mengurangi fast fashion, mengurangi sampah pakaian, membantu orang yang membutuhkan], broader: [AlasanBerdonasi]}
-  EmosiDonatur:           {aliases: [kasihan, rasa kasihan, iba, rasa iba, empati, peduli, kepedulian, simpati, rasa bersalah, tersentuh, amal, pahala], broader: [AlasanBerdonasi]}
+  KesadaranKondisiKerja:  {aliases: [kondisi kerja, kondisi kerja buruk, kondisi pekerja, kondisi para pekerja, kondisi kerja pabrik, kondisi pabrik, keadaan pabrik, keadaan pekerja, melihat kondisi, melihat kondisi pekerja, gambar kondisi kerja, pekerja, para pekerja, pegawai, karyawan, buruh, nasib pekerja, pabrik, pabrik pakaian, pabrik konveksi, upah, gaji, upah tidak layak, tidak layak, menyadari, kesadaran], broader: [AlasanBerdonasi]}
+  DampakTindakanKonsumen: {aliases: [produksi pakaian beretika, produksi pakaian, memproduksi pakaian, pakaian beretika, lebih beretika, beretika, ber etika, etika, etis, membantu pekerja, membantu para pekerja, kesejahteraan pekerja], broader: [AlasanBerdonasi]}
+  EmosiDonatur:           {aliases: [kasihan, rasa kasihan, prihatin, iba, rasa iba, empati, peduli, kepedulian, simpati, rasa bersalah, merasa bersalah, tersentuh, tergerak, sedih], broader: [AlasanBerdonasi]}
 triples:
   - {id: R1, s: [AlasanBerdonasi], p: menyebabkan, o: Donasi, criterion: K1_Alasan, weight: 1}

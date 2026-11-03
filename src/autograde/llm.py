@@ -16,6 +16,8 @@ OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
 GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions"
 RETRY_STATUS = {429, 500, 502, 503, 504}
 log = logging.getLogger("uvicorn.error")
+QUOTA_PAUSE = 60  # seconds the fallback answers after a 429/503: per-minute limits clear by then, a daily one costs one try a minute
+_paused_until = {}  # provider -> time.monotonic() until which its calls go straight to llm.fallback
 
 
 class LLMError(RuntimeError):
@@ -26,8 +28,8 @@ class LLMUnavailable(LLMError):
     """No credentials and no cached response: callers fall back (e.g. template feedback)."""
 
 
-class QuotaExceeded(LLMError):
-    """Still 429 after the retries: the key's quota is used up, so complete_json tries llm.fallback."""
+class ProviderBusy(LLMError):
+    """Still 429 (quota used up) or 503 (model overloaded) after the retries, so complete_json tries llm.fallback."""
 
 
 def cache_dir():
@@ -93,13 +95,13 @@ def chat_backend(url, key_var, system, user, schema, cfg, **extra):
             r = httpx.post(url, json=body, headers={"Authorization": f"Bearer {key}"}, timeout=120)
             if r.status_code not in RETRY_STATUS:
                 break
-            err, quota = f"API error {r.status_code}: {r.text[:300]}", r.status_code == 429
+            err, busy = f"API error {r.status_code}: {r.text[:300]}", r.status_code in (429, 503)
         except httpx.TransportError as e:
-            err, quota = f"connection error: {e}", False
+            err, busy = f"connection error: {e}", False
         if attempt < 2:
             time.sleep(2 ** attempt)
     else:
-        raise (QuotaExceeded if quota else LLMError)(err)
+        raise (ProviderBusy if busy else LLMError)(err)
     if r.status_code == 401:
         raise LLMUnavailable(f"authentication failed: {r.text[:300]}")
     if r.status_code != 200:
@@ -121,7 +123,8 @@ BACKENDS = {"anthropic": anthropic_backend, "openrouter": openrouter_backend, "g
 
 def complete_json(system, user, schema, *, backend=None, cfg=None, cache=None):
     """JSON dict for (system, user, schema), cached by a hash of the whole request.
-    If the provider's quota is used up, llm.fallback (provider and model) answers instead, cached under its own name."""
+    If the provider is out of quota or overloaded, llm.fallback (provider and model) answers instead, cached under its own name,
+    and keeps answering for QUOTA_PAUSE seconds so each call doesn't wait out the provider's retries first."""
     cfg = cfg or io.load_config()["llm"]
     request = {"provider": cfg["provider"], "model": cfg["model"], "effort": cfg["effort"],
                "schema": schema, "system": system, "user": user}
@@ -130,14 +133,18 @@ def complete_json(system, user, schema, *, backend=None, cfg=None, cache=None):
     if path.exists():
         return io.load_json(path)["response"]
     backend = backend or BACKENDS[cfg["provider"]]
+    fallback = cfg.get("fallback")
+    if fallback and time.monotonic() < _paused_until.get(cfg["provider"], 0):
+        return complete_json(system, user, schema, cfg={**cfg, **fallback, "fallback": None}, cache=cache)
     for _ in range(3):  # first try + 2 retries on invalid JSON
         try:
             text = backend(system, user, schema, cfg)
-        except QuotaExceeded as e:
-            if not cfg.get("fallback"):
+        except ProviderBusy as e:
+            if not fallback:
                 raise
-            log.warning("%s quota used up, this call goes to %s (%s)", cfg["provider"], cfg["fallback"], e)
-            return complete_json(system, user, schema, cfg={**cfg, **cfg["fallback"], "fallback": None}, cache=cache)
+            _paused_until[cfg["provider"]] = time.monotonic() + QUOTA_PAUSE
+            log.warning("%s busy or out of quota, calls go to %s for %d s (%s)", cfg["provider"], fallback, QUOTA_PAUSE, e)
+            return complete_json(system, user, schema, cfg={**cfg, **fallback, "fallback": None}, cache=cache)
         try:
             data = json.loads(text)
             break

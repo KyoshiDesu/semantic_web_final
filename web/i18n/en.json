@@ -122,7 +122,11 @@
     "try": "Grade",
     "correct_to": "Correct to",
     "parameter": "Parameter",
-    "value": "Value"
+    "value": "Value",
+    "nilai": "Final score",
+    "ringkasan": "Summary",
+    "umpan_balik": "Feedback",
+    "sumber": "Written by"
   },
   "node": {
     "answer": "Answer",
@@ -243,8 +247,8 @@
     "synthetic": "Contains synthetic answers (demo data), not real student answers.",
     "no_answers": "No answers for this assessment yet. Import them on the Classes page.",
     "grading": "Grading",
-    "grading_help": "Runs on the server: you can close the page. Annotated answers use their annotation; the rest are extracted by the LLM (needs OPENROUTER_API_KEY).",
-    "llm_feedback": "Feedback from the LLM (needs an API key)",
+    "grading_help": "Runs on the server: you can close the page. Annotated answers use their annotation; the rest are extracted by the LLM (GEMINI_API_KEY, falling back to OPENROUTER_API_KEY).",
+    "llm_feedback": "Feedback written by the LLM (otherwise a template)",
     "grade_new": "Grade {n} ungraded answers",
     "grade_stale": "Regrade {n} stale answers",
     "progress": "{done} of {total} answers",
@@ -265,7 +269,11 @@
     "draft_grades": "Draft grades (.csv)",
     "draft_feedback": "Draft feedback (.csv)",
     "locked": "Final export locked: {missing}.",
-    "mean_note": "The mean covers every question of the assessment; an unanswered question counts as 0."
+    "mean_note": "The mean covers every question of the assessment; an unanswered question counts as 0.",
+    "grades": "Grades and feedback",
+    "grades_help": "Every graded answer with its final score and the feedback the student gets. Open an answer to see how the knowledge graph scored it.",
+    "source_llm": "LLM",
+    "source_template": "template"
   },
   "kelas": {
     "title": "Classes",
@@ -375,7 +383,12 @@
     "not_valid": "Not valid yet",
     "graph_after": "Named graph after saving:",
     "save": "Save",
-    "saved": "{id} saved; {n} graded results are now stale until regraded."
+    "saved": "{id} saved; {n} graded results are now stale until regraded.",
+    "draft_llm": "Draft the key with the LLM",
+    "drafting": "Drafting… (up to a minute)",
+    "draft_help": "Fills the criteria, concepts and key triples from the question and reference answer. Check them before saving: an LLM draft stands in for a lecturer-written key.",
+    "draft_replace": "Replace the criteria, concepts and triples below with an LLM draft?",
+    "drafted": "Key drafted. Check it in the preview, then save."
   },
   "search": {
     "title": "Student answers",

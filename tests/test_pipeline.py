@@ -53,6 +53,15 @@ def test_completed_runs_lists_only_finished(ctx):
     assert "unfinished" not in [r["run_id"] for r in pipeline.completed_runs()]
 
 
+def test_llm_extraction_sees_only_the_question_line(ctx, monkeypatch):
+    from autograde import extract
+    seen = {}
+    monkeypatch.setattr(extract, "extract_llm", lambda *a, **k: seen.update(k) or ([], []))
+    pipeline.extract_triples(ctx, "Q1_X", [("Q1_X_s1", "cahaya matahari")], "llm")
+    assert db.question("Q1")["prompt"].startswith("<!--")  # text above the question, as a stimulus would be
+    assert seen["question"].startswith("Jelaskan proses fotosintesis") and "<!--" not in seen["question"]
+
+
 def test_resume_grades_each_answer_once(fast_context, monkeypatch):
     calls, orig = [], pipeline.run_answer
     monkeypatch.setattr(pipeline, "run_answer", lambda *a, **k: calls.append(a[1]) or orig(*a, **k))

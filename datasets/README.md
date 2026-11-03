@@ -65,6 +65,8 @@ Both are added to `ontology/build_ontology.py` and `config/predicates.yaml`, and
    - Map *Total* to the column `<QID>__<rater>`.
    - Only rows for that question have a value; the others are skipped.
 
+`serve` (and so `./run.sh`) loads both folders' `demo` split into the app at every start, skipping what is already there, so the app opens with the courses `MOHLER-EN` and `UKARA-ID` ready to grade.
+
 Step 4 means 24 imports for Mohler. `import_datasets.py` does steps 1–4 through the same API (standard library only, app running):
 
 ```bash

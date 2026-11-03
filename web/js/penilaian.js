@@ -58,7 +58,7 @@ start("penilaian.html", "penilaian.title", async (main, refresh) => {
     return;
   }
   const area = el("div", { id: "job-area", "aria-live": "polite" });
-  const llm = el("input", { type: "checkbox" });
+  const llm = el("input", { type: "checkbox", checked: true });
   const startJob = (which, status) => button(t(`penilaian.grade_${which}`, { n: st.counts[status] || 0 }), async () => {
     const job = await api.post(`/assessments/${id}/grading`, { which, llm_feedback: llm.checked });
     follow(job, area, controls, refresh).catch(e => showError(area, e, { append: true }));
@@ -76,6 +76,14 @@ start("penilaian.html", "penilaian.title", async (main, refresh) => {
   }, { kind: "primary", disabled: !st.approvable.length });
   main.replaceChildren(head,
     panel(t("penilaian.grading"), el("p", { class: "small muted" }, t("penilaian.grading_help")), controls, area),
+    panel(t("penilaian.grades"), el("p", { class: "small muted" }, t("penilaian.grades_help")), table(st.grades, { cell: (c, v) => {
+      if (c === "answer_id") return el("a", { href: href("jawaban.html", { run: st.run_id, answer: v }) }, v);
+      if (c === "nilai") return el("strong", {}, score(v));
+      if (c === "status") return statusChip(v);
+      if (c === "umpan_balik") return el("span", { style: { whiteSpace: "pre-line" } }, v || "—");
+      if (c === "sumber") return t(`penilaian.source_${v}`);
+      return undefined;
+    } })),
     panel(t("penilaian.table"), table(st, { cell: (c, v, row) => {
       if (c === "status") return statusChip(v);
       if (c === "answer_id") {

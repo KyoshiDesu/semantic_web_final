@@ -12,7 +12,10 @@ SYSTEM = """You extract semantic triples from a student's short answer written i
 Rules:
 - Output only relations the student actually states. Never add knowledge the student did not write.
 - subject and object must copy the student's own words from the cited sentences (you may drop articles).
-- predicate must be one of the listed predicate ids or aliases. Use "other" when none fits.
+- A short answer often leaves out what the question already names. Then take that one part, subject or object,
+  from the question's words; the other part must still be the student's.
+- predicate must be one of the listed predicate ids (its aliases show which verbs it covers). Use "other" when
+  none fits.
 - Rewrite passive voice as active: {passive_example}.
 - Split coordinated statements into one triple each.
 - negated is true only when the student denies the relation{negation_words}.
@@ -35,26 +38,31 @@ S1: Karbon dioksida diserap oleh daun.
 Example 2
 S1: Fotosintesis terjadi di kloroplas.
 S2: Proses ini tidak menghasilkan karbon dioksida.
-{"triples": [{"sentence_ids": ["S1", "S2"], "subject": "fotosintesis", "predicate": "menghasilkan", "object": "karbon dioksida", "negated": true}]}""",
+{"triples": [{"sentence_ids": ["S1", "S2"], "subject": "fotosintesis", "predicate": "menghasilkan", "object": "karbon dioksida", "negated": true}]}
+
+Example 3 (question: Apa yang digunakan tumbuhan untuk fotosintesis?)
+S1: cahaya matahari dan air
+{"triples": [{"sentence_ids": ["S1"], "subject": "tumbuhan", "predicate": "menggunakan", "object": "cahaya matahari", "negated": false},
+             {"sentence_ids": ["S1"], "subject": "tumbuhan", "predicate": "menggunakan", "object": "air", "negated": false}]}""",
     "en": """Example 1
 S1: An acknowledgement is sent by the receiver.
-{"triples": [{"sentence_ids": ["S1"], "subject": "receiver", "predicate": "sends", "object": "acknowledgement", "negated": false}]}
+{"triples": [{"sentence_ids": ["S1"], "subject": "receiver", "predicate": "transmits", "object": "acknowledgement", "negated": false}]}
 
 Example 2
 S1: UDP is a transport protocol.
 S2: It has no flow control.
 {"triples": [{"sentence_ids": ["S1"], "subject": "UDP", "predicate": "is_a", "object": "transport protocol", "negated": false},
-             {"sentence_ids": ["S1", "S2"], "subject": "UDP", "predicate": "lacks", "object": "flow control", "negated": false}]}""",
+             {"sentence_ids": ["S1", "S2"], "subject": "UDP", "predicate": "lacks", "object": "flow control", "negated": false}]}
+
+Example 3 (question: What is a router?)
+S1: a device that forwards packets between networks
+{"triples": [{"sentence_ids": ["S1"], "subject": "router", "predicate": "is_a", "object": "device that forwards packets between networks", "negated": false}]}""",
 }
 
 
 def for_language(predicates, language):
     """Only the predicates offered for this language (plus language-independent ones such as `other`)."""
     return {"predicates": [p for p in predicates["predicates"] if p.get("lang", "any") in (language, "any")]}
-
-
-def predicate_values(predicates):
-    return [v for p in predicates["predicates"] for v in [p["id"], *p.get("aliases", [])]]
 
 
 def alias_map(predicates):
@@ -67,7 +75,8 @@ def schema(labels, predicates):
         "properties": {
             "sentence_ids": {"type": "array", "items": {"type": "string", "enum": labels}},
             "subject": {"type": "string"},
-            "predicate": {"type": "string", "enum": predicate_values(predicates)},
+            # ids only: Gemini 2.5 rejects the enum with every alias (104 for English) as too much branching
+            "predicate": {"type": "string", "enum": [p["id"] for p in predicates["predicates"]]},
             "object": {"type": "string"},
             "negated": {"type": "boolean"},
         },
@@ -78,11 +87,12 @@ def schema(labels, predicates):
             "required": ["triples"], "additionalProperties": False}
 
 
-def user_prompt(sentences, predicates, language="id"):
+def user_prompt(sentences, predicates, language="id", question=""):
     preds = "\n".join(f"- {p['id']}: {p['description']}" + (f" (alias: {', '.join(p['aliases'])})" if p.get("aliases") else "")
                       for p in predicates["predicates"])
     numbered = "\n".join(f"S{i}: {text}" for i, (_, text) in enumerate(sentences, 1))
-    return f"Predicates:\n{preds}\n\n{EXAMPLES[language]}\n\nStudent answer:\n{numbered}"
+    context = f"Question (context only, never a source of triples by itself):\n{question}\n\n" if question else ""
+    return f"Predicates:\n{preds}\n\n{EXAMPLES[language]}\n\n{context}Student answer:\n{numbered}"
 
 
 def grounded(span, text, threshold):
@@ -92,8 +102,9 @@ def grounded(span, text, threshold):
     return bool(tokens) and sum(t in have for t in tokens) / len(tokens) >= threshold
 
 
-def parse(answer_id, sentences, data, predicates, threshold):
-    """Contract checks on raw LLM triples -> (kept StudentTriples, log of dropped ones)."""
+def parse(answer_id, sentences, data, predicates, threshold, question=""):
+    """Contract checks on raw LLM triples -> (kept StudentTriples, log of dropped ones).
+    Subject or object (never both) may come from the question: a fragment answer leaves out what it names."""
     by_label = {f"S{i}": (sid, text) for i, (sid, text) in enumerate(sentences, 1)}
     aliases = alias_map(predicates)
     kept, log = [], []
@@ -111,7 +122,8 @@ def parse(answer_id, sentences, data, predicates, threshold):
             continue
         s, o = (unicodedata.normalize("NFKC", raw[k]).strip() for k in ("subject", "object"))
         cited = " ".join(by_label[l][1] for l in raw["sentence_ids"])
-        if not grounded(s, cited, threshold) or not grounded(o, cited, threshold):
+        s_ok, o_ok = grounded(s, cited, threshold), grounded(o, cited, threshold)
+        if not (s_ok and o_ok) and not ((s_ok or o_ok) and grounded(o if s_ok else s, question, threshold)):
             drop("not_grounded")
             continue
         kept.append(StudentTriple(id=f"{answer_id}_t{len(kept) + 1}", answer_id=answer_id, s_text=s, p=p,
@@ -120,16 +132,16 @@ def parse(answer_id, sentences, data, predicates, threshold):
     return kept, log
 
 
-def extract_llm(answer_id, sentences, *, backend=None, predicates=None, threshold=None, language="id"):
+def extract_llm(answer_id, sentences, *, backend=None, predicates=None, threshold=None, language="id", question=""):
     if not sentences:
         return [], []
     predicates = for_language(predicates or io.load_predicates(), language)
     threshold = threshold if threshold is not None else io.load_config()["grounding_threshold"]
     labels = [f"S{i}" for i in range(1, len(sentences) + 1)]
     system = SYSTEM.format(language=LANGUAGES[language], **STYLE[language])
-    data = llm.complete_json(system, user_prompt(sentences, predicates, language), schema(labels, predicates),
-                             backend=backend)
-    return parse(answer_id, sentences, data, predicates, threshold)
+    data = llm.complete_json(system, user_prompt(sentences, predicates, language, question),
+                             schema(labels, predicates), backend=backend)
+    return parse(answer_id, sentences, data, predicates, threshold, question)
 
 
 def extract_gold(answer_id, annotation=None, predicates=None):

@@ -107,7 +107,10 @@ def cmd_db(args):
 def cmd_serve(args):
     import uvicorn
 
+    from autograde import db, importer
     from autograde.api.app import create_app
+    db.connect(create=True).close()
+    print(f"datasets/ (EN + ID, demo split): {importer.load_datasets()} new answers")
     print(f"AutoGrade-RDF on http://127.0.0.1:{args.port} (API docs: /docs)")
     uvicorn.run(create_app(), host="127.0.0.1", port=args.port)  # local only: there is no login
 

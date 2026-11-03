@@ -36,7 +36,8 @@ def status(assessment_id: int):
             "job": db.latest_job(assessment_id),
             "counts": {s: int(n) for s, n in t.status.value_counts().items()},
             "approvable": grades.bulk_approvable(t), "ready": grades.ready(t),
-            "synthetic": bool((t.source == "synthetic").any()), **table(t)}
+            "synthetic": bool((t.source == "synthetic").any()), **table(t),
+            "grades": table(grades.feedback_table(t, run_id))}
 
 
 @router.post("/assessments/{assessment_id}/grading", status_code=202)

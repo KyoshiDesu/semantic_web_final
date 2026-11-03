@@ -17,6 +17,15 @@ def test_alias_lookup():
     assert idx.lookup("makanan") is None
 
 
+def test_alias_inside_a_longer_phrase():
+    idx = ConceptIndex({**CONCEPTS, "GulaDarah": {"aliases": ["gula darah"]}})
+    assert idx.lookup("banyak karbon dioksida di udara") == "CO2"
+    assert idx.lookup("kadar gula darah naik") == "GulaDarah"  # same position: the longest alias, not "gula"
+    assert idx.lookup("gula lalu karbon dioksida") == "Glukosa"  # the earliest (the phrase's head), though shorter
+    assert idx.lookup("gulali manis") is None             # whole words only
+    assert idx.lookup("proses yang lambat") is None       # "proses fotosintesis" needs both words
+
+
 def test_known_different_concepts_never_similar():
     sim = make_sim(lambda a, b: 0.99)  # embedding says "very similar"
     assert sim("Oksigen", "oksigen", "Glukosa", "glukosa") == 0.0

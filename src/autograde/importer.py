@@ -177,6 +177,41 @@ def scores_from_table(df, id_col, qid, columns, rater_id):
     return pd.DataFrame(out, columns=db.SCORE_COLUMNS)
 
 
+# ---------- datasets/ (public EN and ID sets), loaded by `serve` so the app starts with them ----------
+
+DATASETS = {  # folder -> (course code, course name, assessment name), as in datasets/import_datasets.py
+    "en_mohler_cs": ("MOHLER-EN", "Mohler CS short answers (EN)", "Mohler 2011 subset"),
+    "id_ukara": ("UKARA-ID", "UKARA 1.0 jawaban singkat (ID)", "UKARA Task A & B"),
+}
+
+
+def load_datasets(split="demo"):
+    """Add each datasets/ folder's questions, answers_<split>.csv and scores_<split>.csv, as
+    datasets/import_datasets.py does through the API. Returns the number of new answers.
+    What is already there is skipped (scores are replaced), so every start can call it; edited questions are kept."""
+    added = 0
+    for folder, (code, course_name, assessment_name) in DATASETS.items():
+        d = io.ROOT / "datasets" / folder
+        course = next((c["id"] for c in db.courses() if c["code"] == code), None) \
+            or db.add_course(code, course_name)
+        assessment = next((a["id"] for a in db.assessments(course) if a["name"] == assessment_name), None) \
+            or db.add_assessment(course, assessment_name)
+        qids = sorted(p.name for p in (d / "questions").iterdir() if p.is_dir())
+        for qid in set(qids) - set(db.questions()):
+            add_question(assessment, {f: (d / "questions" / qid / f).read_text(encoding="utf-8") for f in QUESTION_FILES})
+        answers, scores = (pd.read_csv(d / f"{kind}_{split}.csv", dtype=str, keep_default_na=False,
+                                       encoding="utf-8-sig") for kind in ("answers", "scores"))
+        rows, _ = answers_from_table(answers, "student_id", [], {q: (q, None) for q in qids if q in answers.columns},
+                                     "pilot" if split == "pilot" else "test")
+        if rows:
+            db.import_course_answers(course, rows)
+            added += len(rows)
+        for col in scores.columns[1:]:
+            qid, rater = col.rsplit("__", 1)
+            db.add_human_scores(scores_from_table(scores, "student_id", qid, {io.TOTAL: col}, rater), replace=True)
+    return added
+
+
 def read_answers(data_dir, question_ids):
     predicates = io.load_predicates()
     rows = []

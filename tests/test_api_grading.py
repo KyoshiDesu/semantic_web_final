@@ -41,6 +41,9 @@ def test_grade_review_correct_and_export(client):
     st = client.get(f"/api/assessments/{aid}/status").json()
     run_id = st["run_id"]
     assert st["counts"] == {"dinilai": 7} and "Q1_A08" not in st["approvable"]  # A08 has a contradiction
+    grades = column(st["grades"], "nilai")
+    assert len(grades) == 7 and grades["Q1_A08"] == round(column(st, "final")["Q1_A08"], 1)
+    assert set(column(st["grades"], "sumber").values()) == {"template"}  # offline: no key, so no LLM feedback
 
     r = client.get(f"/api/assessments/{aid}/exports/grades.csv")
     assert r.status_code == 409 and "dinilai" in r.json()["message"]

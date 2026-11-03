@@ -3,7 +3,7 @@ from typing import Literal
 
 from fastapi import APIRouter, File, HTTPException, Response, UploadFile
 
-from autograde import authoring, db, extract, gold, importer, io, kg, rdfviz
+from autograde import authoring, db, extract, gold, importer, io, kg, llm, rdfviz
 from autograde.api import deps
 from autograde.api.schemas import NewQuestion, PreviewRequest, QuestionDraft
 
@@ -64,15 +64,44 @@ def update_question(qid: str, draft: QuestionDraft):
     return {"id": qid, "stale_results": db.result_count(qid)}
 
 
+def _validated(qid, d, base):
+    """(rubric, gold_raw, reference triples) of a draft, or ValueError listing what is wrong."""
+    rubric, gold_raw = authoring.from_tables(qid, d.tables(), base)
+    return rubric, gold_raw, importer.validate_question(d.prompt.strip(), d.reference_answer.strip(), rubric,
+                                                        gold_raw, importer.checked_relations())
+
+
+@router.post("/questions/draft")
+def draft_key(draft: QuestionDraft):
+    """The LLM's criteria, concepts and key triples for this draft's question and reference answer, replacing its
+    rows. Nothing is saved: the editor shows them, the preview validates them, the lecturer edits and saves."""
+    prompt, reference = draft.prompt.strip(), draft.reference_answer.strip()
+    if not prompt or not reference:
+        raise HTTPException(422, "write the question and the reference answer first")
+    errors = []
+    for _ in range(2):  # one retry with the validator's errors, as LLM feedback does
+        try:
+            rows = authoring.llm_draft(prompt, reference, draft.language, predicates(draft.language), rejected=errors)
+        except llm.LLMUnavailable:
+            raise
+        except llm.LLMError as e:
+            raise HTTPException(502, f"the LLM could not draft the key ({e})") from None
+        out = QuestionDraft(**{**draft.model_dump(), **rows})  # checks the LLM's rows have the editor's shape
+        try:
+            _validated("Q_DRAFT", out, None)
+            break
+        except ValueError as e:
+            errors = str(e).split("; ")
+    return out  # still invalid after the retry: the editor's preview lists what to fix
+
+
 @router.post("/questions/preview")
 def preview(body: PreviewRequest):
     """The live preview: the validation errors, or the gold graph this draft would store. Nothing is saved."""
     base = deps.question_or_404(body.base_id) if body.base_id else None
     d = body.draft
     try:
-        rubric, gold_raw = authoring.from_tables(body.id, d.tables(), base)
-        refs = importer.validate_question(d.prompt.strip(), d.reference_answer.strip(), rubric, gold_raw,
-                                          importer.checked_relations())
+        rubric, gold_raw, refs = _validated(body.id, d, base)
     except ValueError as e:
         return {"valid": False, "errors": str(e).split("; ")}
     files = authoring.question_files(d.prompt, d.reference_answer, rubric, gold_raw)

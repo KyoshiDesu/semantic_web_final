@@ -57,7 +57,10 @@ def grade(ctx, answer_id, students, params=None):
 
 def extract_triples(ctx, answer_id, sentences, mode):
     if mode == "llm":
-        return extract.extract_llm(answer_id, sentences, language=ctx.rubric.get("language", "id"))
+        # only the question line: a stimulus above it can name the expected answer, which a fragment may not borrow
+        # shortcut: assumes the question is the prompt's last line (true for every prompt in data/ and datasets/)
+        return extract.extract_llm(answer_id, sentences, language=ctx.rubric.get("language", "id"),
+                                   question=db.question(ctx.qid)["prompt"].strip().splitlines()[-1])
     if mode == "gold":
         return extract.extract_gold(answer_id), []
     raise ValueError(f"unknown mode {mode!r}")

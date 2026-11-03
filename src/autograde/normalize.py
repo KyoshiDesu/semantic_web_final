@@ -35,7 +35,18 @@ class ConceptIndex:
                 self.lookup_table[" ".join(content_tokens(surface))] = cid
 
     def lookup(self, text):
-        return self.lookup_table.get(norm_text(text)) or self.lookup_table.get(" ".join(content_tokens(text)))
+        """The concept the whole text names; else the one whose alias appears as whole words inside it
+        ("adaptasi terhadap lingkungan baru" -> the concept of "adaptasi"). The earliest alias wins, as the head of the
+        phrase ("data structure that ... last in first out" -> data structure); at the same position, the longest."""
+        exact = self.lookup_table.get(norm_text(text)) or self.lookup_table.get(" ".join(content_tokens(text)))
+        if exact:
+            return exact
+        padded, best = f" {' '.join(content_tokens(text))} ", None
+        for surface, cid in self.lookup_table.items():
+            at = padded.find(f" {surface} ") if surface else -1
+            if at >= 0 and (best is None or (at, -len(surface.split())) < best[0]):
+                best = ((at, -len(surface.split())), cid)
+        return best and best[1]
 
 
 def fill_concepts(triples, index):

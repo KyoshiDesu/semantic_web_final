@@ -56,7 +56,7 @@ def test_schema_enums():
     sch = extract.schema(["S1", "S2"], PREDS)
     item = sch["properties"]["triples"]["items"]["properties"]
     assert item["sentence_ids"]["items"]["enum"] == ["S1", "S2"]
-    assert "memakai" in item["predicate"]["enum"] and "other" in item["predicate"]["enum"]
+    assert item["predicate"]["enum"] == ["menggunakan", "menghasilkan", "other"]  # ids only, no aliases
 
 
 def test_empty_answer_skips_llm():
@@ -88,3 +88,21 @@ def test_english_extraction_prompt(monkeypatch, tmp_path):
     assert "written in English" in seen["system"] and "UDP is a transport protocol" in seen["user"]
     assert "lacks" in seen["enum"] and "menggunakan" not in seen["enum"] and "other" in seen["enum"]
     assert kept[0].p == "decreases"
+
+
+def test_a_fragment_answer_may_take_one_part_from_the_question():
+    seen = {}
+
+    def backend(system, user, schema, cfg):
+        seen["user"] = user
+        return json.dumps({"triples": [t(["S1"], "tumbuhan", "memakai", "cahaya matahari"),
+                                       t(["S1"], "tumbuhan", "memakai", "fotosintesis")]})  # both parts from the question
+    question = "Apa yang digunakan tumbuhan untuk fotosintesis?"
+    kept, log = extract.extract_llm("Q1_X", split("Q1_X", "cahaya matahari"), backend=backend, predicates=PREDS,
+                                    threshold=0.5, question=question)
+    assert question in seen["user"]
+    assert [(k.s_text, k.o_text) for k in kept] == [("tumbuhan", "cahaya matahari")]
+    assert [l["reason"] for l in log] == ["not_grounded"]
+    kept, _ = extract.extract_llm("Q1_X", split("Q1_X", "cahaya matahari"), backend=backend, predicates=PREDS,
+                                  threshold=0.5)
+    assert kept == []  # without the question, "tumbuhan" is not grounded

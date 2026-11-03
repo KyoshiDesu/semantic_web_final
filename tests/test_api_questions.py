@@ -2,7 +2,7 @@
 import io as _io
 import zipfile
 
-from autograde import authoring, db
+from autograde import authoring, db, llm
 
 
 def demo_assessment(client):
@@ -69,3 +69,40 @@ def test_upload_and_zip(client):
 def test_predicates_for_the_editor(client):
     ids = [p["id"] for p in client.get("/api/predicates?lang=id").json()]
     assert "menggunakan" in ids and "other" not in ids and "is_a" not in ids
+
+
+def test_llm_drafts_the_key_for_the_editor(client, monkeypatch):
+    seen = {}
+
+    def fake(system, user, schema, backend=None):
+        seen.update(system=system, user=user, schema=schema,
+                    enum=schema["properties"]["triples"]["items"]["properties"]["p"]["enum"])
+        return {"criteria": [{"id": "K1", "description": "Tumbuhan menyerap air"}],
+                "concepts": [{"concept": "Tumbuhan", "aliases": ["tumbuhan"], "broader": []},
+                             {"concept": "Air", "aliases": ["air", "h2o"], "broader": []}],
+                "triples": [{"id": "R1", "s": ["Tumbuhan"], "p": "menyerap", "o": "Air", "criterion": "K1", "weight": 1}]}
+    monkeypatch.setattr(llm, "complete_json", fake)
+    draft = {"prompt": "Apa yang diserap tumbuhan?", "reference_answer": "Tumbuhan menyerap air.", "language": "id",
+             "criteria": [{"id": "OLD", "description": "replaced"}]}
+    r = client.post("/api/questions/draft", json=draft)
+    assert r.status_code == 200 and "Indonesian" in seen["system"] and "Tumbuhan menyerap air." in seen["user"]
+    assert "menyerap" in seen["enum"] and "is_a" not in seen["enum"] and "other" not in seen["enum"]
+    assert r.json()["prompt"] == draft["prompt"] and [c["id"] for c in r.json()["criteria"]] == ["K1"]
+    assert client.post("/api/questions/preview", json={"id": "Q_DRAFT", "draft": r.json()}).json()["valid"]
+    assert client.post("/api/questions/draft", json={**draft, "reference_answer": " "}).status_code == 422
+
+    replies = iter([{"criteria": [{"id": "K1", "description": "d"}], "concepts": [],  # undeclared concepts
+                     "triples": [{"id": "R1", "s": ["Tumbuhan"], "p": "menyerap", "o": "Air", "criterion": "K1",
+                                  "weight": 1}]}, fake("", "", seen["schema"])])
+    users = []
+    monkeypatch.setattr(llm, "complete_json", lambda s, user, schema, **k: users.append(user) or next(replies))
+    r = client.post("/api/questions/draft", json=draft)
+    assert "undeclared concept 'Tumbuhan'" in users[1] and [c["concept"] for c in r.json()["concepts"]] == ["Tumbuhan", "Air"]
+
+    def fails(error):
+        def raise_(*a, **k):
+            raise error
+        monkeypatch.setattr(llm, "complete_json", raise_)
+        return client.post("/api/questions/draft", json=draft).status_code
+    assert fails(llm.LLMUnavailable("GEMINI_API_KEY is not set")) == 400
+    assert fails(llm.LLMError("API error 500")) == 502

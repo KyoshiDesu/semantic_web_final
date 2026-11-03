@@ -9,6 +9,8 @@ from datetime import date
 import pandas as pd
 import yaml
 
+from autograde import extract, llm
+
 CRITERIA = ["id", "description"]
 CONCEPTS = ["concept", "aliases", "broader"]
 TRIPLES = ["id", "s", "p", "o", "criterion", "weight"]
@@ -80,6 +82,51 @@ def from_tables(qid, draft, base=None):
     gold_raw = {"question_id": qid, **base["gold"], "question_id": qid, "validated_by": name or None,
                 "validated_on": date.today().isoformat() if name else None, "concepts": concepts, "triples": triples}
     return rubric, gold_raw
+
+
+DRAFT_SYSTEM = """You draft the answer key of a short-answer question for an automatic grader, as a lecturer would.
+The question and reference answer are in {language}; write descriptions and aliases in {language}.
+
+- criteria: 1 to 4 things a full answer must state, ids K1, K2, ...
+- concepts: the ideas the criteria need, named in CamelCase (letters and digits only). aliases: the words and short
+  phrases students are likely to write for the concept, lowercase, with synonyms and common misspellings.
+  broader: a more general concept of this list (e.g. one specific challenge under a general Challenge), so a student
+  who names only the general idea earns partial credit; [] when there is none.
+- triples: reference facts subject-predicate-object, ids R1, R2, ..., each scoring one criterion; every criterion
+  needs at least one triple. s lists the subjects a student may use. weight 1 to 3 by importance.
+- Every name in s and o must be one of your concepts, the subject too (the thing the question asks about).
+- Use only the listed predicates. State only what the reference answer supports.
+
+Example (question: What does a router do? reference: A router forwards packets between networks.)
+{{"criteria": [{{"id": "K1", "description": "States that a router forwards packets between networks"}}],
+ "concepts": [{{"concept": "Router", "aliases": ["router", "a router", "routers"], "broader": []}},
+              {{"concept": "Packet", "aliases": ["packet", "packets", "data packets", "datagrams"], "broader": []}}],
+ "triples": [{{"id": "R1", "s": ["Router"], "p": "transmits", "o": "Packet", "criterion": "K1", "weight": 1}}]}}"""
+
+
+def _rows(props):
+    return {"type": "array", "items": {"type": "object", "properties": props, "required": list(props),
+                                       "additionalProperties": False}}
+
+
+def draft_schema(predicate_ids):
+    text, texts = {"type": "string"}, {"type": "array", "items": {"type": "string"}}
+    return {"type": "object", "required": ["criteria", "concepts", "triples"], "additionalProperties": False,
+            "properties": {"criteria": _rows({"id": text, "description": text}),
+                           "concepts": _rows({"concept": text, "aliases": texts, "broader": texts}),
+                           "triples": _rows({"id": text, "s": texts, "p": {"type": "string", "enum": predicate_ids},
+                                             "o": text, "criterion": text, "weight": {"type": "number"}})}}
+
+
+def llm_draft(prompt, reference_answer, language, predicates, *, rejected=(), backend=None):
+    """The editor's criteria, concepts and triples rows, drafted by the LLM from the question and reference answer.
+    A stand-in for a lecturer-written key (the advisor allows it for the demo); the editor validates it like typed rows."""
+    preds = "\n".join(f"- {p['id']}: {p['description']}" for p in predicates)
+    user = f"Predicates:\n{preds}\n\nQuestion:\n{prompt}\n\nReference answer:\n{reference_answer}"
+    if rejected:
+        user += "\n\nYour previous draft was rejected: " + "; ".join(rejected)
+    return llm.complete_json(DRAFT_SYSTEM.format(language=extract.LANGUAGES[language]), user,
+                             draft_schema([p["id"] for p in predicates]), backend=backend)
 
 
 def question_files(prompt, reference_answer, rubric, gold_raw):

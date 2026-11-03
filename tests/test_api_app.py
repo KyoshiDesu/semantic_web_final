@@ -1,7 +1,7 @@
 """The API shell: courses, error mapping, the security checks, the web mount and the serve command."""
 from fastapi.testclient import TestClient
 
-from autograde import cli, db, kg
+from autograde import cli, db, importer, kg
 from autograde.api.app import create_app
 
 
@@ -64,12 +64,15 @@ def test_startup_creates_an_empty_database(fresh_db):
         assert c.get("/api/courses").json() == []
 
 
-def test_serve_binds_localhost_on_an_empty_database(fresh_db, monkeypatch):
+def test_serve_binds_localhost_and_loads_the_datasets(fresh_db, monkeypatch):
     import uvicorn
     calls = []
     monkeypatch.setattr(uvicorn, "run", lambda app, **kw: calls.append(kw))
     cli.main(["serve", "--port", "8123"])
     assert calls == [{"host": "127.0.0.1", "port": 8123}]
+    assert [c["code"] for c in db.courses()] == ["MOHLER-EN", "UKARA-ID"]
+    assert len(db.questions()) == 14 and len(db.answers()) == 72 + 20 and len(db.human_scores()) == 72 * 2 + 20
+    assert importer.load_datasets() == 0  # a restart adds nothing
 
 
 def test_pages_get_a_content_security_policy(client):

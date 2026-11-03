@@ -132,11 +132,26 @@ export async function editor(container, { qid = null, draft, baseId = null, asse
       changed();
     } });
   const validated = el("input", { value: d.validated_by || "", oninput: e => { d.validated_by = e.target.value; changed(); } });
+  const draftKey = button(t("editor.draft_llm"), async b => {
+    if ((d.concepts.length || d.triples.length) && !confirm(t("editor.draft_replace"))) return;  // a new draft starts with one empty K1
+    b.textContent = t("editor.drafting");
+    try {
+      const r = await api.post("/questions/draft", d);
+      for (const key of ["criteria", "concepts", "triples"]) d[key].splice(0, d[key].length, ...r[key]);  // tables edit these arrays
+    } finally {
+      b.textContent = t("editor.draft_llm");
+    }
+    criteriaRows.render();
+    conceptRows.render();
+    linked();
+    toast(t("editor.drafted"));
+  });
   if (newId) newId.addEventListener("input", changed);
   fill(container, datalist,
     newId ? panel(null, el("div", { class: "row" }, field(t("editor.new_id"), newId), field(t("editor.assessment"), target))) : null,
     el("div", { class: "grid2" }, field(t("soal.prompt"), text("prompt")), field(t("soal.reference"), text("reference_answer"))),
     el("div", { class: "row" }, field(t("editor.language"), language), field(t("editor.validated_by"), validated)),
+    el("div", { class: "actions" }, draftKey, el("span", { class: "small muted" }, t("editor.draft_help"))),
     panel(t("soal.criteria"), criteriaRows.element),
     panel(t("soal.concepts"), el("p", { class: "small muted" }, t("soal.concepts_help")), conceptRows.element),
     panel(t("soal.triples"), el("p", { class: "small muted" }, t("editor.triples_help")), triples.element),

@@ -122,7 +122,11 @@
     "try": "Nilai",
     "correct_to": "Koreksi ke",
     "parameter": "Parameter",
-    "value": "Nilai"
+    "value": "Nilai",
+    "nilai": "Skor final",
+    "ringkasan": "Ringkasan",
+    "umpan_balik": "Umpan balik",
+    "sumber": "Ditulis oleh"
   },
   "node": {
     "answer": "Jawaban",
@@ -243,8 +247,8 @@
     "synthetic": "Berisi jawaban sintetis (data demo), bukan jawaban mahasiswa nyata.",
     "no_answers": "Belum ada jawaban untuk penilaian ini. Impor jawaban di halaman Kelas.",
     "grading": "Penilaian otomatis",
-    "grading_help": "Berjalan di server: halaman boleh ditutup. Jawaban beranotasi memakai anotasinya; sisanya diekstraksi dengan LLM (butuh OPENROUTER_API_KEY).",
-    "llm_feedback": "Umpan balik dari LLM (butuh API key)",
+    "grading_help": "Berjalan di server: halaman boleh ditutup. Jawaban beranotasi memakai anotasinya; sisanya diekstraksi dengan LLM (GEMINI_API_KEY, cadangan OPENROUTER_API_KEY).",
+    "llm_feedback": "Umpan balik ditulis oleh LLM (selain itu templat)",
     "grade_new": "Nilai {n} jawaban yang belum dinilai",
     "grade_stale": "Nilai ulang {n} jawaban usang",
     "progress": "{done} dari {total} jawaban",
@@ -265,7 +269,11 @@
     "draft_grades": "Nilai draf (.csv)",
     "draft_feedback": "Umpan balik draf (.csv)",
     "locked": "Ekspor final terkunci: {missing}.",
-    "mean_note": "Rata-rata dihitung atas semua soal penilaian; soal yang tidak dijawab dihitung 0."
+    "mean_note": "Rata-rata dihitung atas semua soal penilaian; soal yang tidak dijawab dihitung 0.",
+    "grades": "Nilai dan umpan balik",
+    "grades_help": "Setiap jawaban yang sudah dinilai dengan skor final dan umpan balik untuk mahasiswa. Buka jawaban untuk melihat cara graf pengetahuan menilainya.",
+    "source_llm": "LLM",
+    "source_template": "templat"
   },
   "kelas": {
     "title": "Kelas",
@@ -375,7 +383,12 @@
     "not_valid": "Belum valid",
     "graph_after": "Named graph setelah disimpan:",
     "save": "Simpan",
-    "saved": "{id} disimpan; {n} hasil penilaian kini usang sampai dinilai ulang."
+    "saved": "{id} disimpan; {n} hasil penilaian kini usang sampai dinilai ulang.",
+    "draft_llm": "Susun kunci dengan LLM",
+    "drafting": "Menyusun… (hingga satu menit)",
+    "draft_help": "Mengisi kriteria, konsep dan tripel kunci dari soal dan jawaban acuan. Periksa sebelum menyimpan: draf LLM menggantikan kunci yang ditulis dosen.",
+    "draft_replace": "Ganti kriteria, konsep dan tripel di bawah dengan draf LLM?",
+    "drafted": "Kunci tersusun. Periksa di pratinjau, lalu simpan."
   },
   "search": {
     "title": "Jawaban mahasiswa",
