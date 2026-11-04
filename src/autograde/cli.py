@@ -45,10 +45,13 @@ def cmd_evaluate(args):
 
 def cmd_audit_import(args):
     import pandas as pd
-    from autograde import db
-    df = pd.read_csv(args.file, dtype=str).fillna("")
-    db.add_evidence_audit(df)
-    print(f"{len(df)} evidence audit rows imported")
+    from autograde import evaluate
+    try:
+        answered, total = evaluate.import_audit(pd.read_csv(args.file, dtype=str, keep_default_na=False,
+                                                            encoding="utf-8-sig"))
+    except ValueError as e:
+        sys.exit(f"audit not imported: {e}")
+    print(f"evidence audit imported: {answered} of {total} rows answered (an earlier import of this run is replaced)")
 
 
 def _run_or_exit(run_id):

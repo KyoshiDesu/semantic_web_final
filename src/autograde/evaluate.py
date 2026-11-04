@@ -5,6 +5,7 @@ from scipy import stats
 
 from autograde import baselines, db, gold, io, llm
 from autograde.models import LedgerEntry
+from autograde.normalize import concept_label
 from autograde.score import score
 
 
@@ -163,7 +164,7 @@ def evaluate(run_id, gold_run_id=None, b2_backend=None):
     per_question.round(6).to_csv(out / "metrics_per_question.csv", index=False)
     per_criterion.round(6).to_csv(out / "per_criterion_mae.csv")
     figures(out, runs.score.to_numpy(), h, per_criterion)
-    report = render(run, metrics, per_criterion, icc, recon, audit, b2_note, len(runs))
+    report = render(run, metrics, per_criterion, icc, recon, audit, b2_note, len(runs), int(runs.synthetic.sum()))
     db.save_evaluation(run_id, report)
     return report
 
@@ -193,10 +194,11 @@ def fmt(x, nd=3):
     return "–" if x is None or (isinstance(x, float) and np.isnan(x)) else f"{x:.{nd}f}"
 
 
-def render(run, metrics, per_criterion, icc, recon, audit, b2_note, n):
+def render(run, metrics, per_criterion, icc, recon, audit, b2_note, n, n_synthetic):
     lines = [f"# Evaluation — run {run['run_id']}", ""]
-    if run["include_synthetic"]:
-        lines += ["> **SYNTHETIC DATA — not real results.** This run includes synthetic answers.", ""]
+    if run["include_synthetic"]:  # every assessment run is marked so, even when all its answers are real
+        lines += [f"> **SYNTHETIC DATA — not real results.** A demonstration run: {n_synthetic} of {n} answers are "
+                  "synthetic, and its evidence audit, if any, may come from a synthetic (LLM) coder.", ""]
     if not run["params_frozen"]:
         lines += ["> Parameters were not frozen when this run was made (allowed only for synthetic demos).", ""]
     p = run["params"]
@@ -226,20 +228,74 @@ def render(run, metrics, per_criterion, icc, recon, audit, b2_note, n):
     return "\n".join(lines) + "\n"
 
 
-def audit_template(run_id):
-    rows = []
-    for a in db.run_scores(run_id).answer_id:
-        r = db.result(run_id, a)
-        sentences = {sid: text for sid, text in r["sentences"]}
-        for e in (LedgerEntry(**x) for x in r["ledger"]):
-            rows.append({"row_type": "ledger", "run_id": run_id, "answer_id": a, "entry_id": e.entry_id,
-                         "reference_id": e.reference_id, "status": e.status,
-                         "quoted_sentences": " ".join(sentences.get(s, "") for s in e.sentence_ids),
-                         "present_in_answer": "", "evidence_correct": ""})
+CODER_ANSWERS = ["present_in_answer", "evidence_correct", "supported"]
+# Blind: no `status` on ledger rows (import restores it), so the coder judges "is it present?" without the system's verdict
+TEMPLATE_COLUMNS = ["row_type", "run_id", "answer_id", "entry_id", "reference_id", "reference", "answer_text",
+                    "quoted_sentences", "present_in_answer", "evidence_correct", "claim_index", "text",
+                    "ledger_entry_ids", "supported"]
+
+
+def _audit_rows(run_id):
+    """Every audit row of a run with what a coder needs to judge it: the whole answer and each key fact in words.
+    A claim row lists the entries it cites with their status, since a claim can't be judged without it."""
+    rows, facts = [], {}
+    for s in db.run_scores(run_id).itertuples():
+        if s.question_id not in facts:
+            _, rubric, refs = gold.load(s.question_id)
+            crit = {c["id"]: c.get("description", "") for c in rubric["criteria"]}
+            facts[s.question_id] = {r.id: f"{' / '.join(map(concept_label, r.s))} {r.p} {concept_label(r.o)} "
+                                          f"({r.criterion}: {crit.get(r.criterion, '')})" for r in refs}
+        fact, r = facts[s.question_id], db.result(run_id, s.answer_id)
+        sentences = dict(r["sentences"])
+        answer = " ".join(sentences.values())
+        entries = [LedgerEntry(**x) for x in r["ledger"]]
+        for e in entries:
+            rows.append({"row_type": "ledger", "run_id": run_id, "answer_id": s.answer_id, "entry_id": e.entry_id,
+                         "reference_id": e.reference_id, "reference": fact[e.reference_id], "answer_text": answer,
+                         "status": e.status, "quoted_sentences": " ".join(sentences.get(i, "") for i in e.sentence_ids)})
+        cited = {e.entry_id: f"{e.entry_id}: {fact[e.reference_id]} [{e.status}]" for e in entries}
         for i, c in enumerate(r["feedback"]["claims"], 1):
-            rows.append({"row_type": "claim", "run_id": run_id, "answer_id": a, "claim_index": i, "text": c["text"],
-                         "ledger_entry_ids": " ".join(c["ledger_entry_ids"]), "supported": ""})
+            rows.append({"row_type": "claim", "run_id": run_id, "answer_id": s.answer_id, "claim_index": str(i),
+                         "text": c["text"], "ledger_entry_ids": " ".join(c["ledger_entry_ids"]), "answer_text": answer,
+                         "reference": "; ".join(cited.get(x, x) for x in c["ledger_entry_ids"])})
+    return rows
+
+
+def _audit_key(row):
+    return row["row_type"], row["answer_id"], row["entry_id"] if row["row_type"] == "ledger" else row["claim_index"]
+
+
+def audit_template(run_id):
     out = report_dir(run_id) / "evidence_audit_template.csv"
     out.parent.mkdir(parents=True, exist_ok=True)
-    pd.DataFrame(rows, columns=db.AUDIT_COLUMNS).to_csv(out, index=False)
+    pd.DataFrame(_audit_rows(run_id), columns=TEMPLATE_COLUMNS).to_csv(out, index=False)
     return out
+
+
+def import_audit(df):
+    """A filled audit CSV -> the run's stored audit, replacing an earlier import. Only the coder's three answer columns
+    are read; every other field comes from the run's ledger, so a coder may drop, reorder or reword them.
+    Returns (rows answered, rows in the run); raises ValueError naming every row it cannot read."""
+    missing = {"row_type", "run_id", "answer_id", "entry_id", "claim_index"} - set(df.columns)
+    if missing:
+        raise ValueError(f"missing columns {sorted(missing)}")
+    df = df.reindex(columns=[*df.columns, *(c for c in CODER_ANSWERS if c not in df.columns)]).fillna("").astype(str)
+    runs = sorted(set(df.run_id))
+    if len(runs) != 1 or db.run(runs[0]) is None:
+        raise ValueError(f"the file must hold one existing run, not {runs}")
+    rows = _audit_rows(runs[0])
+    index, seen, errors = {_audit_key(r): r for r in rows}, set(), []
+    for line, r in enumerate(df.to_dict("records"), 2):  # line 1 is the header
+        k = _audit_key(r)
+        if k not in index or k in seen:
+            errors.append(f"line {line}: {'duplicate' if k in seen else 'no such'} row {k}")
+            continue
+        seen.add(k)
+        for col in CODER_ANSWERS:
+            index[k][col] = v = r[col].strip().lower()
+            if v not in ("yes", "no", ""):
+                errors.append(f"line {line}: {col} must be yes, no or blank, not {r[col]!r}")
+    if errors:
+        raise ValueError("; ".join(errors[:10]) + (f"; and {len(errors) - 10} more" if len(errors) > 10 else ""))
+    db.add_evidence_audit(pd.DataFrame(rows))
+    return sum(any(r.get(c) for c in CODER_ANSWERS) for r in rows), len(rows)

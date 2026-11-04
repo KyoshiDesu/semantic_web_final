@@ -416,8 +416,10 @@ def overrides(answer_id=None):
 
 
 def add_evidence_audit(df):
+    """Replaces the stored audit of every run in df, so a corrected file never counts twice."""
     df = df.reindex(columns=AUDIT_COLUMNS).fillna("").astype(str)
     with tx() as c:
+        c.executemany("DELETE FROM evidence_audit WHERE run_id = ?", [(r,) for r in df.run_id.unique()])
         c.executemany(f"INSERT INTO evidence_audit ({', '.join(AUDIT_COLUMNS)}) "
                       f"VALUES ({', '.join('?' * len(AUDIT_COLUMNS))})", df.itertuples(index=False, name=None))
 
