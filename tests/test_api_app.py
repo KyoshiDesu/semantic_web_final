@@ -75,6 +75,20 @@ def test_serve_binds_localhost_and_loads_the_datasets(fresh_db, monkeypatch):
     assert importer.load_datasets() == 0  # a restart adds nothing
 
 
+def test_serve_lan_listens_on_the_network_and_trusts_its_ip(fresh_db, monkeypatch):
+    import uvicorn
+    calls = []
+    monkeypatch.setattr(uvicorn, "run", lambda app, **kw: calls.append((app, kw)))
+    cli.main(["serve", "--lan", "--port", "8123"])
+    app, kw = calls[0]
+    assert kw == {"host": "0.0.0.0", "port": 8123}
+    ip = next(m.kwargs["allowed_hosts"] for m in app.user_middleware if "allowed_hosts" in m.kwargs)[-1]
+    with TestClient(app, base_url=f"http://{ip}:8123") as c:
+        assert c.get("/api/courses").status_code == 200
+        assert c.post("/api/courses", json={"code": "X1", "name": "x"}, headers={"Origin": f"http://{ip}:8123"}).status_code == 201
+        assert c.get("/api/courses", headers={"Host": "evil.example"}).status_code == 400
+
+
 def test_pages_get_a_content_security_policy(client):
     csp = client.get("/").headers["content-security-policy"]
     assert "default-src 'self'" in csp and "'wasm-unsafe-eval'" in csp

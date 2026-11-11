@@ -114,8 +114,16 @@ def cmd_serve(args):
     from autograde.api.app import create_app
     db.connect(create=True).close()
     print(f"datasets/ (EN + ID, demo split): {importer.load_datasets()} new answers")
-    print(f"AutoGrade-RDF on http://127.0.0.1:{args.port} (API docs: /docs)")
-    uvicorn.run(create_app(), host="127.0.0.1", port=args.port)  # local only: there is no login
+    if not args.lan:
+        print(f"AutoGrade-RDF on http://127.0.0.1:{args.port} (API docs: /docs)")
+        return uvicorn.run(create_app(), host="127.0.0.1", port=args.port)  # local only: there is no login
+    import socket
+    with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
+        s.connect(("10.255.255.255", 1))  # sends nothing; picks the interface that faces the network
+        ip = s.getsockname()[0]
+    # shortcut: one IP is trusted (the main interface), restart if it changes or a second network is needed
+    print(f"AutoGrade-RDF on http://{ip}:{args.port} for this network, no login: anyone on it can use the app")
+    uvicorn.run(create_app([ip]), host="0.0.0.0", port=args.port)
 
 
 def main(argv=None):
@@ -166,6 +174,7 @@ def main(argv=None):
     s.set_defaults(func=cmd_db)
     s = sub.add_parser("serve", help="run the local API and web app on http://127.0.0.1")
     s.add_argument("--port", type=int, default=8000)
+    s.add_argument("--lan", action="store_true", help="also open it to devices on this network (there is no login)")
     s.set_defaults(func=cmd_serve)
     args = p.parse_args(argv)
     if args.command not in ("db", "serve"):

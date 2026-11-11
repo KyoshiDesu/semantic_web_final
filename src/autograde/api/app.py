@@ -1,6 +1,6 @@
 """The local JSON API (/api) and the frontend's files (/) in one process.
 
-Local only: no login, so the server binds 127.0.0.1, refuses foreign Host headers (DNS rebinding) and refuses writes
+Local only: no login, so the server binds 127.0.0.1 (or, with `serve --lan`, the local network), refuses foreign Host headers (DNS rebinding) and refuses writes
 from other origins (any web page could otherwise POST a form here, e.g. to start a paid LLM grading job).
 """
 import logging
@@ -47,7 +47,7 @@ async def lifespan(app):
     yield
 
 
-def create_app():
+def create_app(extra_hosts=()):
     app = FastAPI(title="AutoGrade-RDF", lifespan=lifespan)
 
     @app.exception_handler(StarletteHTTPException)
@@ -101,7 +101,7 @@ def create_app():
             response.headers["Content-Security-Policy"] = CSP
         return response
 
-    app.add_middleware(TrustedHostMiddleware, allowed_hosts=HOSTS)
+    app.add_middleware(TrustedHostMiddleware, allowed_hosts=HOSTS + list(extra_hosts))
     for router in ROUTERS:
         app.include_router(router, prefix="/api")
     app.mount("/", StaticFiles(directory=WEB, html=True), name="web")  # last: /api and /docs match first
